@@ -43,6 +43,7 @@
     "import/no-named-export": ["off"],
     "max-statements": ["warn", { "max": 20 }],
     "jest/require-hook": ["off"],
+    "vitest/prefer-describe-function-title": ["off"],
     "no-await-in-loop": ["error"],
     "no-console": ["warn"],
     "no-empty": ["error"],
