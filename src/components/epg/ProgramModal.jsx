@@ -34,7 +34,7 @@ import { getLargeImageUrl } from '@/utils/images';
  * @returns {React.ReactElement|null} Cast section
  */
 const CastSection = ({ cast }) => {
-  if (!cast || cast.length === 0) {
+  if (!Array.isArray(cast) || cast.length === 0) {
     return null;
   }
 
@@ -182,7 +182,7 @@ const ProgramModal = ({ programId, onClose }) => {
       fullWidth
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" noWrap sx={{ flexGrow: 1, mr: 1 }}>
+        <Typography variant="h6" component="span" noWrap sx={{ flexGrow: 1, mr: 1 }}>
           {program?.title ?? ''}
         </Typography>
         <IconButton onClick={onClose} size="small" aria-label="Fermer">

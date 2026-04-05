@@ -8,7 +8,7 @@
  * @returns {React.ReactElement} EPG grid
  */
 
-import { useRef, useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
@@ -28,13 +28,12 @@ const HOURS_TO_RENDER = 24;
 
 const EpgGrid = ({ channels, isLoadingChannels }) => {
   const dispatch = useDispatch();
-  const containerRef = useRef(null);
-  const scrollContainerRef = useRef(null);
-  const [containerHeight, setContainerHeight] = useState(0);
+  const [containerNode, setContainerNode] = useState(null);
   const { timeOrigin, scrollTop } = useSelector((state) => state.epg);
   const { sidebarWidth, pixelsPerMinute, isMobile } = useLayoutConstants();
   const now = useCurrentTime();
 
+  const containerHeight = containerNode?.clientHeight ?? 0;
   const totalWidth = sidebarWidth + HOURS_TO_RENDER * 60 * pixelsPerMinute;
 
   const { visibleChannels, startIndex, totalHeight } = useVirtualChannels({
@@ -44,25 +43,21 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   });
 
   const { programs, isLoading: isLoadingPrograms } = useEpgViewport(
-    containerRef.current?.clientWidth ?? 1200,
+    containerNode?.clientWidth ?? 1200,
   );
 
   const handleScrollChange = useCallback(({ scrollLeft }) => {
     dispatch(setScroll({ scrollLeft }));
   }, [dispatch]);
 
-  useDragScroll(scrollContainerRef, handleScrollChange);
+  useDragScroll(containerNode, handleScrollChange);
 
-  const handleVerticalScroll = useCallback((event) => {
-    dispatch(setScroll({ scrollTop: event.target.scrollTop }));
+  const handleScroll = useCallback((event) => {
+    dispatch(setScroll({
+      scrollTop: event.target.scrollTop,
+      scrollLeft: event.target.scrollLeft,
+    }));
   }, [dispatch]);
-
-  const handleContainerRef = useCallback((node) => {
-    containerRef.current = node;
-    if (node) {
-      setContainerHeight(node.clientHeight);
-    }
-  }, []);
 
   const handleSelectProgram = useCallback((programId) => {
     dispatch(selectProgram(programId));
@@ -115,24 +110,16 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
 
   return (
     <Box
-      ref={handleContainerRef}
+      ref={setContainerNode}
+      onScroll={handleScroll}
       sx={{
         height: '100%',
-        overflow: 'hidden',
+        overflow: 'auto',
         position: 'relative',
+        cursor: 'grab',
+        touchAction: 'pan-y',
       }}
     >
-      <Box
-        ref={scrollContainerRef}
-        onScroll={handleVerticalScroll}
-        sx={{
-          height: '100%',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          cursor: 'grab',
-          touchAction: 'pan-y',
-        }}
-      >
         <TimeHeader
           timeOrigin={timeOrigin}
           pixelsPerMinute={pixelsPerMinute}
@@ -154,7 +141,6 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
             sidebarWidth={sidebarWidth}
           />
         </Box>
-      </Box>
       {isLoadingPrograms && (
         <CircularProgress
           size={24}

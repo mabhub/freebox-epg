@@ -5,16 +5,22 @@
 
 import { useRef, useCallback, useEffect } from 'react';
 
+const DRAG_THRESHOLD = 5;
+
 /**
- * Enable horizontal drag-to-scroll on a container element
- * @param {React.RefObject} containerRef - Ref to the scrollable container
+ * Enable horizontal drag-to-scroll on a container DOM node
+ * Suppresses click events after a drag to prevent accidental program selection
+ * @param {HTMLElement|null} container - The scrollable DOM node (or null when not yet mounted)
  * @param {Function} onScrollChange - Callback with { scrollLeft } when scroll position changes
- * @returns {{ isDragging: boolean }} Drag state
+ * @returns {void}
  */
-const useDragScroll = (containerRef, onScrollChange) => {
+const useDragScroll = (container, onScrollChange) => {
   const isDragging = useRef(false);
+  const hasMoved = useRef(false);
   const startX = useRef(0);
   const scrollStart = useRef(0);
+  const onScrollChangeRef = useRef(onScrollChange);
+  onScrollChangeRef.current = onScrollChange;
 
   const handleMouseDown = useCallback((event) => {
     if (event.button !== 0) {
@@ -22,27 +28,33 @@ const useDragScroll = (containerRef, onScrollChange) => {
     }
 
     isDragging.current = true;
+    hasMoved.current = false;
     startX.current = event.clientX;
-    scrollStart.current = containerRef.current?.scrollLeft ?? 0;
+    scrollStart.current = event.currentTarget.scrollLeft;
 
     document.body.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
-  }, [containerRef]);
+  }, []);
 
   const handleMouseMove = useCallback((event) => {
     if (!isDragging.current) {
       return;
     }
 
-    event.preventDefault();
     const deltaX = event.clientX - startX.current;
+
+    if (Math.abs(deltaX) > DRAG_THRESHOLD) {
+      hasMoved.current = true;
+    }
+
+    event.preventDefault();
     const newScrollLeft = scrollStart.current - deltaX;
 
-    if (containerRef.current) {
-      containerRef.current.scrollLeft = newScrollLeft;
-      onScrollChange?.({ scrollLeft: newScrollLeft });
+    if (container) {
+      container.scrollLeft = newScrollLeft;
+      onScrollChangeRef.current?.({ scrollLeft: newScrollLeft });
     }
-  }, [containerRef, onScrollChange]);
+  }, [container]);
 
   const handleMouseUp = useCallback(() => {
     if (!isDragging.current) {
@@ -54,64 +66,31 @@ const useDragScroll = (containerRef, onScrollChange) => {
     document.body.style.userSelect = '';
   }, []);
 
-  const handleTouchStart = useCallback((event) => {
-    const touch = event.touches[0];
-    isDragging.current = true;
-    startX.current = touch.clientX;
-    scrollStart.current = containerRef.current?.scrollLeft ?? 0;
-  }, [containerRef]);
-
-  const handleTouchMove = useCallback((event) => {
-    if (!isDragging.current) {
-      return;
+  const handleClick = useCallback((event) => {
+    if (hasMoved.current) {
+      event.stopPropagation();
+      event.preventDefault();
+      hasMoved.current = false;
     }
-
-    const touch = event.touches[0];
-    const deltaX = touch.clientX - startX.current;
-    const newScrollLeft = scrollStart.current - deltaX;
-
-    if (containerRef.current) {
-      containerRef.current.scrollLeft = newScrollLeft;
-      onScrollChange?.({ scrollLeft: newScrollLeft });
-    }
-  }, [containerRef, onScrollChange]);
-
-  const handleTouchEnd = useCallback(() => {
-    isDragging.current = false;
   }, []);
 
   useEffect(() => {
-    const container = containerRef.current;
     if (!container) {
       return;
     }
 
     container.addEventListener('mousedown', handleMouseDown);
+    container.addEventListener('click', handleClick, true);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchmove', handleTouchMove, { passive: true });
-    container.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       container.removeEventListener('mousedown', handleMouseDown);
+      container.removeEventListener('click', handleClick, true);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [
-    containerRef,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-  ]);
-
-  return { isDragging: isDragging.current };
+  }, [container, handleMouseDown, handleMouseMove, handleMouseUp, handleClick]);
 };
 
 export default useDragScroll;
