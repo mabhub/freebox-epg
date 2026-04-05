@@ -15,10 +15,11 @@ import { clearSelection } from '@/store/epgSlice';
 import EpgToolbar from './EpgToolbar';
 import EpgGrid from './EpgGrid';
 import ProgramModal from './ProgramModal';
+import ChannelFilter from './ChannelFilter';
 
 const EpgPage = () => {
   const dispatch = useDispatch();
-  const [_filterOpen, setFilterOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const { channels, isLoading: isLoadingChannels } = useChannels();
   const hiddenChannels = useSelector((state) => state.channels.hiddenChannels);
   const selectedProgramId = useSelector((state) => state.epg.selectedProgramId);
@@ -53,6 +54,11 @@ const EpgPage = () => {
       <ProgramModal
         programId={selectedProgramId}
         onClose={handleCloseModal}
+      />
+      <ChannelFilter
+        open={filterOpen}
+        onClose={handleToggleFilter}
+        channels={channels}
       />
     </Layout>
   );
