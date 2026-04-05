@@ -15,6 +15,7 @@
 import { memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
+import getCategoryColor from '@/utils/categories';
 
 const MIN_CELL_WIDTH = 40;
 const CELL_GAP = 1;
@@ -32,6 +33,7 @@ const ProgramCell = memo(({
   const leftPx = sidebarWidth + offsetMinutes * pixelsPerMinute;
   const widthPx = Math.max(MIN_CELL_WIDTH, durationMinutes * pixelsPerMinute - CELL_GAP);
   const thumbnailUrl = getThumbnailUrl(program.picture);
+  const categoryBg = getCategoryColor(program.category);
 
   const handleClick = useCallback(() => {
     onSelect(program.id);
@@ -52,7 +54,7 @@ const ProgramCell = memo(({
         px: 0.5,
         borderRadius: 0.5,
         overflow: 'hidden',
-        backgroundColor: 'action.hover',
+        backgroundColor: categoryBg || 'action.hover',
         border: 1,
         borderColor: 'divider',
         cursor: 'pointer',
