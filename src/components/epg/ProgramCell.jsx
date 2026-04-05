@@ -17,8 +17,10 @@ import { Box, Typography } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import getCategoryColor from '@/utils/categories';
 
-const MIN_CELL_WIDTH = 40;
-const CELL_GAP = 1;
+const MIN_CELL_WIDTH = 8;
+const CELL_GAP = 4;
+const THUMBNAIL_MIN_WIDTH = 120;
+const SUBTITLE_MIN_WIDTH = 100;
 
 const ProgramCell = memo(({
   program,
@@ -64,7 +66,7 @@ const ProgramCell = memo(({
         },
       }}
     >
-      {thumbnailUrl && (
+      {thumbnailUrl && widthPx >= THUMBNAIL_MIN_WIDTH && (
         <Box
           component="img"
           src={thumbnailUrl}
@@ -88,7 +90,7 @@ const ProgramCell = memo(({
         >
           {program.title}
         </Typography>
-        {program.sub_title && (
+        {program.sub_title && widthPx >= SUBTITLE_MIN_WIDTH && (
           <Typography
             variant="caption"
             color="text.secondary"
