@@ -4,13 +4,13 @@ import {
   Route,
 } from 'react-router';
 
-import Home from './components/Home';
+import EpgPage from './components/epg/EpgPage';
 import NotFound from './components/NotFound';
 
 const App = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<EpgPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
