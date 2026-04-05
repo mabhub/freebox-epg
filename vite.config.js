@@ -34,6 +34,11 @@ if (useHttps && fs.existsSync(keyPath) && fs.existsSync(certPath)) {
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, 'src'),
+    },
+  },
   server: {
     https: httpsConfig,
     host: true,
