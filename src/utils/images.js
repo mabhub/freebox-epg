@@ -15,24 +15,26 @@ export const getLogoUrl = (uuid) =>
 
 /**
  * Build the URL for a program thumbnail (small, 100x77)
- * @param {string} picturePath - Relative picture path from EpgProgram.picture
- * @returns {string|null} Full URL to the thumbnail, or null if no picture
+ * The API returns paths already prefixed with /api/latest, so no base URL needed
+ * @param {string} picturePath - Picture path from EpgProgram.picture
+ * @returns {string|null} URL to the thumbnail, or null if no picture
  */
 export const getThumbnailUrl = (picturePath) => {
   if (!picturePath) {
     return null;
   }
-  return `${BASE_URL}${picturePath}`;
+  return picturePath;
 };
 
 /**
  * Build the URL for a program image (large, 168x130)
- * @param {string} pictureBigPath - Relative picture path from EpgProgram.picture_big
- * @returns {string|null} Full URL to the large image, or null if no picture
+ * The API returns paths already prefixed with /api/latest, so no base URL needed
+ * @param {string} pictureBigPath - Picture path from EpgProgram.picture_big
+ * @returns {string|null} URL to the large image, or null if no picture
  */
 export const getLargeImageUrl = (pictureBigPath) => {
   if (!pictureBigPath) {
     return null;
   }
-  return `${BASE_URL}${pictureBigPath}`;
+  return pictureBigPath;
 };

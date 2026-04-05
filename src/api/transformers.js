@@ -61,7 +61,7 @@ export const mergeChannels = (channelsMap, bouquetChannels) =>
 
 /**
  * Merge multiple EPG by_time Maps into a single Map
- * Programs from later buckets are appended (no deduplication needed since buckets are disjoint)
+ * Deduplicates programs by ID since adjacent hourly buckets can overlap
  * @param {Array<Map<string, Array>>} maps - Array of Maps from transformEpgByTime
  * @returns {Map<string, Array>} Merged Map of channel UUID to sorted programs
  */
@@ -70,19 +70,23 @@ export const mergeEpgMaps = (maps) => {
 
   for (const map of maps) {
     for (const [uuid, programs] of map) {
-      const existing = result.get(uuid);
-      if (existing) {
-        existing.push(...programs);
-      } else {
-        result.set(uuid, [...programs]);
+      if (!result.has(uuid)) {
+        result.set(uuid, new Map());
+      }
+      const channelMap = result.get(uuid);
+      for (const program of programs) {
+        channelMap.set(program.id, program);
       }
     }
   }
 
-  // Sort merged arrays by date
-  for (const [uuid, programs] of result) {
-    result.set(uuid, programs.toSorted((a, b) => a.date - b.date));
+  const merged = new Map();
+  for (const [uuid, programMap] of result) {
+    merged.set(
+      uuid,
+      [...programMap.values()].toSorted((a, b) => a.date - b.date),
+    );
   }
 
-  return result;
+  return merged;
 };

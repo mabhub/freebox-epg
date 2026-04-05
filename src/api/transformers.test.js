@@ -77,4 +77,18 @@ describe('mergeEpgMaps', () => {
     expect(result.get('uuid-1')[0].id).toBe('a');
     expect(result.get('uuid-2')).toHaveLength(1);
   });
+
+  it('deduplicates programs with the same id across buckets', () => {
+    const map1 = new Map([
+      ['uuid-1', [{ id: 'dup', date: 1000, title: 'First' }]],
+    ]);
+    const map2 = new Map([
+      ['uuid-1', [{ id: 'dup', date: 1000, title: 'Second' }, { id: 'unique', date: 2000 }]],
+    ]);
+
+    const result = mergeEpgMaps([map1, map2]);
+    expect(result.get('uuid-1')).toHaveLength(2);
+    expect(result.get('uuid-1')[0].id).toBe('dup');
+    expect(result.get('uuid-1')[1].id).toBe('unique');
+  });
 });
