@@ -36,8 +36,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     https: httpsConfig,
-    host: true, // Allow external connections
+    host: true,
     port: 3000,
+    proxy: {
+      '/api/latest': {
+        target: process.env.VITE_API_URL,
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   build: {
     // Generate source maps for production debugging
