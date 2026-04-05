@@ -3,7 +3,7 @@
  * @module utils/images
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/latest';
+const BASE_URL = '/api/latest';
 
 /**
  * Build the URL for a channel logo

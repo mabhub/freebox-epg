@@ -3,7 +3,7 @@
  * @module api/client
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/latest';
+const BASE_URL = '/api/latest';
 
 /**
  * Fetch wrapper for the Freebox API
