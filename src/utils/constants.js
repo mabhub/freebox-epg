@@ -18,6 +18,9 @@ export const OVERSCAN_ROWS = 5;
 /** Number of extra hours to prefetch before/after the viewport */
 export const OVERSCAN_HOURS = 1;
 
+/** Hours of past content available before the current time origin */
+export const PAST_HOURS = 6;
+
 /** Pixels per minute (desktop) */
 export const PIXELS_PER_MINUTE = 4;
 

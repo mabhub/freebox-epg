@@ -5,12 +5,15 @@
 
 import { createSlice } from '@reduxjs/toolkit';
 import { nowTimestamp } from '@/utils/time';
+import { PAST_HOURS, PIXELS_PER_MINUTE } from '@/utils/constants';
+
+const PAST_OFFSET_PX = PAST_HOURS * 60 * PIXELS_PER_MINUTE;
 
 const initialState = {
-  /** Unix timestamp of the left edge of the viewport */
-  timeOrigin: nowTimestamp(),
+  /** Unix timestamp of the left edge of the viewport (includes past buffer) */
+  timeOrigin: nowTimestamp() - PAST_HOURS * 3600,
   /** Horizontal scroll position in pixels */
-  scrollLeft: 0,
+  scrollLeft: PAST_OFFSET_PX,
   /** Vertical scroll position in pixels */
   scrollTop: 0,
   /** Selected program ID for the detail modal (null = closed) */
@@ -42,8 +45,8 @@ const epgSlice = createSlice({
      * @param {{ payload: number }} action - Unix timestamp
      */
     setTimeOrigin (state, action) {
-      state.timeOrigin = action.payload;
-      state.scrollLeft = 0;
+      state.timeOrigin = action.payload - PAST_HOURS * 3600;
+      state.scrollLeft = PAST_OFFSET_PX;
     },
 
     /**

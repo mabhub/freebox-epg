@@ -35,14 +35,11 @@ const TimeHeader = ({ timeOrigin, pixelsPerMinute, totalWidth, sidebarWidth }) =
   return (
     <Box
       sx={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 5,
         height: TIME_HEADER_HEIGHT,
-        backgroundColor: 'background.paper',
+        width: totalWidth,
+        bgcolor: 'background.paper',
         borderBottom: 1,
         borderColor: 'divider',
-        overflow: 'hidden',
       }}
     >
       {markers.map(({ ts, leftPx, label }) => (
