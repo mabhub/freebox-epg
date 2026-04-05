@@ -5,14 +5,23 @@
  * @returns {React.ReactElement} EPG page
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 
 import Layout from '@/components/Layout';
+import useChannels from '@/hooks/useChannels';
 import EpgToolbar from './EpgToolbar';
+import EpgGrid from './EpgGrid';
 
 const EpgPage = () => {
   const [_filterOpen, setFilterOpen] = useState(false);
+  const { channels, isLoading: isLoadingChannels } = useChannels();
+  const hiddenChannels = useSelector((state) => state.channels.hiddenChannels);
+
+  const visibleChannels = useMemo(() =>
+    channels.filter((ch) => !hiddenChannels.includes(ch.uuid)),
+  [channels, hiddenChannels]);
 
   const handleToggleFilter = useCallback(() => {
     setFilterOpen((prev) => !prev);
@@ -28,7 +37,10 @@ const EpgPage = () => {
           position: 'relative',
         }}
       >
-        {/* EpgGrid will be rendered here in phase 4 */}
+        <EpgGrid
+          channels={visibleChannels}
+          isLoadingChannels={isLoadingChannels}
+        />
       </Box>
     </Layout>
   );

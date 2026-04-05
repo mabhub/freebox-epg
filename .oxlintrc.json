@@ -41,6 +41,7 @@
     // Possible Errors
     "class-methods-use-this": ["off"],
     "import/no-named-export": ["off"],
+    "max-statements": ["warn", { "max": 20 }],
     "jest/require-hook": ["off"],
     "no-await-in-loop": ["error"],
     "no-console": ["warn"],
