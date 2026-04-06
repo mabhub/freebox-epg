@@ -9,15 +9,13 @@
  * @returns {React.ReactElement} Channel filter drawer
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Drawer,
   Box,
   Typography,
   TextField,
-  List,
-  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
@@ -33,11 +31,15 @@ import { toggleChannel, setHiddenChannels } from '@/store/channelsSlice';
 import { getLogoUrl } from '@/utils/images';
 
 const DRAWER_WIDTH = 320;
+const ITEM_HEIGHT = 40;
+const OVERSCAN = 8;
 
 const ChannelFilter = ({ open, onClose, channels }) => {
   const dispatch = useDispatch();
   const hiddenChannels = useSelector((state) => state.channels.hiddenChannels);
   const [search, setSearch] = useState('');
+  const [scrollTop, setScrollTop] = useState(0);
+  const listRef = useRef(null);
 
   const filteredChannels = useMemo(() => {
     if (!search) {
@@ -50,6 +52,14 @@ const ChannelFilter = ({ open, onClose, channels }) => {
       || String(ch.number).includes(query),
     );
   }, [channels, search]);
+
+  const listHeight = listRef.current?.clientHeight ?? 400;
+  const totalHeight = filteredChannels.length * ITEM_HEIGHT;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
+  const visibleItems = filteredChannels.slice(
+    startIndex,
+    Math.min(filteredChannels.length, Math.ceil((scrollTop + listHeight) / ITEM_HEIGHT) + OVERSCAN),
+  );
 
   const handleToggle = useCallback((uuid) => {
     dispatch(toggleChannel(uuid));
@@ -83,6 +93,14 @@ const ChannelFilter = ({ open, onClose, channels }) => {
 
   const handleSearchChange = useCallback((event) => {
     setSearch(event.target.value);
+    setScrollTop(0);
+    if (listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
+  }, []);
+
+  const handleListScroll = useCallback((event) => {
+    setScrollTop(event.target.scrollTop);
   }, []);
 
   const visibleCount = channels.length - hiddenChannels.length;
@@ -139,12 +157,28 @@ const ChannelFilter = ({ open, onClose, channels }) => {
 
       <Divider />
 
-      <List dense sx={{ overflowY: 'auto', flexGrow: 1 }}>
-        {filteredChannels.map((channel) => {
-          const isHidden = hiddenChannels.includes(channel.uuid);
-          return (
-            <ListItem key={channel.uuid} disablePadding>
-              <ListItemButton onClick={() => handleToggle(channel.uuid)} dense>
+      <Box
+        ref={listRef}
+        onScroll={handleListScroll}
+        sx={{ overflowY: 'auto', flexGrow: 1 }}
+      >
+        <Box sx={{ position: 'relative', height: totalHeight }}>
+          {visibleItems.map((channel, index) => {
+            const isHidden = hiddenChannels.includes(channel.uuid);
+            const itemIndex = startIndex + index;
+            return (
+              <ListItemButton
+                key={channel.uuid}
+                onClick={() => handleToggle(channel.uuid)}
+                dense
+                sx={{
+                  position: 'absolute',
+                  top: itemIndex * ITEM_HEIGHT,
+                  left: 0,
+                  right: 0,
+                  height: ITEM_HEIGHT,
+                }}
+              >
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   <Checkbox
                     edge="start"
@@ -158,6 +192,7 @@ const ChannelFilter = ({ open, onClose, channels }) => {
                   component="img"
                   src={getLogoUrl(channel.uuid)}
                   alt=""
+                  loading="lazy"
                   sx={{ width: 28, height: 24, objectFit: 'contain', mr: 1 }}
                 />
                 <ListItemText
@@ -165,10 +200,10 @@ const ChannelFilter = ({ open, onClose, channels }) => {
                   slotProps={{ primary: { variant: 'body2', noWrap: true } }}
                 />
               </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
+            );
+          })}
+        </Box>
+      </Box>
     </Drawer>
   );
 };
