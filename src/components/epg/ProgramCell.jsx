@@ -13,7 +13,7 @@
  * @returns {React.ReactElement} Program cell
  */
 
-import { memo, useCallback, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
@@ -61,6 +61,8 @@ const ProgramCell = memo(({
       prefetchTimer.current = null;
     }
   }, []);
+
+  useEffect(() => () => clearTimeout(prefetchTimer.current), []);
 
   const tooltipContent = useMemo(() => {
     const startTime = formatTime(program.date);
