@@ -45,8 +45,10 @@ const CastSection = ({ cast }) => {
       grouped[job] = [];
     }
     const name = [member.first_name, member.last_name].filter(Boolean).join(' ');
-    const display = member.role ? `${name} (${member.role})` : name;
-    grouped[job].push(display);
+    if (name) {
+      const display = member.role ? `${name} (${member.role})` : name;
+      grouped[job].push(display);
+    }
   }
 
   return (

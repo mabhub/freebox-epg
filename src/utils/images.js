@@ -14,27 +14,17 @@ export const getLogoUrl = (uuid) =>
   `${API_BASE_URL}/tv/img/channels/logos68x60/${uuid}.png`;
 
 /**
- * Build the URL for a program thumbnail (small, 100x77)
- * The API returns paths already prefixed with /api/latest, so no base URL needed
- * @param {string} picturePath - Picture path from EpgProgram.picture
- * @returns {string|null} URL to the thumbnail, or null if no picture
+ * Return the program thumbnail URL (100x77)
+ * The API already returns full paths prefixed with /api/latest
+ * @param {string|undefined} picturePath - Path from EpgProgram.picture, or falsy if absent
+ * @returns {string|null} Usable URL, or null if the program has no thumbnail
  */
-export const getThumbnailUrl = (picturePath) => {
-  if (!picturePath) {
-    return null;
-  }
-  return picturePath;
-};
+export const getThumbnailUrl = (picturePath) => picturePath || null;
 
 /**
- * Build the URL for a program image (large, 168x130)
- * The API returns paths already prefixed with /api/latest, so no base URL needed
- * @param {string} pictureBigPath - Picture path from EpgProgram.picture_big
- * @returns {string|null} URL to the large image, or null if no picture
+ * Return the program large image URL (168x130)
+ * The API already returns full paths prefixed with /api/latest
+ * @param {string|undefined} pictureBigPath - Path from EpgProgram.picture_big, or falsy if absent
+ * @returns {string|null} Usable URL, or null if the program has no large image
  */
-export const getLargeImageUrl = (pictureBigPath) => {
-  if (!pictureBigPath) {
-    return null;
-  }
-  return pictureBigPath;
-};
+export const getLargeImageUrl = (pictureBigPath) => pictureBigPath || null;
