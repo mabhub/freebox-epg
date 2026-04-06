@@ -3,7 +3,7 @@
  * @module utils/images
  */
 
-const BASE_URL = '/api/latest';
+import { API_BASE_URL } from './constants';
 
 /**
  * Build the URL for a channel logo
@@ -11,7 +11,7 @@ const BASE_URL = '/api/latest';
  * @returns {string} Full URL to the 68x60 PNG logo
  */
 export const getLogoUrl = (uuid) =>
-  `${BASE_URL}/tv/img/channels/logos68x60/${uuid}.png`;
+  `${API_BASE_URL}/tv/img/channels/logos68x60/${uuid}.png`;
 
 /**
  * Build the URL for a program thumbnail (small, 100x77)

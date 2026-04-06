@@ -3,6 +3,9 @@
  * @module utils/constants
  */
 
+/** Base URL path for the Freebox API (relative, proxied by Vite in dev) */
+export const API_BASE_URL = '/api/latest';
+
 /** Height of a single channel row in pixels */
 export const ROW_HEIGHT = 80;
 

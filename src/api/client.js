@@ -3,7 +3,7 @@
  * @module api/client
  */
 
-const BASE_URL = '/api/latest';
+import { API_BASE_URL } from '@/utils/constants';
 
 /**
  * Fetch wrapper for the Freebox API
@@ -14,7 +14,7 @@ const BASE_URL = '/api/latest';
  * @throws {Error} If the API returns success: false or network error
  */
 const apiFetch = async (path, options = {}) => {
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: 'include',
   });
