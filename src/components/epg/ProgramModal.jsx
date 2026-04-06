@@ -93,27 +93,18 @@ const ProgramModalContent = ({ program, isLoading }) => {
     <>
       {imageUrl && (
         <Box
+          component="img"
+          src={imageUrl}
+          alt={program.title}
           sx={{
-            width: '100%',
-            height: 200,
+            float: 'right',
+            width: 168,
+            height: 130,
             borderRadius: 1,
-            mb: 2,
-            overflow: 'hidden',
-            bgcolor: 'action.hover',
+            ml: 2,
+            mb: 1,
           }}
-        >
-          <Box
-            component="img"
-            src={imageUrl}
-            alt={program.title}
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-            }}
-          />
-        </Box>
+        />
       )}
 
       <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
