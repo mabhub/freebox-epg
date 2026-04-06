@@ -13,16 +13,18 @@
  * @returns {React.ReactElement} Program cell
  */
 
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useRef } from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
 import getCategoryColor from '@/utils/categories';
+import { usePrefetchProgram } from '@/hooks/useProgramDetail';
 
 const MIN_CELL_WIDTH = 8;
 const CELL_GAP = 4;
 const THUMBNAIL_MIN_WIDTH = 120;
 const SUBTITLE_MIN_WIDTH = 100;
+const PREFETCH_DELAY_MS = 500;
 
 const ProgramCell = memo(({
   program,
@@ -40,10 +42,25 @@ const ProgramCell = memo(({
   const thumbnailUrl = getThumbnailUrl(program.picture);
   const categoryBg = getCategoryColor(program.category);
   const isOnAir = now >= program.date && now < program.date + program.duration;
+  const prefetchProgram = usePrefetchProgram();
+  const prefetchTimer = useRef(null);
 
   const handleClick = useCallback(() => {
     onSelect(program.id);
   }, [onSelect, program.id]);
+
+  const handleMouseEnter = useCallback(() => {
+    prefetchTimer.current = setTimeout(() => {
+      prefetchProgram(program.id);
+    }, PREFETCH_DELAY_MS);
+  }, [prefetchProgram, program.id]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (prefetchTimer.current) {
+      clearTimeout(prefetchTimer.current);
+      prefetchTimer.current = null;
+    }
+  }, []);
 
   const tooltipContent = useMemo(() => {
     const startTime = formatTime(program.date);
@@ -101,6 +118,8 @@ const ProgramCell = memo(({
     >
     <Box
       onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       sx={{
         position: 'absolute',
         left: leftPx,

@@ -3,9 +3,19 @@
  * @module hooks/useProgramDetail
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiFetch from '@/api/client';
 import { programDetailPath } from '@/api/endpoints';
+
+const PROGRAM_STALE_TIME = 10 * 60 * 1000;
+
+/**
+ * Build the query key for a program detail
+ * @param {string} programId - Program ID
+ * @returns {Array} Query key
+ */
+const programQueryKey = (programId) => ['epg', 'program', programId];
 
 /**
  * Fetch detailed information for a single program
@@ -15,10 +25,10 @@ import { programDetailPath } from '@/api/endpoints';
  */
 const useProgramDetail = (programId) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['epg', 'program', programId],
+    queryKey: programQueryKey(programId),
     queryFn: () => apiFetch(programDetailPath(programId)),
     enabled: Boolean(programId),
-    staleTime: 10 * 60 * 1000,
+    staleTime: PROGRAM_STALE_TIME,
   });
 
   return {
@@ -26,6 +36,26 @@ const useProgramDetail = (programId) => {
     isLoading,
     error: error ?? null,
   };
+};
+
+/**
+ * Return a function that prefetches program details into the TanStack cache
+ * Intended to be called on hover to anticipate modal opening
+ * @returns {Function} prefetch(programId) - triggers a background fetch
+ */
+export const usePrefetchProgram = () => {
+  const queryClient = useQueryClient();
+
+  return useCallback((programId) => {
+    if (!programId) {
+      return;
+    }
+    queryClient.prefetchQuery({
+      queryKey: programQueryKey(programId),
+      queryFn: () => apiFetch(programDetailPath(programId)),
+      staleTime: PROGRAM_STALE_TIME,
+    });
+  }, [queryClient]);
 };
 
 export default useProgramDetail;
