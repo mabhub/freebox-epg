@@ -20,20 +20,8 @@ import {
 } from '@mui/icons-material';
 
 import { setTimeOrigin } from '@/store/epgSlice';
-import { nowTimestamp } from '@/utils/time';
+import { nowTimestamp, todayAt } from '@/utils/time';
 import { PRIME_TIME_HOUR, PRIME_TIME_MINUTE } from '@/utils/constants';
-
-/**
- * Build a Unix timestamp for today at a given hour and minute
- * @param {number} hour - Hour (0-23)
- * @param {number} minute - Minute (0-59)
- * @returns {number} Unix timestamp in seconds
- */
-const todayAt = (hour, minute) => {
-  const date = new Date();
-  date.setHours(hour, minute, 0, 0);
-  return Math.floor(date.getTime() / 1000);
-};
 
 const EpgToolbar = ({ onToggleFilter }) => {
   const dispatch = useDispatch();

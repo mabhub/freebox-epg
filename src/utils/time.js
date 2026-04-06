@@ -90,3 +90,15 @@ export const getHourBuckets = (startTs, endTs) => {
  * @returns {number} Current timestamp
  */
 export const nowTimestamp = () => Math.floor(Date.now() / 1000);
+
+/**
+ * Build a Unix timestamp for today at a given hour and minute
+ * @param {number} hour - Hour (0-23)
+ * @param {number} minute - Minute (0-59)
+ * @returns {number} Unix timestamp in seconds
+ */
+export const todayAt = (hour, minute) => {
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+  return Math.floor(date.getTime() / 1000);
+};
