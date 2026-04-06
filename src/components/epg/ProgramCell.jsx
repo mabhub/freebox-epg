@@ -82,6 +82,7 @@ const ProgramCell = memo(({
             objectFit: 'cover',
             borderRadius: 0.5,
             flexShrink: 0,
+            pointerEvents: 'none',
           }}
         />
       )}
