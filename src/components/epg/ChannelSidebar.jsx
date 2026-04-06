@@ -49,6 +49,7 @@ const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
           component="img"
           src={getLogoUrl(channel.uuid)}
           alt={channel.name}
+          loading="lazy"
           sx={{
             width: isMobile ? 32 : 40,
             height: isMobile ? 28 : 35,
