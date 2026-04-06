@@ -16,7 +16,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
-import getCategoryColor from '@/utils/categories';
+import { getCategoryColor, getCategoryAccent } from '@/utils/categories';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import { usePrefetchProgram } from '@/hooks/useProgramDetail';
 
@@ -41,6 +41,7 @@ const ProgramCell = memo(({
   const widthPx = Math.max(MIN_CELL_WIDTH, durationMinutes * pixelsPerMinute - CELL_GAP);
   const thumbnailUrl = getThumbnailUrl(program.picture);
   const categoryBg = getCategoryColor(program.category);
+  const categoryAccent = getCategoryAccent(program.category);
   const isOnAir = now >= program.date && now < program.date + program.duration;
   const prefetchProgram = usePrefetchProgram();
   const prefetchTimer = useRef(null);
@@ -138,6 +139,8 @@ const ProgramCell = memo(({
         opacity: isOnAir ? 1 : 0.55,
         border: 1,
         borderColor: 'divider',
+        borderLeft: categoryAccent ? 3 : 1,
+        borderLeftColor: categoryAccent ?? 'divider',
         cursor: 'pointer',
         transition: 'background-color 0.15s',
         '&:hover': {

@@ -31,11 +31,28 @@ const CATEGORY_COLORS = {
 };
 
 /**
+ * Accent border colors for highlighted categories (Film, Téléfilm, Série)
+ * Opaque versions of the background colors for a left border accent
+ */
+const CATEGORY_ACCENTS = {
+  1: '#e91e63',
+  2: '#e91e63',
+  3: '#3f51b5',
+  4: '#3f51b5',
+};
+
+/**
  * Get the background color for a program category
  * @param {number} categoryId - Category ID
  * @returns {string} CSS color value
  */
-const getCategoryColor = (categoryId) =>
+export const getCategoryColor = (categoryId) =>
   CATEGORY_COLORS[categoryId] ?? 'transparent';
 
-export default getCategoryColor;
+/**
+ * Get the accent border color for highlighted categories
+ * @param {number} categoryId - Category ID
+ * @returns {string|null} CSS color value, or null if no accent
+ */
+export const getCategoryAccent = (categoryId) =>
+  CATEGORY_ACCENTS[categoryId] ?? null;
