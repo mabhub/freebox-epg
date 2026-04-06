@@ -23,6 +23,7 @@ import {
   ListItemText,
   Checkbox,
   Button,
+  Chip,
   Divider,
   InputAdornment,
 } from '@mui/material';
@@ -62,6 +63,24 @@ const ChannelFilter = ({ open, onClose, channels }) => {
     dispatch(setHiddenChannels(channels.map((ch) => ch.uuid)));
   }, [dispatch, channels]);
 
+  const handleShowFree = useCallback(() => {
+    dispatch(setHiddenChannels(
+      channels.filter((ch) => ch.hasAbo).map((ch) => ch.uuid),
+    ));
+  }, [dispatch, channels]);
+
+  const handleShowPaid = useCallback(() => {
+    dispatch(setHiddenChannels(
+      channels.filter((ch) => !ch.hasAbo).map((ch) => ch.uuid),
+    ));
+  }, [dispatch, channels]);
+
+  const handleShowTnt = useCallback(() => {
+    dispatch(setHiddenChannels(
+      channels.filter((ch) => !ch.pubService).map((ch) => ch.uuid),
+    ));
+  }, [dispatch, channels]);
+
   const handleSearchChange = useCallback((event) => {
     setSearch(event.target.value);
   }, []);
@@ -92,6 +111,12 @@ const ChannelFilter = ({ open, onClose, channels }) => {
           <Button size="small" variant="outlined" onClick={handleHideAll}>
             Tout masquer
           </Button>
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
+          <Chip label="Gratuites" size="small" variant="outlined" onClick={handleShowFree} />
+          <Chip label="Payantes" size="small" variant="outlined" onClick={handleShowPaid} />
+          <Chip label="TNT" size="small" variant="outlined" onClick={handleShowTnt} />
         </Box>
 
         <TextField

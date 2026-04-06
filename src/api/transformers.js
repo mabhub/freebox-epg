@@ -54,6 +54,7 @@ export const mergeChannels = (channelsMap, bouquetChannels) =>
         available: channel.available,
         hasService: channel.has_service,
         hasAbo: channel.has_abo,
+        pubService: bc.pub_service,
       };
     })
     .filter(Boolean)
