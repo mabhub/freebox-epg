@@ -43,7 +43,6 @@ const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
           borderColor: 'divider',
           zIndex: 3,
           overflow: 'hidden',
-          cursor: 'pointer',
         }}
       >
         <Box

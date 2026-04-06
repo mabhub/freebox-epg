@@ -25,6 +25,7 @@ import ChannelRow from './ChannelRow';
 import NowIndicator from './NowIndicator';
 
 const HOURS_TO_RENDER = PAST_HOURS + 24;
+const DEFAULT_VIEWPORT_WIDTH = 1200;
 
 const EpgGrid = ({ channels, isLoadingChannels }) => {
   const dispatch = useDispatch();
@@ -53,7 +54,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   });
 
   const { programs, isLoading: isLoadingPrograms } = useEpgViewport(
-    containerNode?.clientWidth ?? 1200,
+    containerNode?.clientWidth ?? DEFAULT_VIEWPORT_WIDTH,
   );
 
   const handleScrollChange = useCallback(({ scrollLeft, scrollTop: sTop }) => {
