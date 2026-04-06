@@ -23,7 +23,7 @@ import { usePrefetchProgram } from '@/hooks/useProgramDetail';
 const MIN_CELL_WIDTH = 8;
 const CELL_GAP = 4;
 const THUMBNAIL_MIN_WIDTH = 120;
-const SUBTITLE_MIN_WIDTH = 100;
+const SUBTITLE_MIN_WIDTH = 50;
 const PREFETCH_DELAY_MS = 500;
 
 const ProgramCell = memo(({
