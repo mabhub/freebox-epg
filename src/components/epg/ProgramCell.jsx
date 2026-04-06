@@ -8,6 +8,7 @@
  * @param {number} props.pixelsPerMinute - Scale factor
  * @param {number} props.sidebarWidth - Width of the channel sidebar
  * @param {number} props.rowHeight - Height of the row
+ * @param {number} props.now - Current Unix timestamp in seconds
  * @param {Function} props.onSelect - Callback when program is clicked
  * @returns {React.ReactElement} Program cell
  */
@@ -28,6 +29,7 @@ const ProgramCell = memo(({
   pixelsPerMinute,
   sidebarWidth,
   rowHeight,
+  now,
   onSelect,
 }) => {
   const offsetMinutes = (program.date - timeOrigin) / 60;
@@ -36,6 +38,7 @@ const ProgramCell = memo(({
   const widthPx = Math.max(MIN_CELL_WIDTH, durationMinutes * pixelsPerMinute - CELL_GAP);
   const thumbnailUrl = getThumbnailUrl(program.picture);
   const categoryBg = getCategoryColor(program.category);
+  const isOnAir = now >= program.date && now < program.date + program.duration;
 
   const handleClick = useCallback(() => {
     onSelect(program.id);
@@ -57,6 +60,7 @@ const ProgramCell = memo(({
         borderRadius: 0.5,
         overflow: 'hidden',
         backgroundColor: categoryBg || 'action.hover',
+        opacity: isOnAir ? 1 : 0.55,
         border: 1,
         borderColor: 'divider',
         cursor: 'pointer',

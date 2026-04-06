@@ -87,6 +87,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
         pixelsPerMinute={pixelsPerMinute}
         sidebarWidth={sidebarWidth}
         isMobile={isMobile}
+        now={now}
         onSelectProgram={handleSelectProgram}
       />
     )), [
@@ -96,6 +97,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     pixelsPerMinute,
     sidebarWidth,
     isMobile,
+    now,
     handleSelectProgram,
     getChannelPrograms,
   ]);
