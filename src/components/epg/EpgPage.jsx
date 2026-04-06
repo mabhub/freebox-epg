@@ -84,32 +84,32 @@ const EpgPage = () => {
 
   return (
     <NowProvider>
-    <Layout>
-      <EpgToolbar onToggleFilter={handleToggleFilter} />
-      <Box
-        sx={{
-          flexGrow: 1,
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        <EpgGrid
-          channels={visibleChannels}
-          isLoadingChannels={isLoadingChannels}
+      <Layout>
+        <EpgToolbar onToggleFilter={handleToggleFilter} />
+        <Box
+          sx={{
+            flexGrow: 1,
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          <EpgGrid
+            channels={visibleChannels}
+            isLoadingChannels={isLoadingChannels}
+          />
+        </Box>
+        <ProgramModal
+          programId={selectedProgramId}
+          channelPrograms={channelPrograms}
+          onNavigate={handleNavigateProgram}
+          onClose={handleCloseModal}
         />
-      </Box>
-      <ProgramModal
-        programId={selectedProgramId}
-        channelPrograms={channelPrograms}
-        onNavigate={handleNavigateProgram}
-        onClose={handleCloseModal}
-      />
-      <ChannelFilter
-        open={filterOpen}
-        onClose={handleToggleFilter}
-        channels={channels}
-      />
-    </Layout>
+        <ChannelFilter
+          open={filterOpen}
+          onClose={handleToggleFilter}
+          channels={channels}
+        />
+      </Layout>
     </NowProvider>
   );
 };
