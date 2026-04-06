@@ -1,13 +1,17 @@
 /**
  * Program detail modal
  * Displays detailed information about a selected program
+ * Supports left/right arrow keys to navigate between programs on the same channel
  *
  * @param {Object} props - Component props
  * @param {string|null} props.programId - Selected program ID or null
+ * @param {Array} props.channelPrograms - Programs for the selected channel (sorted by date)
+ * @param {Function} props.onNavigate - Callback with new programId for prev/next navigation
  * @param {Function} props.onClose - Callback to close the modal
  * @returns {React.ReactElement} Program detail dialog
  */
 
+import { useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -144,11 +148,37 @@ const ProgramModalContent = ({ program, isLoading }) => {
   );
 };
 
-const ProgramModal = ({ programId, onClose }) => {
+const ProgramModal = ({ programId, channelPrograms, onNavigate, onClose }) => {
   const { program, isLoading } = useProgramDetail(programId);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isOpen = Boolean(programId);
+
+  const handleKeyDown = useCallback((event) => {
+    if (!programId || !channelPrograms?.length) {
+      return;
+    }
+    const currentIndex = channelPrograms.findIndex((p) => p.id === programId);
+    if (currentIndex === -1) {
+      return;
+    }
+
+    if (event.key === 'ArrowLeft' && currentIndex > 0) {
+      event.stopPropagation();
+      onNavigate(channelPrograms[currentIndex - 1].id);
+    } else if (event.key === 'ArrowRight' && currentIndex < channelPrograms.length - 1) {
+      event.stopPropagation();
+      onNavigate(channelPrograms[currentIndex + 1].id);
+    }
+  }, [programId, channelPrograms, onNavigate]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleKeyDown]);
 
   if (isMobile) {
     return (

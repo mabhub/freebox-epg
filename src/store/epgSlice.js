@@ -18,6 +18,8 @@ const initialState = {
   scrollTop: 0,
   /** Selected program ID for the detail modal (null = closed) */
   selectedProgramId: null,
+  /** Channel UUID of the selected program (for prev/next navigation) */
+  selectedChannelUuid: null,
 };
 
 const epgSlice = createSlice({
@@ -54,10 +56,11 @@ const epgSlice = createSlice({
     /**
      * Select a program to show in the detail modal
      * @param {Object} state - Current state
-     * @param {{ payload: string }} action - Program ID
+     * @param {{ payload: { programId: string, channelUuid: string } }} action - Program and channel IDs
      */
     selectProgram (state, action) {
-      state.selectedProgramId = action.payload;
+      state.selectedProgramId = action.payload.programId;
+      state.selectedChannelUuid = action.payload.channelUuid;
     },
 
     /**
@@ -66,6 +69,7 @@ const epgSlice = createSlice({
      */
     clearSelection (state) {
       state.selectedProgramId = null;
+      state.selectedChannelUuid = null;
     },
   },
 });

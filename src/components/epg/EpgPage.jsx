@@ -7,27 +7,68 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import { Box } from '@mui/material';
 
 import Layout from '@/components/Layout';
 import useChannels from '@/hooks/useChannels';
 import { NowProvider } from '@/hooks/useCurrentTime';
-import { clearSelection } from '@/store/epgSlice';
+import { selectProgram, clearSelection } from '@/store/epgSlice';
 import EpgToolbar from './EpgToolbar';
 import EpgGrid from './EpgGrid';
 import ProgramModal from './ProgramModal';
 import ChannelFilter from './ChannelFilter';
 
+/**
+ * Extract programs for a channel from the TanStack Query cache
+ * Cache stores raw API data: { uuid: { "ts_hash": program, ... }, ... }
+ * @param {Object} queryClient - TanStack Query client
+ * @param {string} channelUuid - Channel UUID
+ * @returns {Array} Sorted and deduplicated programs for the channel
+ */
+const getChannelProgramsFromCache = (queryClient, channelUuid) => {
+  if (!channelUuid) {
+    return [];
+  }
+  const queries = queryClient.getQueriesData({ queryKey: ['epg', 'byTime'] });
+  const seen = new Set();
+  const programs = [];
+
+  for (const [, data] of queries) {
+    if (!data || typeof data !== 'object') {
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+    const channelData = data[channelUuid];
+    if (channelData) {
+      for (const prog of Object.values(channelData)) {
+        if (!seen.has(prog.id)) {
+          seen.add(prog.id);
+          programs.push(prog);
+        }
+      }
+    }
+  }
+
+  return programs.toSorted((a, b) => a.date - b.date);
+};
+
 const EpgPage = () => {
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [filterOpen, setFilterOpen] = useState(false);
   const { channels, isLoading: isLoadingChannels } = useChannels();
   const hiddenChannels = useSelector((state) => state.channels.hiddenChannels);
   const selectedProgramId = useSelector((state) => state.epg.selectedProgramId);
+  const selectedChannelUuid = useSelector((state) => state.epg.selectedChannelUuid);
 
   const visibleChannels = useMemo(() =>
     channels.filter((ch) => !hiddenChannels.includes(ch.uuid)),
   [channels, hiddenChannels]);
+
+  const channelPrograms = useMemo(() =>
+    getChannelProgramsFromCache(queryClient, selectedChannelUuid),
+  [queryClient, selectedChannelUuid, selectedProgramId]);
 
   const handleToggleFilter = useCallback(() => {
     setFilterOpen((prev) => !prev);
@@ -36,6 +77,10 @@ const EpgPage = () => {
   const handleCloseModal = useCallback(() => {
     dispatch(clearSelection());
   }, [dispatch]);
+
+  const handleNavigateProgram = useCallback((programId) => {
+    dispatch(selectProgram({ programId, channelUuid: selectedChannelUuid }));
+  }, [dispatch, selectedChannelUuid]);
 
   return (
     <NowProvider>
@@ -55,6 +100,8 @@ const EpgPage = () => {
       </Box>
       <ProgramModal
         programId={selectedProgramId}
+        channelPrograms={channelPrograms}
+        onNavigate={handleNavigateProgram}
         onClose={handleCloseModal}
       />
       <ChannelFilter

@@ -54,6 +54,7 @@ const ChannelRow = memo(({
         pixelsPerMinute={pixelsPerMinute}
         sidebarWidth={sidebarWidth}
         rowHeight={rowHeight}
+        channelUuid={channel.uuid}
         onSelect={onSelectProgram}
       />
     ))}

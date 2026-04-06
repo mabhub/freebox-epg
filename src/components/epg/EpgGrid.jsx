@@ -75,8 +75,8 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     dispatch(setScroll({ scrollTop: sTop, scrollLeft: sLeft }));
   }, [dispatch]);
 
-  const handleSelectProgram = useCallback((programId) => {
-    dispatch(selectProgram(programId));
+  const handleSelectProgram = useCallback((programId, channelUuid) => {
+    dispatch(selectProgram({ programId, channelUuid }));
   }, [dispatch]);
 
   const getChannelPrograms = useCallback((channelUuid) =>

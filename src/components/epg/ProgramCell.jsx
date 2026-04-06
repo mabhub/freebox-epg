@@ -32,6 +32,7 @@ const ProgramCell = memo(({
   pixelsPerMinute,
   sidebarWidth,
   rowHeight,
+  channelUuid,
   onSelect,
 }) => {
   const now = useCurrentTime();
@@ -47,8 +48,8 @@ const ProgramCell = memo(({
   const prefetchTimer = useRef(null);
 
   const handleClick = useCallback(() => {
-    onSelect(program.id);
-  }, [onSelect, program.id]);
+    onSelect(program.id, channelUuid);
+  }, [onSelect, program.id, channelUuid]);
 
   const handleMouseEnter = useCallback(() => {
     prefetchTimer.current = setTimeout(() => {
