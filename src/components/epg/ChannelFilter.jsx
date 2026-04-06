@@ -73,18 +73,6 @@ const ChannelFilter = ({ open, onClose, channels }) => {
     dispatch(setHiddenChannels(channels.map((ch) => ch.uuid)));
   }, [dispatch, channels]);
 
-  const handleShowAvailable = useCallback(() => {
-    dispatch(setHiddenChannels(
-      channels.filter((ch) => !ch.available || !ch.hasService).map((ch) => ch.uuid),
-    ));
-  }, [dispatch, channels]);
-
-  const handleShowUnavailable = useCallback(() => {
-    dispatch(setHiddenChannels(
-      channels.filter((ch) => ch.available && ch.hasService).map((ch) => ch.uuid),
-    ));
-  }, [dispatch, channels]);
-
   const handleShowTnt = useCallback(() => {
     dispatch(setHiddenChannels(
       channels.filter((ch) => !ch.pubService).map((ch) => ch.uuid),
@@ -132,8 +120,6 @@ const ChannelFilter = ({ open, onClose, channels }) => {
         </Box>
 
         <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
-          <Chip label="Disponibles" size="small" variant="outlined" onClick={handleShowAvailable} />
-          <Chip label="Indisponibles" size="small" variant="outlined" onClick={handleShowUnavailable} />
           <Chip label="TNT" size="small" variant="outlined" onClick={handleShowTnt} />
         </Box>
 
