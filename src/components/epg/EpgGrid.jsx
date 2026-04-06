@@ -55,6 +55,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
 
   const { programs, isLoading: isLoadingPrograms } = useEpgViewport(
     containerNode?.clientWidth ?? DEFAULT_VIEWPORT_WIDTH,
+    pixelsPerMinute,
   );
 
   const handleScrollChange = useCallback(({ scrollLeft, scrollTop: sTop }) => {

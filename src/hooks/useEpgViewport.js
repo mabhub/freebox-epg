@@ -7,18 +7,19 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import useEpgByTime from './useEpgByTime';
 import { getHourBuckets } from '@/utils/time';
-import { OVERSCAN_HOURS, PIXELS_PER_MINUTE } from '@/utils/constants';
+import { OVERSCAN_HOURS } from '@/utils/constants';
 
 /**
  * Compute which EPG time buckets to fetch based on viewport scroll position
  * @param {number} viewportWidth - Viewport width in pixels
+ * @param {number} pixelsPerMinute - Current responsive scale factor
  * @returns {{ programs: Map<string, Array>, isLoading: boolean, error: Error|null }} Merged programs and loading state
  */
-const useEpgViewport = (viewportWidth) => {
+const useEpgViewport = (viewportWidth, pixelsPerMinute) => {
   const { timeOrigin, scrollLeft } = useSelector((state) => state.epg);
 
   const timestamps = useMemo(() => {
-    const pixelsPerSecond = PIXELS_PER_MINUTE / 60;
+    const pixelsPerSecond = pixelsPerMinute / 60;
     const viewportStartOffset = scrollLeft / pixelsPerSecond;
     const viewportEndOffset = (scrollLeft + viewportWidth) / pixelsPerSecond;
 
@@ -26,7 +27,7 @@ const useEpgViewport = (viewportWidth) => {
     const endTs = timeOrigin + viewportEndOffset + OVERSCAN_HOURS * 3600;
 
     return getHourBuckets(startTs, endTs);
-  }, [timeOrigin, scrollLeft, viewportWidth]);
+  }, [timeOrigin, scrollLeft, viewportWidth, pixelsPerMinute]);
 
   return useEpgByTime(timestamps);
 };
