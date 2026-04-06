@@ -56,8 +56,8 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     containerNode?.clientWidth ?? 1200,
   );
 
-  const handleScrollChange = useCallback(({ scrollLeft }) => {
-    dispatch(setScroll({ scrollLeft }));
+  const handleScrollChange = useCallback(({ scrollLeft, scrollTop: sTop }) => {
+    dispatch(setScroll({ scrollLeft, scrollTop: sTop }));
   }, [dispatch]);
 
   useDragScroll(containerNode, handleScrollChange);

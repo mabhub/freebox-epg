@@ -1,5 +1,5 @@
 /**
- * Hook for drag-to-scroll horizontal navigation
+ * Hook for drag-to-scroll navigation (horizontal and vertical)
  * @module hooks/useDragScroll
  */
 
@@ -8,17 +8,19 @@ import { useRef, useCallback, useEffect } from 'react';
 const DRAG_THRESHOLD = 5;
 
 /**
- * Enable horizontal drag-to-scroll on a container DOM node
+ * Enable drag-to-scroll on a container DOM node (both axes)
  * Suppresses click events after a drag to prevent accidental program selection
  * @param {HTMLElement|null} container - The scrollable DOM node (or null when not yet mounted)
- * @param {Function} onScrollChange - Callback with { scrollLeft } when scroll position changes
+ * @param {Function} onScrollChange - Callback with { scrollLeft, scrollTop } when scroll position changes
  * @returns {void}
  */
 const useDragScroll = (container, onScrollChange) => {
   const isDragging = useRef(false);
   const hasMoved = useRef(false);
   const startX = useRef(0);
-  const scrollStart = useRef(0);
+  const startY = useRef(0);
+  const scrollStartX = useRef(0);
+  const scrollStartY = useRef(0);
   const onScrollChangeRef = useRef(onScrollChange);
   onScrollChangeRef.current = onScrollChange;
 
@@ -30,7 +32,9 @@ const useDragScroll = (container, onScrollChange) => {
     isDragging.current = true;
     hasMoved.current = false;
     startX.current = event.clientX;
-    scrollStart.current = event.currentTarget.scrollLeft;
+    startY.current = event.clientY;
+    scrollStartX.current = event.currentTarget.scrollLeft;
+    scrollStartY.current = event.currentTarget.scrollTop;
 
     document.body.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
@@ -42,17 +46,21 @@ const useDragScroll = (container, onScrollChange) => {
     }
 
     const deltaX = event.clientX - startX.current;
+    const deltaY = event.clientY - startY.current;
 
-    if (Math.abs(deltaX) > DRAG_THRESHOLD) {
+    if (Math.abs(deltaX) > DRAG_THRESHOLD || Math.abs(deltaY) > DRAG_THRESHOLD) {
       hasMoved.current = true;
     }
 
     event.preventDefault();
-    const newScrollLeft = scrollStart.current - deltaX;
 
     if (container) {
-      container.scrollLeft = newScrollLeft;
-      onScrollChangeRef.current?.({ scrollLeft: newScrollLeft });
+      container.scrollLeft = scrollStartX.current - deltaX;
+      container.scrollTop = scrollStartY.current - deltaY;
+      onScrollChangeRef.current?.({
+        scrollLeft: container.scrollLeft,
+        scrollTop: container.scrollTop,
+      });
     }
   }, [container]);
 
