@@ -13,9 +13,10 @@
  * @returns {React.ReactElement} Program cell
  */
 
-import { memo, useCallback } from 'react';
-import { Box, Typography } from '@mui/material';
+import { memo, useCallback, useMemo } from 'react';
+import { Box, Typography, Tooltip } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
+import { formatTime } from '@/utils/time';
 import getCategoryColor from '@/utils/categories';
 
 const MIN_CELL_WIDTH = 8;
@@ -44,7 +45,60 @@ const ProgramCell = memo(({
     onSelect(program.id);
   }, [onSelect, program.id]);
 
+  const tooltipContent = useMemo(() => {
+    const startTime = formatTime(program.date);
+    const endTime = formatTime(program.date + program.duration);
+    const seasonEp = program.season_number
+      ? ` s${program.season_number}${program.episode_number ? `e${program.episode_number}` : ''}`
+      : '';
+    const desc = program.desc ?? program.short_desc ?? '';
+    const truncatedDesc = desc.length > 200 ? `${desc.slice(0, 200)}…` : desc;
+
+    return (
+      <Box sx={{ maxWidth: 300 }}>
+        <Typography variant="caption" color="text.secondary">
+          {program.category_name} &bull; {startTime} - {endTime}
+        </Typography>
+        <Typography variant="body2" fontWeight="bold">
+          {program.title}{seasonEp}
+        </Typography>
+        {program.sub_title && (
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            {program.sub_title}
+          </Typography>
+        )}
+        {truncatedDesc && (
+          <Typography variant="caption" sx={{ mt: 0.5, display: 'block', lineHeight: 1.4 }}>
+            {truncatedDesc}
+          </Typography>
+        )}
+      </Box>
+    );
+  }, [program]);
+
   return (
+    <Tooltip
+      title={tooltipContent}
+      enterDelay={400}
+      enterNextDelay={200}
+      placement="bottom-start"
+      arrow
+      disableInteractive
+      slotProps={{
+        tooltip: {
+          sx: {
+            bgcolor: 'background.paper',
+            color: 'text.primary',
+            boxShadow: 4,
+            border: 1,
+            borderColor: 'divider',
+            '& .MuiTooltip-arrow': {
+              color: 'background.paper',
+            },
+          },
+        },
+      }}
+    >
     <Box
       onClick={handleClick}
       sx={{
@@ -111,6 +165,7 @@ const ProgramCell = memo(({
         )}
       </Box>
     </Box>
+    </Tooltip>
   );
 });
 
