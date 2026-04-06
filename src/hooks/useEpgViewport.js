@@ -16,7 +16,8 @@ import { OVERSCAN_HOURS } from '@/utils/constants';
  * @returns {{ programs: Map<string, Array>, isLoading: boolean, error: Error|null }} Merged programs and loading state
  */
 const useEpgViewport = (viewportWidth, pixelsPerMinute) => {
-  const { timeOrigin, scrollLeft } = useSelector((state) => state.epg);
+  const timeOrigin = useSelector((state) => state.epg.timeOrigin);
+  const scrollLeft = useSelector((state) => state.epg.scrollLeft);
 
   const timestamps = useMemo(() => {
     const pixelsPerSecond = pixelsPerMinute / 60;
