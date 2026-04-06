@@ -54,9 +54,9 @@ const EpgToolbar = ({ onToggleFilter }) => {
             color="inherit"
             size="small"
             onClick={handleGoToPrimeTime}
-            aria-label="Aller au prime time 20h30"
+            aria-label={`Aller au prime time ${PRIME_TIME_HOUR}h${String(PRIME_TIME_MINUTE).padStart(2, '0')}`}
           >
-            20h30
+            {PRIME_TIME_HOUR}h{String(PRIME_TIME_MINUTE).padStart(2, '0')}
           </Button>
         </Box>
 
