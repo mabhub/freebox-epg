@@ -8,12 +8,12 @@
  * @returns {React.ReactElement} Channel sidebar cell
  */
 
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 import { getLogoUrl } from '@/utils/images';
 
 const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
-  const tooltipContent = (
+  const tooltipContent = useMemo(() => (
     <Box>
       <Typography variant="subtitle2">{channel.name}</Typography>
       <Typography variant="body2">N° {channel.number}</Typography>
@@ -23,7 +23,7 @@ const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
         </Typography>
       )}
     </Box>
-  );
+  ), [channel.name, channel.number, channel.hasAbo]);
 
   return (
     <Tooltip title={tooltipContent} placement="right" arrow>

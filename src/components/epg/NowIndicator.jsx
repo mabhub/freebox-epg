@@ -9,9 +9,10 @@
  * @returns {React.ReactElement|null} Now indicator line
  */
 
+import { memo } from 'react';
 import { Box } from '@mui/material';
 
-const NowIndicator = ({ timeOrigin, pixelsPerMinute, now, sidebarWidth }) => {
+const NowIndicator = memo(({ timeOrigin, pixelsPerMinute, now, sidebarWidth }) => {
   const offsetSeconds = now - timeOrigin;
 
   if (offsetSeconds < 0) {
@@ -34,6 +35,8 @@ const NowIndicator = ({ timeOrigin, pixelsPerMinute, now, sidebarWidth }) => {
       }}
     />
   );
-};
+});
+
+NowIndicator.displayName = 'NowIndicator';
 
 export default NowIndicator;
