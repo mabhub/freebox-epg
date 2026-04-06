@@ -39,8 +39,6 @@ const ChannelRow = memo(({
       right: 0,
       height: rowHeight,
       display: 'flex',
-      borderBottom: 1,
-      borderColor: 'divider',
     }}
   >
     <ChannelSidebar
