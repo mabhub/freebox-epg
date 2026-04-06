@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { setScroll, selectProgram } from '@/store/epgSlice';
@@ -30,9 +30,14 @@ const DEFAULT_VIEWPORT_WIDTH = 1200;
 const EpgGrid = ({ channels, isLoadingChannels }) => {
   const dispatch = useDispatch();
   const [containerNode, setContainerNode] = useState(null);
-  const [scrollLeftPx, setScrollLeftPx] = useState(0);
-  const timeOrigin = useSelector((state) => state.epg.timeOrigin);
-  const scrollTop = useSelector((state) => state.epg.scrollTop);
+  const { timeOrigin, scrollTop, scrollLeft } = useSelector(
+    (state) => ({
+      timeOrigin: state.epg.timeOrigin,
+      scrollTop: state.epg.scrollTop,
+      scrollLeft: state.epg.scrollLeft,
+    }),
+    shallowEqual,
+  );
   const { sidebarWidth, pixelsPerMinute, isMobile } = useLayoutConstants();
   const now = useCurrentTime();
 
@@ -59,8 +64,8 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     pixelsPerMinute,
   );
 
-  const handleScrollChange = useCallback(({ scrollLeft, scrollTop: sTop }) => {
-    dispatch(setScroll({ scrollLeft, scrollTop: sTop }));
+  const handleScrollChange = useCallback(({ scrollLeft: sLeft, scrollTop: sTop }) => {
+    dispatch(setScroll({ scrollLeft: sLeft, scrollTop: sTop }));
   }, [dispatch]);
 
   useDragScroll(containerNode, handleScrollChange);
@@ -68,7 +73,6 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   const handleScroll = useCallback((event) => {
     const { scrollTop: sTop, scrollLeft: sLeft } = event.target;
     dispatch(setScroll({ scrollTop: sTop, scrollLeft: sLeft }));
-    setScrollLeftPx(sLeft);
   }, [dispatch]);
 
   const handleSelectProgram = useCallback((programId) => {
@@ -135,7 +139,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
           pointerEvents: 'none',
         }}
       >
-        <Box sx={{ transform: `translateX(-${scrollLeftPx}px)` }}>
+        <Box sx={{ transform: `translateX(-${scrollLeft}px)` }}>
           <TimeHeader
             timeOrigin={timeOrigin}
             pixelsPerMinute={pixelsPerMinute}

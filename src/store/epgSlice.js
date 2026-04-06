@@ -41,8 +41,10 @@ const epgSlice = createSlice({
 
     /**
      * Jump to a specific time
+     * Resets scrollLeft to the past-hours offset so the target time
+     * appears at the expected viewport position after navigation
      * @param {Object} state - Current state
-     * @param {{ payload: number }} action - Unix timestamp
+     * @param {{ payload: number }} action - Target Unix timestamp
      */
     setTimeOrigin (state, action) {
       state.timeOrigin = action.payload - PAST_HOURS * 3600;
