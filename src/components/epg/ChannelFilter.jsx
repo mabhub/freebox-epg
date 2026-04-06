@@ -73,15 +73,15 @@ const ChannelFilter = ({ open, onClose, channels }) => {
     dispatch(setHiddenChannels(channels.map((ch) => ch.uuid)));
   }, [dispatch, channels]);
 
-  const handleShowFree = useCallback(() => {
+  const handleShowAvailable = useCallback(() => {
     dispatch(setHiddenChannels(
-      channels.filter((ch) => ch.hasAbo).map((ch) => ch.uuid),
+      channels.filter((ch) => !ch.available || !ch.hasService).map((ch) => ch.uuid),
     ));
   }, [dispatch, channels]);
 
-  const handleShowPaid = useCallback(() => {
+  const handleShowUnavailable = useCallback(() => {
     dispatch(setHiddenChannels(
-      channels.filter((ch) => !ch.hasAbo).map((ch) => ch.uuid),
+      channels.filter((ch) => ch.available && ch.hasService).map((ch) => ch.uuid),
     ));
   }, [dispatch, channels]);
 
@@ -132,8 +132,8 @@ const ChannelFilter = ({ open, onClose, channels }) => {
         </Box>
 
         <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
-          <Chip label="Gratuites" size="small" variant="outlined" onClick={handleShowFree} />
-          <Chip label="Payantes" size="small" variant="outlined" onClick={handleShowPaid} />
+          <Chip label="Disponibles" size="small" variant="outlined" onClick={handleShowAvailable} />
+          <Chip label="Indisponibles" size="small" variant="outlined" onClick={handleShowUnavailable} />
           <Chip label="TNT" size="small" variant="outlined" onClick={handleShowTnt} />
         </Box>
 
