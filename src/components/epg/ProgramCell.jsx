@@ -8,7 +8,6 @@
  * @param {number} props.pixelsPerMinute - Scale factor
  * @param {number} props.sidebarWidth - Width of the channel sidebar
  * @param {number} props.rowHeight - Height of the row
- * @param {number} props.now - Current Unix timestamp in seconds
  * @param {Function} props.onSelect - Callback when program is clicked
  * @returns {React.ReactElement} Program cell
  */
@@ -18,6 +17,7 @@ import { Box, Typography, Tooltip } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
 import getCategoryColor from '@/utils/categories';
+import useCurrentTime from '@/hooks/useCurrentTime';
 import { usePrefetchProgram } from '@/hooks/useProgramDetail';
 
 const MIN_CELL_WIDTH = 8;
@@ -32,9 +32,9 @@ const ProgramCell = memo(({
   pixelsPerMinute,
   sidebarWidth,
   rowHeight,
-  now,
   onSelect,
 }) => {
+  const now = useCurrentTime();
   const offsetMinutes = (program.date - timeOrigin) / 60;
   const durationMinutes = program.duration / 60;
   const leftPx = sidebarWidth + offsetMinutes * pixelsPerMinute;

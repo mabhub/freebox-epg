@@ -11,6 +11,7 @@ import { Box } from '@mui/material';
 
 import Layout from '@/components/Layout';
 import useChannels from '@/hooks/useChannels';
+import { NowProvider } from '@/hooks/useCurrentTime';
 import { clearSelection } from '@/store/epgSlice';
 import EpgToolbar from './EpgToolbar';
 import EpgGrid from './EpgGrid';
@@ -37,6 +38,7 @@ const EpgPage = () => {
   }, [dispatch]);
 
   return (
+    <NowProvider>
     <Layout>
       <EpgToolbar onToggleFilter={handleToggleFilter} />
       <Box
@@ -61,6 +63,7 @@ const EpgPage = () => {
         channels={channels}
       />
     </Layout>
+    </NowProvider>
   );
 };
 

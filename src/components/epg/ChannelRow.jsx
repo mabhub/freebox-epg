@@ -11,7 +11,6 @@
  * @param {number} props.pixelsPerMinute - Scale factor
  * @param {number} props.sidebarWidth - Sidebar width in pixels
  * @param {boolean} props.isMobile - Whether in mobile viewport
- * @param {number} props.now - Current Unix timestamp in seconds
  * @param {Function} props.onSelectProgram - Callback when a program is clicked
  * @returns {React.ReactElement} Channel row
  */
@@ -30,7 +29,6 @@ const ChannelRow = memo(({
   pixelsPerMinute,
   sidebarWidth,
   isMobile,
-  now,
   onSelectProgram,
 }) => (
   <Box
@@ -58,7 +56,6 @@ const ChannelRow = memo(({
         pixelsPerMinute={pixelsPerMinute}
         sidebarWidth={sidebarWidth}
         rowHeight={rowHeight}
-        now={now}
         onSelect={onSelectProgram}
       />
     ))}

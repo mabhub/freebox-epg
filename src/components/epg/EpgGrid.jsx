@@ -31,7 +31,8 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   const dispatch = useDispatch();
   const [containerNode, setContainerNode] = useState(null);
   const [scrollLeftPx, setScrollLeftPx] = useState(0);
-  const { timeOrigin, scrollTop } = useSelector((state) => state.epg);
+  const timeOrigin = useSelector((state) => state.epg.timeOrigin);
+  const scrollTop = useSelector((state) => state.epg.scrollTop);
   const { sidebarWidth, pixelsPerMinute, isMobile } = useLayoutConstants();
   const now = useCurrentTime();
 
@@ -89,7 +90,6 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
         pixelsPerMinute={pixelsPerMinute}
         sidebarWidth={sidebarWidth}
         isMobile={isMobile}
-        now={now}
         onSelectProgram={handleSelectProgram}
       />
     )), [
@@ -99,7 +99,6 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     pixelsPerMinute,
     sidebarWidth,
     isMobile,
-    now,
     handleSelectProgram,
     getChannelPrograms,
   ]);
