@@ -88,11 +88,15 @@ const ProgramCell = memo(({
       <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
         <Typography
           variant="caption"
-          fontWeight="bold"
           noWrap
           sx={{ display: 'block', lineHeight: 1.3 }}
         >
-          {program.title}
+          <Box component="span" fontWeight="bold">{program.title}</Box>
+          {program.season_number && (
+            <Box component="span" color="text.secondary">
+              {` s${program.season_number}`}{program.episode_number ? `e${program.episode_number}` : ''}
+            </Box>
+          )}
         </Typography>
         {program.sub_title && widthPx >= SUBTITLE_MIN_WIDTH && (
           <Typography
