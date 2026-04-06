@@ -18,13 +18,13 @@ import useEpgViewport from '@/hooks/useEpgViewport';
 import useDragScroll from '@/hooks/useDragScroll';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import useLayoutConstants from '@/hooks/useLayoutConstants';
-import { ROW_HEIGHT, TIME_HEADER_HEIGHT, PAST_HOURS } from '@/utils/constants';
+import { ROW_HEIGHT, TIME_HEADER_HEIGHT, PAST_HOURS, FUTURE_HOURS } from '@/utils/constants';
 
 import TimeHeader from './TimeHeader';
 import ChannelRow from './ChannelRow';
 import NowIndicator from './NowIndicator';
 
-const HOURS_TO_RENDER = PAST_HOURS + 24;
+const HOURS_TO_RENDER = PAST_HOURS + FUTURE_HOURS;
 const DEFAULT_VIEWPORT_WIDTH = 1200;
 
 const EpgGrid = ({ channels, isLoadingChannels }) => {

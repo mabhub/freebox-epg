@@ -24,6 +24,9 @@ export const OVERSCAN_HOURS = 1;
 /** Hours of past content available before the current time origin */
 export const PAST_HOURS = 6;
 
+/** Hours of future content rendered after the current time origin */
+export const FUTURE_HOURS = 24;
+
 /** Pixels per minute (desktop) */
 export const PIXELS_PER_MINUTE = 4;
 
