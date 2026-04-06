@@ -232,7 +232,7 @@
 
     // React Hooks
     "react-hooks/exhaustive-deps": ["warn"],
-    "react-hooks/rules-of-hooks": ["warn"],
+    "react-hooks/rules-of-hooks": ["error"],
 
     // ========================================
     // JSX A11y Rules (Accessibility)
