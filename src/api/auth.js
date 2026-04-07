@@ -90,7 +90,9 @@ export const login = async (password) => {
   const data = await response.json();
 
   if (!data.success) {
-    throw new Error(data.msg ?? 'Identifiants invalides');
+    const error = new Error(data.msg ?? 'Identifiants invalides');
+    error.code = data.error_code;
+    throw error;
   }
 
   return data.result;

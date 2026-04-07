@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -11,9 +11,25 @@ import {
 
 import { useLogin } from '@/hooks/useAuth';
 
+const LOCKOUT_SECONDS = 30;
+
 const LoginPage = () => {
   const [password, setPassword] = useState('');
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const loginMutation = useLogin();
+
+  const locked = remainingSeconds > 0;
+
+  useEffect(() => {
+    if (loginMutation.error?.code !== 'ratelimited') return;
+    setRemainingSeconds(LOCKOUT_SECONDS);
+  }, [loginMutation.error]);
+
+  useEffect(() => {
+    if (remainingSeconds <= 0) return;
+    const timer = setTimeout(() => setRemainingSeconds((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [remainingSeconds]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -43,20 +59,21 @@ const LoginPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             autoFocus
             fullWidth
-            disabled={loginMutation.isPending}
+            disabled={loginMutation.isPending || locked}
           />
 
           <Button
             type="submit"
             variant="contained"
             fullWidth
-            disabled={loginMutation.isPending || !password}
+            disabled={loginMutation.isPending || locked || !password}
           >
-            {loginMutation.isPending ? <CircularProgress size={24} /> : 'Connexion'}
+            {loginMutation.isPending && <CircularProgress size={24} />}
+            {!loginMutation.isPending && (locked ? `Patientez ${remainingSeconds}s` : 'Connexion')}
           </Button>
 
           {loginMutation.isError && (
-            <Alert severity="error">
+            <Alert severity={locked ? 'warning' : 'error'}>
               {loginMutation.error?.message ?? 'Erreur de connexion'}
             </Alert>
           )}
