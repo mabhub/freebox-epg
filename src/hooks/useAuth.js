@@ -23,6 +23,9 @@ export const useLogout = () => {
 
   return useMutation({
     mutationFn: logout,
-    onSuccess: () => queryClient.clear(),
+    onSuccess: () => {
+      queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== 'auth' });
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
+    },
   });
 };
