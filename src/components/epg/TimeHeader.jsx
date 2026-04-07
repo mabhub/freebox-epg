@@ -10,9 +10,25 @@
  */
 
 import { useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Typography, styled } from '@mui/material';
 import { formatTime, roundToHour } from '@/utils/time';
 import { TIME_HEADER_HEIGHT } from '@/utils/constants';
+
+const HeaderRoot = styled('div')(({ theme }) => ({
+  height: TIME_HEADER_HEIGHT,
+  backgroundColor: theme.palette.background.paper,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
+
+const Marker = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  top: 0,
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  borderLeft: `1px solid ${theme.palette.divider}`,
+  paddingLeft: theme.spacing(0.5),
+}));
 
 const TimeHeader = ({ timeOrigin, pixelsPerMinute, totalWidth, sidebarWidth }) => {
   const markers = useMemo(() => {
@@ -33,36 +49,15 @@ const TimeHeader = ({ timeOrigin, pixelsPerMinute, totalWidth, sidebarWidth }) =
   }, [timeOrigin, pixelsPerMinute, totalWidth, sidebarWidth]);
 
   return (
-    <Box
-      sx={{
-        height: TIME_HEADER_HEIGHT,
-        width: totalWidth,
-        bgcolor: 'background.paper',
-        borderBottom: 1,
-        borderColor: 'divider',
-      }}
-    >
+    <HeaderRoot style={{ width: totalWidth }}>
       {markers.map(({ ts, leftPx, label }) => (
-        <Box
-          key={ts}
-          sx={{
-            position: 'absolute',
-            left: leftPx,
-            top: 0,
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            borderLeft: 1,
-            borderColor: 'divider',
-            pl: 0.5,
-          }}
-        >
+        <Marker key={ts} style={{ left: leftPx }}>
           <Typography variant="caption" color="text.secondary" noWrap>
             {label}
           </Typography>
-        </Box>
+        </Marker>
       ))}
-    </Box>
+    </HeaderRoot>
   );
 };
 
