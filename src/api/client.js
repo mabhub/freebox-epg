@@ -25,6 +25,10 @@ const apiFetch = async (path, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: 'include',
+    headers: {
+      'X-FBX-FREEBOX0S': '1',
+      ...options.headers,
+    },
   });
 
   if (response.status === 403) {
