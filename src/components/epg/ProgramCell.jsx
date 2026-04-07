@@ -7,16 +7,16 @@
  * @param {number} props.timeOrigin - Unix timestamp of the grid's left edge
  * @param {number} props.pixelsPerMinute - Scale factor
  * @param {number} props.sidebarWidth - Width of the channel sidebar
- * @param {number} props.rowHeight - Height of the row
  * @param {Function} props.onSelect - Callback when program is clicked
  * @returns {React.ReactElement} Program cell
  */
 
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Box, Typography, Tooltip } from '@mui/material';
+import { Box, Typography, Tooltip, styled } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
 import { getCategoryColor, getCategoryAccent } from '@/utils/categories';
+import { ROW_HEIGHT } from '@/utils/constants';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import { usePrefetchProgram } from '@/hooks/useProgramDetail';
 
@@ -26,12 +26,60 @@ const THUMBNAIL_MIN_WIDTH = 120;
 const SUBTITLE_MIN_WIDTH = 50;
 const PREFETCH_DELAY_MS = 500;
 
+const CellRoot = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  top: 2,
+  height: ROW_HEIGHT - 4,
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(0.5),
+  padding: `0 ${theme.spacing(0.5)}`,
+  borderRadius: theme.shape.borderRadius,
+  overflow: 'hidden',
+  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.action.hover,
+  opacity: 0.55,
+  cursor: 'pointer',
+  transition: 'background-color 0.15s',
+  '&:hover': {
+    backgroundColor: theme.palette.action.selected,
+  },
+}));
+
+const Thumbnail = styled('img')({
+  width: 50,
+  height: 38,
+  objectFit: 'cover',
+  borderRadius: 2,
+  flexShrink: 0,
+  pointerEvents: 'none',
+});
+
+const TextContainer = styled('div')({
+  minWidth: 0,
+  overflow: 'hidden',
+});
+
+const TOOLTIP_SLOT_PROPS = {
+  tooltip: {
+    sx: {
+      bgcolor: 'background.paper',
+      color: 'text.primary',
+      boxShadow: 4,
+      border: 1,
+      borderColor: 'divider',
+      '& .MuiTooltip-arrow': {
+        color: 'background.paper',
+      },
+    },
+  },
+};
+
 const ProgramCell = memo(({
   program,
   timeOrigin,
   pixelsPerMinute,
   sidebarWidth,
-  rowHeight,
   channelUuid,
   onSelect,
 }) => {
@@ -105,67 +153,28 @@ const ProgramCell = memo(({
       placement="bottom-start"
       arrow
       disableInteractive
-      slotProps={{
-        tooltip: {
-          sx: {
-            bgcolor: 'background.paper',
-            color: 'text.primary',
-            boxShadow: 4,
-            border: 1,
-            borderColor: 'divider',
-            '& .MuiTooltip-arrow': {
-              color: 'background.paper',
-            },
-          },
-        },
-      }}
+      slotProps={TOOLTIP_SLOT_PROPS}
     >
-    <Box
+    <CellRoot
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      sx={{
-        position: 'absolute',
+      style={{
         left: leftPx,
-        top: 2,
         width: widthPx,
-        height: rowHeight - 4,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0.5,
-        px: 0.5,
-        borderRadius: 0.5,
-        overflow: 'hidden',
-        backgroundColor: categoryBg || 'action.hover',
-        opacity: isOnAir ? 1 : 0.55,
-        border: 1,
-        borderColor: 'divider',
-        borderLeft: categoryAccent ? 3 : 1,
-        borderLeftColor: categoryAccent ?? 'divider',
-        cursor: 'pointer',
-        transition: 'background-color 0.15s',
-        '&:hover': {
-          backgroundColor: 'action.selected',
-        },
+        ...(categoryBg && { backgroundColor: categoryBg }),
+        ...(isOnAir && { opacity: 1 }),
+        ...(categoryAccent && { borderLeft: `3px solid ${categoryAccent}` }),
       }}
     >
       {thumbnailUrl && widthPx >= THUMBNAIL_MIN_WIDTH && (
-        <Box
-          component="img"
+        <Thumbnail
           src={thumbnailUrl}
           alt=""
           loading="lazy"
-          sx={{
-            width: 50,
-            height: 38,
-            objectFit: 'cover',
-            borderRadius: 0.5,
-            flexShrink: 0,
-            pointerEvents: 'none',
-          }}
         />
       )}
-      <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
+      <TextContainer>
         <Typography
           variant="caption"
           fontWeight="bold"
@@ -184,8 +193,8 @@ const ProgramCell = memo(({
             {program.sub_title ?? `s${program.season_number}${program.episode_number ? `e${program.episode_number}` : ''}`}
           </Typography>
         )}
-      </Box>
-    </Box>
+      </TextContainer>
+    </CellRoot>
     </Tooltip>
   );
 });

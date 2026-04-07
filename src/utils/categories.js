@@ -44,10 +44,10 @@ const CATEGORY_ACCENTS = {
 /**
  * Get the background color for a program category
  * @param {number} categoryId - Category ID
- * @returns {string} CSS color value
+ * @returns {string|null} CSS color value, or null if no category match
  */
 export const getCategoryColor = (categoryId) =>
-  CATEGORY_COLORS[categoryId] ?? 'transparent';
+  CATEGORY_COLORS[categoryId] ?? null;
 
 /**
  * Get the accent border color for highlighted categories
