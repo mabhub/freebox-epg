@@ -10,7 +10,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography, styled } from '@mui/material';
 
 import { setScroll, selectProgram } from '@/store/epgSlice';
 import useVirtualChannels from '@/hooks/useVirtualChannels';
@@ -26,6 +26,11 @@ import NowIndicator from './NowIndicator';
 
 const HOURS_TO_RENDER = PAST_HOURS + FUTURE_HOURS;
 const DEFAULT_VIEWPORT_WIDTH = 1200;
+
+const GridContent = styled('div')({
+  position: 'relative',
+  marginTop: TIME_HEADER_HEIGHT,
+});
 
 const EpgGrid = ({ channels, isLoadingChannels }) => {
   const dispatch = useDispatch();
@@ -138,14 +143,14 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
           pointerEvents: 'none',
         }}
       >
-        <Box sx={{ transform: `translateX(-${scrollLeft}px)` }}>
+        <div style={{ transform: `translateX(-${scrollLeft}px)` }}>
           <TimeHeader
             timeOrigin={timeOrigin}
             pixelsPerMinute={pixelsPerMinute}
             totalWidth={totalWidth}
             sidebarWidth={sidebarWidth}
           />
-        </Box>
+        </div>
       </Box>
 
       {/* Scrollable grid content */}
@@ -159,14 +164,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
           touchAction: 'pan-y',
         }}
       >
-        <Box
-          sx={{
-            position: 'relative',
-            width: totalWidth,
-            height: totalHeight,
-            mt: `${TIME_HEADER_HEIGHT}px`,
-          }}
-        >
+        <GridContent style={{ width: totalWidth, height: totalHeight }}>
           {gridContent}
           <NowIndicator
             timeOrigin={timeOrigin}
@@ -174,7 +172,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
             now={now}
             sidebarWidth={sidebarWidth}
           />
-        </Box>
+        </GridContent>
       </Box>
 
       {isLoadingPrograms && (
