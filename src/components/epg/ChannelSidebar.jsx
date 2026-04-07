@@ -9,8 +9,32 @@
  */
 
 import { memo, useMemo } from 'react';
-import { Box, Typography, Tooltip } from '@mui/material';
+import { Box, Typography, Tooltip, styled } from '@mui/material';
 import { getLogoUrl } from '@/utils/images';
+
+const SidebarRoot = styled('div')(({ theme }) => ({
+  position: 'sticky',
+  left: 0,
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(0.5),
+  padding: `0 ${theme.spacing(0.5)}`,
+  backgroundColor: '#2c2c2c',
+  color: '#fff',
+  borderRight: `1px solid ${theme.palette.divider}`,
+  zIndex: 3,
+  overflow: 'hidden',
+}));
+
+const ChannelLogo = styled('img')({
+  objectFit: 'contain',
+  flexShrink: 0,
+});
+
+const TextBlock = styled('div')({
+  minWidth: 0,
+});
 
 const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
   const tooltipContent = useMemo(() => (
@@ -27,39 +51,18 @@ const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
 
   return (
     <Tooltip title={tooltipContent} placement="right" arrow>
-      <Box
-        sx={{
-          position: 'sticky',
-          left: 0,
-          width: sidebarWidth,
-          minWidth: sidebarWidth,
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          px: 0.5,
-          backgroundColor: '#2c2c2c',
-          color: '#fff',
-          borderRight: 1,
-          borderColor: 'divider',
-          zIndex: 3,
-          overflow: 'hidden',
-        }}
-      >
-        <Box
-          component="img"
+      <SidebarRoot style={{ width: sidebarWidth, minWidth: sidebarWidth }}>
+        <ChannelLogo
           src={getLogoUrl(channel.uuid)}
           alt={channel.name}
           loading="lazy"
-          sx={{
+          style={{
             width: isMobile ? 32 : 40,
             height: isMobile ? 28 : 35,
-            objectFit: 'contain',
-            flexShrink: 0,
           }}
         />
         {!isMobile && (
-          <Box sx={{ minWidth: 0 }}>
+          <TextBlock>
             <Typography
               variant="caption"
               fontWeight="bold"
@@ -75,9 +78,9 @@ const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
             >
               {channel.shortName ?? channel.name}
             </Typography>
-          </Box>
+          </TextBlock>
         )}
-      </Box>
+      </SidebarRoot>
     </Tooltip>
   );
 });
