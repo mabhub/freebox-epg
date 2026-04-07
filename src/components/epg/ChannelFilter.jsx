@@ -24,6 +24,7 @@ import {
   Chip,
   Divider,
   InputAdornment,
+  styled,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 
@@ -33,6 +34,28 @@ import { getLogoUrl } from '@/utils/images';
 const DRAWER_WIDTH = 320;
 const ITEM_HEIGHT = 40;
 const OVERSCAN = 8;
+
+const VirtualItem = styled(ListItemButton)({
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  height: ITEM_HEIGHT,
+});
+
+const ChannelLogo = styled('img')({
+  width: 28,
+  height: 24,
+  objectFit: 'contain',
+  marginRight: 8,
+});
+
+const VirtualList = styled('div')({
+  position: 'relative',
+});
+
+const CompactListItemIcon = styled(ListItemIcon)({
+  minWidth: 36,
+});
 
 const ChannelFilter = ({ open, onClose, channels }) => {
   const dispatch = useDispatch();
@@ -148,24 +171,18 @@ const ChannelFilter = ({ open, onClose, channels }) => {
         onScroll={handleListScroll}
         sx={{ overflowY: 'auto', flexGrow: 1 }}
       >
-        <Box sx={{ position: 'relative', height: totalHeight }}>
+        <VirtualList style={{ height: totalHeight }}>
           {visibleItems.map((channel, index) => {
             const isHidden = hiddenChannels.includes(channel.uuid);
             const itemIndex = startIndex + index;
             return (
-              <ListItemButton
+              <VirtualItem
                 key={channel.uuid}
                 onClick={() => handleToggle(channel.uuid)}
                 dense
-                sx={{
-                  position: 'absolute',
-                  top: itemIndex * ITEM_HEIGHT,
-                  left: 0,
-                  right: 0,
-                  height: ITEM_HEIGHT,
-                }}
+                style={{ top: itemIndex * ITEM_HEIGHT }}
               >
-                <ListItemIcon sx={{ minWidth: 36 }}>
+                <CompactListItemIcon>
                   <Checkbox
                     edge="start"
                     checked={!isHidden}
@@ -173,22 +190,20 @@ const ChannelFilter = ({ open, onClose, channels }) => {
                     disableRipple
                     size="small"
                   />
-                </ListItemIcon>
-                <Box
-                  component="img"
+                </CompactListItemIcon>
+                <ChannelLogo
                   src={getLogoUrl(channel.uuid)}
                   alt=""
                   loading="lazy"
-                  sx={{ width: 28, height: 24, objectFit: 'contain', mr: 1 }}
                 />
                 <ListItemText
                   primary={`${channel.number} - ${channel.name}`}
                   slotProps={{ primary: { variant: 'body2', noWrap: true } }}
                 />
-              </ListItemButton>
+              </VirtualItem>
             );
           })}
-        </Box>
+        </VirtualList>
       </Box>
     </Drawer>
   );
