@@ -102,3 +102,28 @@ export const todayAt = (hour, minute) => {
   date.setHours(hour, minute, 0, 0);
   return Math.floor(date.getTime() / 1000);
 };
+
+/**
+ * Pad a number to 2 digits with leading zero
+ * @param {number} n - Number to pad
+ * @returns {string} Zero-padded string
+ */
+const pad2 = (n) => String(n).padStart(2, '0');
+
+/**
+ * Convert a Unix timestamp to a datetime-local input string (YYYY-MM-DDTHH:MM)
+ * @param {number} timestamp - Unix timestamp in seconds
+ * @returns {string} Formatted string for input type="datetime-local"
+ */
+export const timestampToDatetimeLocal = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+};
+
+/**
+ * Convert a datetime-local input string to a Unix timestamp
+ * @param {string} str - String in YYYY-MM-DDTHH:MM format
+ * @returns {number} Unix timestamp in seconds
+ */
+export const datetimeLocalToTimestamp = (str) =>
+  Math.floor(new Date(str).getTime() / 1000);

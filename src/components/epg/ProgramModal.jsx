@@ -11,7 +11,8 @@
  * @returns {React.ReactElement} Program detail dialog
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
+import { useSelector } from 'react-redux';
 import {
   Dialog,
   DialogTitle,
@@ -19,15 +20,21 @@ import {
   IconButton,
   Typography,
   Box,
+  Button,
   Chip,
   Skeleton,
   Drawer,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import {
+  Close as CloseIcon,
+  FiberManualRecord as RecordIcon,
+} from '@mui/icons-material';
 
 import useProgramDetail from '@/hooks/useProgramDetail';
+import useChannels from '@/hooks/useChannels';
+import RecordModal from './RecordModal';
 import { formatTime, formatDate, formatDuration } from '@/utils/time';
 import { getLargeImageUrl } from '@/utils/images';
 
@@ -71,7 +78,7 @@ const CastSection = ({ cast }) => {
   );
 };
 
-const ProgramModalContent = ({ program, isLoading }) => {
+const ProgramModalContent = ({ program, isLoading, onRecord }) => {
   if (isLoading) {
     return (
       <Box sx={{ p: 2 }}>
@@ -144,6 +151,18 @@ const ProgramModalContent = ({ program, isLoading }) => {
       )}
 
       <CastSection cast={program.cast} />
+
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          variant="contained"
+          color="error"
+          size="small"
+          startIcon={<RecordIcon />}
+          onClick={onRecord}
+        >
+          Enregistrer
+        </Button>
+      </Box>
     </>
   );
 };
@@ -153,6 +172,10 @@ const ProgramModal = ({ programId, channelPrograms, onNavigate, onClose }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isOpen = Boolean(programId);
+  const [recordOpen, setRecordOpen] = useState(false);
+  const channelUuid = useSelector((state) => state.epg.selectedChannelUuid);
+  const { channels } = useChannels();
+  const channelName = channels.find((ch) => ch.uuid === channelUuid)?.name ?? '';
 
   const handleKeyDown = useCallback((event) => {
     if (!programId || !channelPrograms?.length) {
@@ -180,52 +203,76 @@ const ProgramModal = ({ programId, channelPrograms, onNavigate, onClose }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleKeyDown]);
 
+  const recordModal = recordOpen && (
+    <RecordModal
+      open
+      onClose={() => setRecordOpen(false)}
+      program={program}
+      channelUuid={channelUuid}
+      channelName={channelName}
+    />
+  );
+
+  const content = (
+    <ProgramModalContent
+      program={program}
+      isLoading={isLoading}
+      onRecord={() => setRecordOpen(true)}
+    />
+  );
+
   if (isMobile) {
     return (
-      <Drawer
-        anchor="bottom"
+      <>
+        <Drawer
+          anchor="bottom"
+          open={isOpen}
+          onClose={onClose}
+          slotProps={{
+            paper: {
+              sx: { maxHeight: '80vh', borderTopLeftRadius: 16, borderTopRightRadius: 16 },
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, pb: 0 }}>
+            <Typography variant="h6" noWrap sx={{ flexGrow: 1, mr: 1 }}>
+              {program?.title ?? ''}
+            </Typography>
+            <IconButton onClick={onClose} size="small" aria-label="Fermer">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <Box sx={{ p: 2, overflowY: 'auto' }}>
+            {content}
+          </Box>
+        </Drawer>
+        {recordModal}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Dialog
         open={isOpen}
         onClose={onClose}
-        slotProps={{
-          paper: {
-            sx: { maxHeight: '80vh', borderTopLeftRadius: 16, borderTopRightRadius: 16 },
-          },
-        }}
+        maxWidth="sm"
+        fullWidth
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, pb: 0 }}>
-          <Typography variant="h6" noWrap sx={{ flexGrow: 1, mr: 1 }}>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" component="span" noWrap sx={{ flexGrow: 1, mr: 1 }}>
             {program?.title ?? ''}
           </Typography>
           <IconButton onClick={onClose} size="small" aria-label="Fermer">
             <CloseIcon />
           </IconButton>
-        </Box>
-        <Box sx={{ p: 2, overflowY: 'auto' }}>
-          <ProgramModalContent program={program} isLoading={isLoading} />
-        </Box>
-      </Drawer>
-    );
-  }
-
-  return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" component="span" noWrap sx={{ flexGrow: 1, mr: 1 }}>
-          {program?.title ?? ''}
-        </Typography>
-        <IconButton onClick={onClose} size="small" aria-label="Fermer">
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <ProgramModalContent program={program} isLoading={isLoading} />
-      </DialogContent>
-    </Dialog>
+        </DialogTitle>
+        <DialogContent>
+          {content}
+        </DialogContent>
+      </Dialog>
+      {recordModal}
+    </>
   );
 };
 

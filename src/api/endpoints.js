@@ -59,3 +59,21 @@ export const bouquetFreeboxTvChannelsPath = () => '/tv/bouquets/freeboxtv/channe
  * @returns {string} API path
  */
 export const bouquetChannelsPath = (bouquetId) => `/tv/bouquets/${bouquetId}/channels/`;
+
+/**
+ * Path for PVR programmed recordings
+ * @returns {string} API path
+ */
+export const pvrProgrammedPath = () => '/pvr/programmed/';
+
+/**
+ * Path for PVR configuration (margins)
+ * @returns {string} API path
+ */
+export const pvrConfigPath = () => '/pvr/config/';
+
+/**
+ * Path for PVR storage media list
+ * @returns {string} API path
+ */
+export const pvrMediaPath = () => '/pvr/media/';
