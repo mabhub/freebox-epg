@@ -10,7 +10,17 @@
  */
 
 import { memo } from 'react';
-import { Box } from '@mui/material';
+import { styled } from '@mui/material';
+
+const Line = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  width: 2,
+  backgroundColor: theme.palette.secondary.main,
+  zIndex: 4,
+  pointerEvents: 'none',
+}));
 
 const NowIndicator = memo(({ timeOrigin, pixelsPerMinute, now, sidebarWidth }) => {
   const offsetSeconds = now - timeOrigin;
@@ -21,20 +31,7 @@ const NowIndicator = memo(({ timeOrigin, pixelsPerMinute, now, sidebarWidth }) =
 
   const leftPx = sidebarWidth + (offsetSeconds / 60) * pixelsPerMinute;
 
-  return (
-    <Box
-      sx={{
-        position: 'absolute',
-        left: leftPx,
-        top: 0,
-        bottom: 0,
-        width: 2,
-        backgroundColor: 'secondary.main',
-        zIndex: 4,
-        pointerEvents: 'none',
-      }}
-    />
-  );
+  return <Line style={{ left: leftPx }} />;
 });
 
 NowIndicator.displayName = 'NowIndicator';
