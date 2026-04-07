@@ -51,6 +51,13 @@ export default defineConfig({
         target: env.FREEBOX_API_TARGET,
         changeOrigin: true,
         secure: false,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes, req) => {
+            if (req.url.includes('/tv/img/')) {
+              proxyRes.headers['cache-control'] = 'public, max-age=604800, immutable';
+            }
+          });
+        },
       },
     },
   },
