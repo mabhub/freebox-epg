@@ -5,12 +5,20 @@
 
 import { API_BASE_URL } from '@/utils/constants';
 
+export class AuthError extends Error {
+  constructor (message) {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
 /**
  * Fetch wrapper for the Freebox API
  * Handles base URL, credentials, and response unwrapping
  * @param {string} path - API path (e.g., "/tv/channels/")
  * @param {RequestInit} [options] - Fetch options
  * @returns {Promise<*>} Unwrapped API result
+ * @throws {AuthError} If the API returns 403 (session expired)
  * @throws {Error} If the API returns success: false or network error
  */
 const apiFetch = async (path, options = {}) => {
@@ -18,6 +26,10 @@ const apiFetch = async (path, options = {}) => {
     ...options,
     credentials: 'include',
   });
+
+  if (response.status === 403) {
+    throw new AuthError('Session expired');
+  }
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${response.statusText}`);

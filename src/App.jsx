@@ -3,17 +3,36 @@ import {
   Routes,
   Route,
 } from 'react-router';
+import { Box, CircularProgress } from '@mui/material';
 
+import { useAuth } from '@/hooks/useAuth';
 import EpgPage from './components/epg/EpgPage';
+import LoginPage from './components/LoginPage';
 import NotFound from './components/NotFound';
 
-const App = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<EpgPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  </BrowserRouter>
-);
+const App = () => {
+  const { data, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!data?.logged_in) {
+    return <LoginPage />;
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<EpgPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 export default App;

@@ -17,14 +17,17 @@ import {
 import {
   FilterList as FilterListIcon,
   AccessTime as AccessTimeIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 
 import { setTimeOrigin } from '@/store/epgSlice';
 import { nowTimestamp, todayAt } from '@/utils/time';
 import { PRIME_TIME_HOUR, PRIME_TIME_MINUTE } from '@/utils/constants';
+import { useLogout } from '@/hooks/useAuth';
 
 const EpgToolbar = ({ onToggleFilter }) => {
   const dispatch = useDispatch();
+  const logoutMutation = useLogout();
 
   const handleGoToNow = useCallback(() => {
     dispatch(setTimeOrigin(nowTimestamp()));
@@ -66,6 +69,15 @@ const EpgToolbar = ({ onToggleFilter }) => {
           aria-label="Filtrer les chaînes"
         >
           <FilterListIcon />
+        </IconButton>
+
+        <IconButton
+          color="inherit"
+          onClick={() => logoutMutation.mutate()}
+          aria-label="Déconnexion"
+          disabled={logoutMutation.isPending}
+        >
+          <LogoutIcon />
         </IconButton>
       </Toolbar>
     </AppBar>

@@ -9,7 +9,8 @@ import {
   useMediaQuery,
 } from '@mui/material';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthError } from '@/api/client';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 
@@ -18,6 +19,13 @@ import store from './store';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      if (error instanceof AuthError) {
+        queryClient.setQueryData(['auth'], (old) => ({ ...old, logged_in: false }));
+      }
+    },
+  }),
   defaultOptions: {
     queries: {
       retry: 1,
