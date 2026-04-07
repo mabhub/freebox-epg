@@ -18,7 +18,7 @@ import useEpgViewport from '@/hooks/useEpgViewport';
 import useDragScroll from '@/hooks/useDragScroll';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import useLayoutConstants from '@/hooks/useLayoutConstants';
-import { ROW_HEIGHT, TIME_HEADER_HEIGHT, PAST_HOURS, FUTURE_HOURS } from '@/utils/constants';
+import { TIME_HEADER_HEIGHT, PAST_HOURS, FUTURE_HOURS } from '@/utils/constants';
 
 import TimeHeader from './TimeHeader';
 import ChannelRow from './ChannelRow';
@@ -89,7 +89,6 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
         channel={channel}
         programs={getChannelPrograms(channel.uuid)}
         rowIndex={startIndex + index}
-        rowHeight={ROW_HEIGHT}
         timeOrigin={timeOrigin}
         pixelsPerMinute={pixelsPerMinute}
         sidebarWidth={sidebarWidth}

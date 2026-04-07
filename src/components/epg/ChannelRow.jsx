@@ -6,7 +6,6 @@
  * @param {Object} props.channel - Channel data
  * @param {Array} props.programs - Programs for this channel
  * @param {number} props.rowIndex - Absolute row index for positioning
- * @param {number} props.rowHeight - Row height in pixels
  * @param {number} props.timeOrigin - Unix timestamp of the grid's left edge
  * @param {number} props.pixelsPerMinute - Scale factor
  * @param {number} props.sidebarWidth - Sidebar width in pixels
@@ -16,31 +15,30 @@
  */
 
 import { memo } from 'react';
-import { Box } from '@mui/material';
+import { styled } from '@mui/material';
+import { ROW_HEIGHT } from '@/utils/constants';
 import ChannelSidebar from './ChannelSidebar';
 import ProgramCell from './ProgramCell';
+
+const RowRoot = styled('div')({
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  height: ROW_HEIGHT,
+  display: 'flex',
+});
 
 const ChannelRow = memo(({
   channel,
   programs,
   rowIndex,
-  rowHeight,
   timeOrigin,
   pixelsPerMinute,
   sidebarWidth,
   isMobile,
   onSelectProgram,
 }) => (
-  <Box
-    sx={{
-      position: 'absolute',
-      top: rowIndex * rowHeight,
-      left: 0,
-      right: 0,
-      height: rowHeight,
-      display: 'flex',
-    }}
-  >
+  <RowRoot style={{ top: rowIndex * ROW_HEIGHT }}>
     <ChannelSidebar
       channel={channel}
       sidebarWidth={sidebarWidth}
@@ -57,7 +55,7 @@ const ChannelRow = memo(({
         onSelect={onSelectProgram}
       />
     ))}
-  </Box>
+  </RowRoot>
 ));
 
 ChannelRow.displayName = 'ChannelRow';
