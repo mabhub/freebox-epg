@@ -4,6 +4,9 @@ node_modules
 dist
 dist-ssr
 
+# Generated at build time from FREEBOX_API_TARGET
+public/_redirects
+
 # Environment files
 .env
 .env.local
