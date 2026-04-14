@@ -161,7 +161,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
           height: '100%',
           overflow: 'auto',
           cursor: 'grab',
-          touchAction: 'pan-y',
+          touchAction: 'pan-x pan-y',
         }}
       >
         <GridContent style={{ width: totalWidth, height: totalHeight }}>
