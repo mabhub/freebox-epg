@@ -11,7 +11,7 @@
  * @returns {React.ReactElement} Program cell
  */
 
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, Tooltip, styled } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
@@ -25,6 +25,7 @@ const CELL_GAP = 4;
 const THUMBNAIL_MIN_WIDTH = 120;
 const SUBTITLE_MIN_WIDTH = 50;
 const PREFETCH_DELAY_MS = 500;
+const TOOLTIP_IDLE_DELAY_MS = 250;
 
 const CellRoot = styled('div')(({ theme }) => ({
   position: 'absolute',
@@ -94,25 +95,46 @@ const ProgramCell = memo(({
   const isOnAir = now >= program.date && now < program.date + program.duration;
   const prefetchProgram = usePrefetchProgram();
   const prefetchTimer = useRef(null);
+  const idleTimer = useRef(null);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
 
   const handleClick = useCallback(() => {
     onSelect(program.id, channelUuid);
   }, [onSelect, program.id, channelUuid]);
 
+  const scheduleTooltip = useCallback(() => {
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    idleTimer.current = setTimeout(() => setTooltipOpen(true), TOOLTIP_IDLE_DELAY_MS);
+  }, []);
+
   const handleMouseEnter = useCallback(() => {
     prefetchTimer.current = setTimeout(() => {
       prefetchProgram(program.id);
     }, PREFETCH_DELAY_MS);
-  }, [prefetchProgram, program.id]);
+    scheduleTooltip();
+  }, [prefetchProgram, program.id, scheduleTooltip]);
+
+  const handleMouseMove = useCallback(() => {
+    setTooltipOpen(false);
+    scheduleTooltip();
+  }, [scheduleTooltip]);
 
   const handleMouseLeave = useCallback(() => {
     if (prefetchTimer.current) {
       clearTimeout(prefetchTimer.current);
       prefetchTimer.current = null;
     }
+    if (idleTimer.current) {
+      clearTimeout(idleTimer.current);
+      idleTimer.current = null;
+    }
+    setTooltipOpen(false);
   }, []);
 
-  useEffect(() => () => clearTimeout(prefetchTimer.current), []);
+  useEffect(() => () => {
+    clearTimeout(prefetchTimer.current);
+    clearTimeout(idleTimer.current);
+  }, []);
 
   const tooltipContent = useMemo(() => {
     const startTime = formatTime(program.date);
@@ -148,16 +170,19 @@ const ProgramCell = memo(({
   return (
     <Tooltip
       title={tooltipContent}
-      enterDelay={400}
-      enterNextDelay={200}
+      open={tooltipOpen}
       placement="bottom-start"
       arrow
       disableInteractive
+      disableHoverListener
+      disableFocusListener
+      disableTouchListener
       slotProps={TOOLTIP_SLOT_PROPS}
     >
     <CellRoot
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
         left: leftPx,
