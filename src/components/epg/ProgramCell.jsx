@@ -12,7 +12,7 @@
  */
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Typography, Tooltip, styled } from '@mui/material';
+import { Box, Typography, Tooltip, styled, useMediaQuery } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
 import { getCategoryColor, getCategoryAccent } from '@/utils/categories';
@@ -97,15 +97,17 @@ const ProgramCell = memo(({
   const prefetchTimer = useRef(null);
   const idleTimer = useRef(null);
   const [tooltipOpen, setTooltipOpen] = useState(false);
+  const supportsHover = useMediaQuery('(hover: hover) and (pointer: fine)');
 
   const handleClick = useCallback(() => {
     onSelect(program.id, channelUuid);
   }, [onSelect, program.id, channelUuid]);
 
   const scheduleTooltip = useCallback(() => {
+    if (!supportsHover) return;
     if (idleTimer.current) clearTimeout(idleTimer.current);
     idleTimer.current = setTimeout(() => setTooltipOpen(true), TOOLTIP_IDLE_DELAY_MS);
-  }, []);
+  }, [supportsHover]);
 
   const handleMouseEnter = useCallback(() => {
     prefetchTimer.current = setTimeout(() => {
