@@ -1,129 +1,81 @@
-# Vite React MUI Template
+# Freebox EPG
 
-Un template moderne et optimisé pour créer des applications React avec Vite, Material-UI et les meilleures pratiques de développement.
+Guide électronique des programmes (EPG) pour Freebox, avec grille horaire interactive, filtrage des chaînes, détail des programmes et planification d'enregistrements PVR.
 
-## 🚀 Technologies incluses
+L'application consomme l'API de Freebox OS et s'utilise aussi bien sur desktop qu'en mobile tactile.
 
-- **[React 19](https://react.dev/)** - Dernière version avec hooks modernes
-- **[Vite 7](https://vitejs.dev/)** - Build tool rapide et moderne
-- **[Material-UI (MUI) v7](https://mui.com/)** - Composants React avec Material Design
-- **[TanStack Query v5](https://tanstack.com/query)** - Gestion des données et cache intelligent
-- **[React Router v7](https://reactrouter.com/)** - Navigation côté client
-- **[Oxlint](https://oxc.rs/)** - Linter JavaScript/TypeScript ultra-rapide
+## Fonctionnalités
 
-## ✨ Fonctionnalités
+- Grille EPG virtualisée (défilement horizontal temporel, vertical entre chaînes) avec synchronisation de la timeline
+- Drag-to-scroll souris + scroll tactile natif, tooltips désactivés sur mobile
+- Sidebar des chaînes avec recherche, toggle individuel et raccourcis « tout afficher / tout masquer / TNT uniquement »
+- Persistance localStorage des chaînes masquées
+- Détail d'un programme et planification d'enregistrement sur le PVR Freebox
+- Indicateur temps réel (ligne « maintenant ») qui se déplace chaque minute
 
-- 🎨 **Thème personnalisable** et support du mode sombre automatique
-- 🛡️ **Error Boundary** pour une gestion d'erreurs
-- 📱 **Design responsive** avec breakpoints Material-UI
-- ⚡ **Configuration optimisée** de TanStack Query avec DevTools
-- 🧪 **Tests unitaires** avec Vitest et React Testing Library
-- 🔧 **Configuration Oxlint complète** avec règles strictes
-- 🎨 **Layout réutilisable** avec AppBar et Footer
-- 🌐 **Support HTTPS** en développement (optionnel)
-- 📦 **Variables d'environnement** avec `.env.example`
+## Stack
 
-## 🛠️ Installation et démarrage
+- React 19 + Vite 8 (plugin SWC)
+- Material-UI v7 + Emotion
+- Redux Toolkit (state filtres) + TanStack Query v5 (cache API)
+- React Router v7
+- Oxlint + Vitest / Testing Library
+
+## Démarrage
 
 ```bash
-# Installation des dépendances
+nvm use                  # Node 24 (cf. .nvmrc)
 npm install
-
-# Démarrage en mode développement
+cp .env.example .env
+# éditer .env pour renseigner FREEBOX_API_TARGET
 npm run dev
-
-# Build de production
-npm run build
-
-# Aperçu du build
-npm run serve
-
-# Linting
-npm run lint
 ```
 
-## 📁 Structure du projet
+## Configuration
+
+Variables d'environnement (`.env`) :
+
+| Variable | Rôle |
+|----------|------|
+| `VITE_APP_TITLE` | Titre affiché dans l'app |
+| `FREEBOX_API_TARGET` | Host Freebox (`https://host:port`). Utilisée par le proxy Vite en dev et, côté Netlify, par `scripts/generate-redirects.js` (hook `prebuild`) pour écrire `public/_redirects`. Jamais exposée dans le bundle client. |
+| `VITE_HTTPS` | Active HTTPS en dev (nécessite `~/https/key.pem` et `cert.pem`) |
+
+L'authentification utilise le mot de passe de la Freebox : une page de login interne (`LoginPage`) envoie les identifiants à l'API Freebox OS, qui renvoie un cookie de session réutilisé pour les appels suivants. Un token CSRF (`X-FBX-FREEBOX0S`) est ajouté automatiquement sur chaque requête.
+
+## Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Serveur Vite avec proxy vers la Freebox |
+| `npm run build` | Build de prod (génère `public/_redirects` à partir de `FREEBOX_API_TARGET` via le hook `prebuild`) |
+| `npm run preview` | Preview du build |
+| `npm test` | Tests Vitest |
+| `npm run test:ui` | Interface Vitest |
+| `npm run test:coverage` | Couverture v8 |
+| `npm run lint` | Oxlint |
+| `npm run lint:fix` | Oxlint avec auto-fix |
+
+## Déploiement Netlify
+
+`netlify.toml` définit `npm run build` comme commande et `dist` comme dossier publié. Le fichier `public/_redirects` est généré au build à partir de `FREEBOX_API_TARGET` (à définir comme variable de site Netlify) pour relayer les appels `/api/*` vers la Freebox. Les miniatures programmes (`/api/latest/tv/img/*`) sont cachées 7 jours via les headers Netlify.
+
+## Structure
 
 ```
 src/
+├── api/                 # Client HTTP Freebox (CSRF, cookies)
 ├── components/
-│   ├── ErrorBoundary.jsx   # Gestion globale des erreurs
-│   ├── Layout.jsx          # Layout principal avec AppBar/Footer
-│   ├── Home.jsx            # Page d'accueil exemple
-│   └── Home.test.jsx       # Tests du composant Home
-├── setupTests.js           # Configuration des tests
-├── App.jsx                 # Composant principal avec routing
-└── main.jsx                # Point d'entrée avec providers
-```
-
-## 🎨 Personnalisation du thème
-
-Le thème Material-UI est configuré dans `src/main.jsx` avec :
-
-- **Mode sombre automatique** basé sur les préférences système
-- **Couleurs personnalisées** (primary: #adb31b, secondary: #ff6b35)
-
-## 🔧 Configuration
-
-### Variables d'environnement
-
-Copiez le fichier `.env.example` en `.env.local` pour personnaliser votre configuration :
-
-```bash
-cp .env.example .env.local
-```
-
-Variables disponibles :
-
-- `VITE_APP_TITLE` - Titre de l'application
-- `VITE_API_URL` - URL de votre API backend
-- `VITE_HTTPS` - Active/désactive HTTPS en développement (`true`/`false`)
-
-**Note** : Les variables doivent commencer par `VITE_` pour être accessibles dans l'application.
-
-### HTTPS en développement (optionnel)
-
-Le template inclut une configuration HTTPS pour le développement. Pour l'utiliser :
-
-1. Créez un dossier `~/https/` avec vos certificats SSL
-2. Ajoutez `key.pem` et `cert.pem` dans ce dossier
-3. Définissez `VITE_HTTPS=true` dans votre `.env.local`
-
-### TanStack Query
-
-Configuration par défaut optimisée :
-
-- 1 seul retry en cas d'échec
-- Pas de refetch automatique lors du focus
-- Cache de 5 minutes
-
-## 📝 Scripts disponibles
-
-- `npm run dev` - Serveur de développement
-- `npm run build` - Build de production
-- `npm run preview` - Aperçu du build
-- `npm test` - Lance les tests en mode watch
-- `npm run test:ui` - Interface graphique pour les tests
-- `npm run test:coverage` - Rapport de couverture des tests
-- `npm run lint` - Analyse du code avec Oxlint
-- `npm run lint:fix` - Correction automatique des erreurs
-- `npm run start` - Alias pour `npm run dev`
-
-## 🔍 Bonnes pratiques incluses
-
-- **Composants fonctionnels** avec hooks
-- **Gestion d'erreurs** avec Error Boundary
-- **Accessibilité** avec attributs ARIA appropriés
-- **SEO** avec meta tags optimisés
-- **Performance** avec lazy loading et optimisations
-- **Code quality** avec oxlint
-
-## 🚦 Node.js
-
-Ce projet utilise Node.js version **24** (voir `.nvmrc`).
-
-Si vous utilisez nvm :
-
-```bash
-nvm use
+│   ├── epg/             # Grille, sidebar, cellules, tooltip, modales
+│   ├── ErrorBoundary.jsx
+│   ├── Layout.jsx
+│   ├── LoginPage.jsx
+│   └── NotFound.jsx
+├── hooks/               # useChannels, useEpgByChannel, useDragScroll, usePvr…
+├── store/               # Redux slices (epg, channels) + persistance localStorage
+├── utils/               # Formatage temps, couleurs catégories, constantes
+├── App.jsx              # Routing
+└── main.jsx             # Providers (Redux, Query, MUI theme, Router)
+scripts/
+└── generate-redirects.js  # Génère public/_redirects depuis FREEBOX_API_TARGET
 ```
