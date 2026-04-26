@@ -31,6 +31,7 @@ import {
 } from '@/utils/time';
 
 const DEFAULT_PATH = 'Enregistrements';
+const SUCCESS_AUTO_CLOSE_MS = 1500;
 
 const QUALITY_OPTIONS = [
   { value: 'auto', label: 'Auto' },
@@ -78,7 +79,7 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName }) => {
 
   useEffect(() => {
     if (open) createRecording.reset();
-  }, [open]);
+  }, [open, createRecording]);
 
   useEffect(() => {
     if (mediaList?.length && !media) {
@@ -109,7 +110,7 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName }) => {
 
   useEffect(() => {
     if (createRecording.isSuccess) {
-      const timer = setTimeout(onClose, 1500);
+      const timer = setTimeout(onClose, SUCCESS_AUTO_CLOSE_MS);
       return () => clearTimeout(timer);
     }
   }, [createRecording.isSuccess, onClose]);
