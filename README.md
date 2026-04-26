@@ -71,7 +71,7 @@ src/
 │   ├── Layout.jsx
 │   ├── LoginPage.jsx
 │   └── NotFound.jsx
-├── hooks/               # useChannels, useEpgByChannel, useDragScroll, usePvr…
+├── hooks/               # useChannels, useEpgViewport, useDragScroll, usePvr…
 ├── store/               # Redux slices (epg, channels) + persistance localStorage
 ├── utils/               # Formatage temps, couleurs catégories, constantes
 ├── App.jsx              # Routing
