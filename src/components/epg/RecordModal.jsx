@@ -1,228 +1,189 @@
 /**
- * Modal for scheduling a PVR recording
+ * Modal for scheduling a new PVR recording or editing an existing one.
  *
- * @param {Object} props
+ * Two mutually-exclusive modes are driven by the props:
+ * - **Create**: pass `program`, `channelUuid`, `channelName`
+ * - **Edit**: pass `recording` (unified shape from transformers.js)
+ *
+ * In edit mode, the form pre-fills from the recording payload and field
+ * editability is constrained by the recording's `kind` and `state`. The
+ * delete action is exposed alongside save; for a `running` programmed
+ * timer the button is labelled "Arrêter" since the Freebox treats DELETE
+ * as a stop request.
+ *
+ * @param {Object} props - Component props
  * @param {boolean} props.open - Whether the modal is visible
  * @param {Function} props.onClose - Close callback
- * @param {Object|null} props.program - Program data from useProgramDetail
- * @param {string} props.channelUuid - Channel UUID
- * @param {string} props.channelName - Channel display name
+ * @param {Object|null} [props.program] - Program data (create mode)
+ * @param {string} [props.channelUuid] - Channel UUID (create mode)
+ * @param {string} [props.channelName] - Channel display name (create mode)
+ * @param {Object|null} [props.recording] - Existing recording (edit mode)
+ * @returns {React.ReactElement} Modal
  */
 
 import { useEffect, useState } from 'react';
 import {
   Alert,
+  Box,
   Button,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
-  TextField,
-  Typography,
 } from '@mui/material';
 
-import { usePvrConfig, usePvrMedia, useCreateRecording } from '@/hooks/usePvr';
 import {
-  formatDuration,
-  timestampToDatetimeLocal,
-  datetimeLocalToTimestamp,
-} from '@/utils/time';
+  usePvrConfig,
+  usePvrMedia,
+  useCreateRecording,
+  useUpdateRecording,
+  useDeleteRecording,
+} from '@/hooks/usePvr';
+import useRecordingForm from '@/hooks/useRecordingForm';
+import { buildCreatePayload, buildUpdatePayload } from '@/utils/recordingPayload';
 
-const DEFAULT_PATH = 'Enregistrements';
+import RecordingFormFields from './RecordingFormFields';
+
 const SUCCESS_AUTO_CLOSE_MS = 1500;
 
-const QUALITY_OPTIONS = [
-  { value: 'auto', label: 'Auto' },
-  { value: 'hd', label: 'HD' },
-  { value: 'sd', label: 'SD' },
-  { value: 'ld', label: 'LD' },
-];
-
-/**
- * Format a byte count as a human-readable string in gigabytes
- * @param {number} bytes - Size in bytes
- * @returns {string} Formatted size (e.g., "90.5 Go")
- */
-const formatBytes = (bytes) => {
-  const gb = bytes / (1024 ** 3);
-  return `${gb.toFixed(1)} Go`;
+const computeSuccessMessage = ({ isEdit, deleteRecording }) => {
+  if (deleteRecording.isSuccess) return 'Enregistrement supprimé';
+  return isEdit ? 'Enregistrement mis à jour' : 'Enregistrement programmé';
 };
 
-const RecordModal = ({ open, onClose, program, channelUuid, channelName }) => {
+const submitButtonLabel = (isEdit) => (isEdit ? 'Enregistrer les modifications' : 'Programmer');
+
+const DeleteButton = ({ recording, confirmDelete, onClick, deleteRecording }) => {
+  const baseLabel = recording.state === 'running' ? 'Arrêter' : 'Supprimer';
+  let label;
+  if (deleteRecording.isPending) {
+    label = <CircularProgress size={20} />;
+  } else if (confirmDelete) {
+    label = `Confirmer (${baseLabel})`;
+  } else {
+    label = baseLabel;
+  }
+  return (
+    <Box sx={{ flex: 1 }}>
+      <Button
+        color={confirmDelete ? 'error' : 'inherit'}
+        variant={confirmDelete ? 'contained' : 'text'}
+        onClick={onClick}
+        disabled={deleteRecording.isPending || deleteRecording.isSuccess}
+      >
+        {label}
+      </Button>
+    </Box>
+  );
+};
+
+const RecordModal = ({ open, onClose, program, channelUuid, channelName, recording }) => {
   const { data: pvrConfig } = usePvrConfig();
   const { data: mediaList } = usePvrMedia();
   const createRecording = useCreateRecording();
+  const updateRecording = useUpdateRecording();
+  const deleteRecording = useDeleteRecording();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const [name, setName] = useState('');
-  const [subname, setSubname] = useState('');
-  const [start, setStart] = useState('');
-  const [end, setEnd] = useState('');
-  const [quality, setQuality] = useState('auto');
-  const [media, setMedia] = useState('');
-  const [path, setPath] = useState(DEFAULT_PATH);
+  const { values, setField, locks, startTs, endTs, duration, isEdit } = useRecordingForm({
+    open, recording, program, pvrConfig, mediaList,
+  });
 
+  // Reset all mutation states + delete confirmation when the modal opens
+  // — otherwise stale success/error alerts would flash on the next open.
   useEffect(() => {
-    if (!program || !open) return;
-
-    const marginBefore = pvrConfig?.margin_before ?? 0;
-    const marginAfter = pvrConfig?.margin_after ?? 0;
-
-    setName(program.title ?? '');
-    setSubname(program.sub_title ?? '');
-    setStart(timestampToDatetimeLocal(program.date - marginBefore));
-    setEnd(timestampToDatetimeLocal(program.date + program.duration + marginAfter));
-    setQuality('auto');
-    setPath(DEFAULT_PATH);
-  }, [program, pvrConfig, open]);
-
-  useEffect(() => {
-    if (open) createRecording.reset();
-  }, [open, createRecording]);
-
-  useEffect(() => {
-    if (mediaList?.length && !media) {
-      setMedia(mediaList[0].media);
+    if (open) {
+      createRecording.reset();
+      updateRecording.reset();
+      deleteRecording.reset();
+      setConfirmDelete(false);
     }
-  }, [mediaList, media]);
-
-  const startTs = start ? datetimeLocalToTimestamp(start) : 0;
-  const endTs = end ? datetimeLocalToTimestamp(end) : 0;
-  const duration = endTs - startTs;
+  }, [open, createRecording, updateRecording, deleteRecording]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    createRecording.mutate({
-      channel_uuid: channelUuid,
-      channel_name: channelName,
-      channel_quality: quality,
-      broadcast_type: 'tv',
-      name,
-      subname,
-      start: startTs,
-      end: endTs,
-      media,
-      path,
-      enabled: true,
-    });
+    if (isEdit) {
+      updateRecording.mutate({
+        id: recording.id,
+        kind: recording.kind,
+        payload: buildUpdatePayload({ recording, values, locks, startTs, endTs }),
+      });
+    } else {
+      createRecording.mutate(
+        buildCreatePayload({ values, channelUuid, channelName, startTs, endTs }),
+      );
+    }
   };
 
-  useEffect(() => {
-    if (createRecording.isSuccess) {
-      const timer = setTimeout(onClose, SUCCESS_AUTO_CLOSE_MS);
-      return () => clearTimeout(timer);
+  const handleDelete = () => {
+    if (!isEdit) return;
+    if (confirmDelete) {
+      deleteRecording.mutate({ id: recording.id, kind: recording.kind });
+    } else {
+      setConfirmDelete(true);
     }
-  }, [createRecording.isSuccess, onClose]);
+  };
+
+  // Auto-close on success — same delay across create / update / delete.
+  const successFlag = createRecording.isSuccess || updateRecording.isSuccess || deleteRecording.isSuccess;
+  useEffect(() => {
+    if (!successFlag) return;
+    const timer = setTimeout(onClose, SUCCESS_AUTO_CLOSE_MS);
+    // eslint-disable-next-line consistent-return -- timer cleanup
+    return () => clearTimeout(timer);
+  }, [successFlag, onClose]);
+
+  const isOccurrence = isEdit && recording.generatorId !== null;
+  const submitPending = createRecording.isPending || updateRecording.isPending;
+  const formIncomplete = !values.name || !values.start || !values.end || duration <= 0;
+  const submitDisabled = submitPending || successFlag || formIncomplete;
+  const errorMessage = (createRecording.error ?? updateRecording.error ?? deleteRecording.error)?.message;
+  const successMessage = computeSuccessMessage({ isEdit, deleteRecording });
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Programmer un enregistrement</DialogTitle>
+        <DialogTitle>
+          {isEdit ? 'Modifier l\'enregistrement' : 'Programmer un enregistrement'}
+        </DialogTitle>
 
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '16px !important' }}>
-          <TextField
-            label="Nom"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            fullWidth
-            required
-            size="small"
-          />
-
-          <TextField
-            label="Sous-titre"
-            value={subname}
-            onChange={(e) => setSubname(e.target.value)}
-            fullWidth
-            size="small"
-          />
-
-          <TextField
-            label="Début"
-            type="datetime-local"
-            value={start}
-            onChange={(e) => setStart(e.target.value)}
-            fullWidth
-            required
-            size="small"
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-
-          <TextField
-            label="Fin"
-            type="datetime-local"
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            fullWidth
-            required
-            size="small"
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-
-          {duration > 0 && (
-            <Typography variant="caption" color="text.secondary">
-              Durée : {formatDuration(duration)}
-            </Typography>
-          )}
-
-          <TextField
-            label="Qualité"
-            value={quality}
-            onChange={(e) => setQuality(e.target.value)}
-            select
-            fullWidth
-            size="small"
-          >
-            {QUALITY_OPTIONS.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-            ))}
-          </TextField>
-
-          {mediaList?.length > 0 && (
-            <TextField
-              label="Support"
-              value={media}
-              onChange={(e) => setMedia(e.target.value)}
-              select
-              fullWidth
-              size="small"
-            >
-              {mediaList.map((m) => (
-                <MenuItem key={m.media} value={m.media}>
-                  {m.media} ({formatBytes(m.free_bytes)} libres)
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
-
-          <TextField
-            label="Dossier"
-            value={path}
-            onChange={(e) => setPath(e.target.value)}
-            fullWidth
-            size="small"
-          />
-
-          {createRecording.isSuccess && (
-            <Alert severity="success">Enregistrement programmé</Alert>
-          )}
-
-          {createRecording.isError && (
-            <Alert severity="error">
-              {createRecording.error?.message ?? 'Erreur lors de la programmation'}
+          {isOccurrence && (
+            <Alert severity="info">
+              Cet enregistrement fait partie d&apos;une programmation récurrente. Modifier la série pour changer les autres champs.
             </Alert>
           )}
+
+          <RecordingFormFields
+            values={values}
+            setField={setField}
+            locks={locks}
+            duration={duration}
+            mediaList={mediaList}
+          />
+
+          {confirmDelete && !deleteRecording.isSuccess && (
+            <Alert severity="warning">
+              Confirmer la suppression de cet enregistrement ?
+            </Alert>
+          )}
+          {successFlag && <Alert severity="success">{successMessage}</Alert>}
+          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         </DialogContent>
 
         <DialogActions>
+          {isEdit && (
+            <DeleteButton
+              recording={recording}
+              confirmDelete={confirmDelete}
+              onClick={handleDelete}
+              deleteRecording={deleteRecording}
+            />
+          )}
           <Button onClick={onClose}>Annuler</Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={createRecording.isPending || createRecording.isSuccess || !name || !start || !end || duration <= 0}
-          >
-            {createRecording.isPending ? <CircularProgress size={20} /> : 'Programmer'}
+          <Button type="submit" variant="contained" disabled={submitDisabled}>
+            {submitPending ? <CircularProgress size={20} /> : submitButtonLabel(isEdit)}
           </Button>
         </DialogActions>
       </form>

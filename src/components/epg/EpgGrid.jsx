@@ -18,11 +18,14 @@ import useEpgViewport from '@/hooks/useEpgViewport';
 import useDragScroll from '@/hooks/useDragScroll';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import useLayoutConstants from '@/hooks/useLayoutConstants';
+import { useDeleteRecording } from '@/hooks/usePvr';
 import { TIME_HEADER_HEIGHT, PAST_HOURS, FUTURE_HOURS } from '@/utils/constants';
 
 import TimeHeader from './TimeHeader';
 import ChannelRow from './ChannelRow';
 import NowIndicator from './NowIndicator';
+import RecordingsOverlay from './RecordingsOverlay';
+import RecordModal from './RecordModal';
 
 const HOURS_TO_RENDER = PAST_HOURS + FUTURE_HOURS;
 
@@ -39,6 +42,8 @@ const GridContent = styled('div')({
 const EpgGrid = ({ channels, isLoadingChannels }) => {
   const dispatch = useDispatch();
   const [containerNode, setContainerNode] = useState(null);
+  const [editingRecording, setEditingRecording] = useState(null);
+  const deleteRecording = useDeleteRecording();
   const { timeOrigin, scrollTop, scrollLeft } = useSelector(
     (state) => ({
       timeOrigin: state.epg.timeOrigin,
@@ -111,6 +116,28 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   const handleSelectProgram = useCallback((programId, channelUuid) => {
     dispatch(selectProgram({ programId, channelUuid }));
   }, [dispatch]);
+
+  const handleSelectRecording = useCallback((recording) => {
+    setEditingRecording(recording);
+  }, []);
+
+  const handleCloseRecordingModal = useCallback(() => {
+    setEditingRecording(null);
+  }, []);
+
+  const handleDeleteRecording = useCallback((recording) => {
+    const confirmed = globalThis.confirm(
+      `Supprimer l'enregistrement « ${recording.name} » ?`,
+    );
+    if (confirmed) {
+      deleteRecording.mutate({ id: recording.id, kind: recording.kind });
+    }
+  }, [deleteRecording]);
+
+  // Time window currently rendered by the grid, used by RecordingsOverlay
+  // to skip cells outside the visible range.
+  const viewportStart = timeOrigin;
+  const viewportEnd = timeOrigin + HOURS_TO_RENDER * 3600;
 
   const gridContent = useMemo(() =>
     visibleChannels.map((channel, index) => (
@@ -191,6 +218,17 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
       >
         <GridContent style={{ width: totalWidth, height: totalHeight }}>
           {gridContent}
+          <RecordingsOverlay
+            visibleChannels={visibleChannels}
+            startIndex={startIndex}
+            timeOrigin={timeOrigin}
+            pixelsPerMinute={pixelsPerMinute}
+            sidebarWidth={sidebarWidth}
+            viewportStart={viewportStart}
+            viewportEnd={viewportEnd}
+            onSelect={handleSelectRecording}
+            onDelete={handleDeleteRecording}
+          />
           <NowIndicator
             timeOrigin={timeOrigin}
             pixelsPerMinute={pixelsPerMinute}
@@ -199,6 +237,12 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
           />
         </GridContent>
       </Box>
+
+      <RecordModal
+        open={editingRecording !== null}
+        onClose={handleCloseRecordingModal}
+        recording={editingRecording}
+      />
 
       {isLoadingPrograms && (
         <CircularProgress
