@@ -6,13 +6,13 @@
  * @param {Object} props - Component props
  * @param {string|null} props.programId - Selected program ID or null
  * @param {Array} props.channelPrograms - Programs for the selected channel (sorted by date)
+ * @param {Object|null} props.selectedChannel - Channel object whose program is shown (uuid + name)
  * @param {Function} props.onNavigate - Callback with new programId for prev/next navigation
  * @param {Function} props.onClose - Callback to close the modal
  * @returns {React.ReactElement} Program detail dialog
  */
 
 import { useEffect, useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
 import {
   Dialog,
   DialogTitle,
@@ -33,7 +33,6 @@ import {
 } from '@mui/icons-material';
 
 import useProgramDetail from '@/hooks/useProgramDetail';
-import useChannels from '@/hooks/useChannels';
 import RecordModal from './RecordModal';
 import { formatTime, formatDate, formatDuration } from '@/utils/time';
 import { getLargeImageUrl } from '@/utils/images';
@@ -167,15 +166,14 @@ const ProgramModalContent = ({ program, isLoading, onRecord }) => {
   );
 };
 
-const ProgramModal = ({ programId, channelPrograms, onNavigate, onClose }) => {
+const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate, onClose }) => {
   const { program, isLoading } = useProgramDetail(programId);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isOpen = Boolean(programId);
   const [recordOpen, setRecordOpen] = useState(false);
-  const channelUuid = useSelector((state) => state.epg.selectedChannelUuid);
-  const { channels } = useChannels();
-  const channelName = channels.find((ch) => ch.uuid === channelUuid)?.name ?? '';
+  const channelUuid = selectedChannel?.uuid ?? '';
+  const channelName = selectedChannel?.name ?? '';
 
   const handleKeyDown = useCallback((event) => {
     if (!programId || !channelPrograms?.length) {
