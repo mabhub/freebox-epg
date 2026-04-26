@@ -54,10 +54,37 @@ export const bouquetFreeboxTvChannelsPath = () => '/tv/bouquets/freeboxtv/channe
 export const bouquetChannelsPath = (bouquetId) => `/tv/bouquets/${bouquetId}/channels/`;
 
 /**
- * Path for PVR programmed recordings
+ * Path for PVR programmed recordings (list / create)
  * @returns {string} API path
  */
 export const pvrProgrammedPath = () => '/pvr/programmed/';
+
+/**
+ * Build path for a single programmed recording (update / delete)
+ * @param {number|string} recordId - Recording id
+ * @returns {string} API path
+ */
+export const pvrProgrammedItemPath = (recordId) => `/pvr/programmed/${recordId}`;
+
+/**
+ * Path for PVR finished recordings (list)
+ * @returns {string} API path
+ */
+export const pvrFinishedPath = () => '/pvr/finished/';
+
+/**
+ * Build path for a single finished recording (update / delete)
+ * @param {number|string} recordId - Recording id
+ * @returns {string} API path
+ */
+export const pvrFinishedItemPath = (recordId) => `/pvr/finished/${recordId}`;
+
+/**
+ * Build path for a single recording generator (lazy fetch for tooltip enrichment)
+ * @param {number|string} generatorId - Generator id
+ * @returns {string} API path
+ */
+export const pvrGeneratorItemPath = (generatorId) => `/pvr/generator/${generatorId}`;
 
 /**
  * Path for PVR configuration (margins)

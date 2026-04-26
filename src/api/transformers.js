@@ -72,3 +72,52 @@ export const mergeByChannelEntries = (entries) => {
 
   return byUuid;
 };
+
+/**
+ * Map a raw Freebox `state` value (programmed timer) to one of the five
+ * categories the overlay UI handles. The Freebox emits more granular
+ * states (`waiting_start_time`, `starting`, `running_error`, `start_error`,
+ * etc.) but visually we group them so users see one of: waiting, running,
+ * failed, disabled, finished.
+ * @param {string} state - Raw `state` from /pvr/programmed/
+ * @returns {string} Normalised state
+ */
+const normaliseProgrammedState = (state) => {
+  switch (state) {
+    case 'starting':
+    case 'running':
+      return 'running';
+    case 'failed':
+    case 'start_error':
+    case 'running_error':
+      return 'failed';
+    case 'finished':
+      return 'finished';
+    case 'disabled':
+      return 'disabled';
+    case 'waiting_start_time':
+    default:
+      return 'waiting';
+  }
+};
+
+/**
+ * Normalise a raw recording (programmed timer or finished recording) into
+ * the unified shape consumed by the EPG overlay.
+ * @param {Object} raw - Raw API payload
+ * @param {'programmed'|'finished'} kind - Which endpoint it came from
+ * @returns {Object} Recording in the unified shape
+ */
+export const transformRecording = (raw, kind) => ({
+  id: raw.id,
+  kind,
+  channelUuid: raw.channel_uuid ?? '',
+  channelName: raw.channel_name ?? '',
+  name: raw.name ?? '',
+  subname: raw.subname ?? '',
+  start: raw.start,
+  end: raw.end,
+  state: kind === 'finished' ? 'finished' : normaliseProgrammedState(raw.state),
+  generatorId: raw.has_record_gen ? raw.record_gen_id ?? null : null,
+  raw,
+});
