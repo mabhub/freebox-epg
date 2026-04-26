@@ -1,4 +1,9 @@
-import { transformEpgByChannel, mergeChannels, mergeByChannelEntries } from './transformers';
+import {
+  transformEpgByChannel,
+  mergeChannels,
+  mergeByChannelEntries,
+  transformRecording,
+} from './transformers';
 
 describe('transformEpgByChannel', () => {
   it('converts dict to sorted array', () => {
@@ -72,5 +77,83 @@ describe('mergeByChannelEntries', () => {
   it('returns an empty Map when given no entries', () => {
     const result = mergeByChannelEntries([]);
     expect(result.size).toBe(0);
+  });
+});
+
+describe('transformRecording', () => {
+  const baseProgrammed = {
+    id: 42,
+    start: 1000,
+    end: 2000,
+    name: 'Title',
+    subname: 'Sub',
+    channel_uuid: 'uuid-201',
+    channel_name: 'TF1',
+    state: 'waiting_start_time',
+    has_record_gen: false,
+  };
+
+  it('transforms a waiting programmed timer', () => {
+    const result = transformRecording(baseProgrammed, 'programmed');
+    expect(result).toMatchObject({
+      id: 42,
+      kind: 'programmed',
+      channelUuid: 'uuid-201',
+      channelName: 'TF1',
+      name: 'Title',
+      subname: 'Sub',
+      start: 1000,
+      end: 2000,
+      state: 'waiting',
+      generatorId: null,
+    });
+    expect(result.raw).toBe(baseProgrammed);
+  });
+
+  it('groups starting/running into "running"', () => {
+    expect(transformRecording({ ...baseProgrammed, state: 'starting' }, 'programmed').state).toBe('running');
+    expect(transformRecording({ ...baseProgrammed, state: 'running' }, 'programmed').state).toBe('running');
+  });
+
+  it('groups failure-like states into "failed"', () => {
+    expect(transformRecording({ ...baseProgrammed, state: 'failed' }, 'programmed').state).toBe('failed');
+    expect(transformRecording({ ...baseProgrammed, state: 'running_error' }, 'programmed').state).toBe('failed');
+    expect(transformRecording({ ...baseProgrammed, state: 'start_error' }, 'programmed').state).toBe('failed');
+  });
+
+  it('preserves disabled and finished states', () => {
+    expect(transformRecording({ ...baseProgrammed, state: 'disabled' }, 'programmed').state).toBe('disabled');
+    expect(transformRecording({ ...baseProgrammed, state: 'finished' }, 'programmed').state).toBe('finished');
+  });
+
+  it('falls back to "waiting" for an unknown state', () => {
+    expect(transformRecording({ ...baseProgrammed, state: 'mystery' }, 'programmed').state).toBe('waiting');
+  });
+
+  it('exposes generatorId when has_record_gen is true', () => {
+    const recurring = { ...baseProgrammed, has_record_gen: true, record_gen_id: 7 };
+    expect(transformRecording(recurring, 'programmed').generatorId).toBe(7);
+  });
+
+  it('forces state to "finished" for finished recordings regardless of payload', () => {
+    const finished = {
+      id: 99,
+      start: 1000,
+      end: 2000,
+      name: 'Done',
+      subname: '',
+      channel_uuid: 'uuid-202',
+      channel_name: 'France 2',
+    };
+    expect(transformRecording(finished, 'finished').state).toBe('finished');
+  });
+
+  it('coerces missing optional strings to empty strings', () => {
+    const sparse = { id: 1, start: 0, end: 0 };
+    const result = transformRecording(sparse, 'programmed');
+    expect(result.channelUuid).toBe('');
+    expect(result.channelName).toBe('');
+    expect(result.name).toBe('');
+    expect(result.subname).toBe('');
   });
 });
