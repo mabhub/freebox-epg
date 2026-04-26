@@ -20,8 +20,11 @@ import ProgramModal from './ProgramModal';
 import ChannelFilter from './ChannelFilter';
 
 /**
- * Extract programs for a channel from the TanStack Query cache
- * Cache stores raw API data: { uuid: { "ts_hash": program, ... }, ... }
+ * Extract programs for a channel from the TanStack Query cache.
+ * Each cached entry under ['epg', 'byChannel', uuid, ts] holds an
+ * `Array<Program>` produced by `transformEpgByChannel` (one per 2-hour
+ * bucket). Adjacent buckets can repeat the same program at the boundary,
+ * so we deduplicate by id.
  * @param {Object} queryClient - TanStack Query client
  * @param {string} channelUuid - Channel UUID
  * @returns {Array} Sorted and deduplicated programs for the channel
@@ -30,27 +33,20 @@ const getChannelProgramsFromCache = (queryClient, channelUuid) => {
   if (!channelUuid) {
     return [];
   }
-  const queries = queryClient.getQueriesData({ queryKey: ['epg', 'byTime'] });
-  const seen = new Set();
-  const programs = [];
+  const queries = queryClient.getQueriesData({
+    queryKey: ['epg', 'byChannel', channelUuid],
+  });
+  const seen = new Map();
 
-  for (const [, data] of queries) {
-    if (!data || typeof data !== 'object') {
-      // eslint-disable-next-line no-continue
-      continue;
-    }
-    const channelData = data[channelUuid];
-    if (channelData) {
-      for (const prog of Object.values(channelData)) {
-        if (!seen.has(prog.id)) {
-          seen.add(prog.id);
-          programs.push(prog);
-        }
+  for (const [, programs] of queries) {
+    if (Array.isArray(programs)) {
+      for (const prog of programs) {
+        seen.set(prog.id, prog);
       }
     }
   }
 
-  return programs.toSorted((a, b) => a.date - b.date);
+  return [...seen.values()].toSorted((a, b) => a.date - b.date);
 };
 
 const EpgPage = () => {

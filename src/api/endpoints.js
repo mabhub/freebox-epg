@@ -4,13 +4,6 @@
  */
 
 /**
- * Build path for EPG programs by time slot
- * @param {number} timestamp - Unix timestamp rounded to 3600s
- * @returns {string} API path
- */
-export const epgByTimePath = (timestamp) => `/tv/epg/by_time/${timestamp}/`;
-
-/**
  * Build path for EPG programs by channel
  * @param {string} channelUuid - Channel UUID (e.g., "uuid-webtv-201")
  * @param {number} timestamp - Unix timestamp rounded to 7200s

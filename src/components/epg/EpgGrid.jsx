@@ -8,11 +8,11 @@
  * @returns {React.ReactElement} EPG grid
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import { Box, CircularProgress, Typography, styled } from '@mui/material';
 
-import { setScroll, selectProgram } from '@/store/epgSlice';
+import { setScroll, centerOnTimeOrigin, selectProgram } from '@/store/epgSlice';
 import useVirtualChannels from '@/hooks/useVirtualChannels';
 import useEpgViewport from '@/hooks/useEpgViewport';
 import useDragScroll from '@/hooks/useDragScroll';
@@ -25,7 +25,6 @@ import ChannelRow from './ChannelRow';
 import NowIndicator from './NowIndicator';
 
 const HOURS_TO_RENDER = PAST_HOURS + FUTURE_HOURS;
-const DEFAULT_VIEWPORT_WIDTH = 1200;
 
 const GridContent = styled('div')({
   position: 'relative',
@@ -47,16 +46,33 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   const now = useCurrentTime();
 
   const containerHeight = containerNode?.clientHeight ?? 0;
+  const containerWidth = containerNode?.clientWidth ?? 0;
   const totalWidth = sidebarWidth + HOURS_TO_RENDER * 60 * pixelsPerMinute;
 
-  // Scroll so that the target time sits at ~1/3 of the viewport width
+  // Re-centre the viewport whenever a new (pixelsPerMinute, timeOrigin)
+  // pairing arrives — initial mount, breakpoint change, or a toolbar jump
+  // (`Maintenant` / `20h30`). Dispatched to Redux *before* the first fetch
+  // batch is computed, so `useEpgViewport` only ever sees the centred
+  // scrollLeft and never wastes a batch on the default position.
+  const lastCenteredKeyRef = useRef(null);
+  const centerKey = `${pixelsPerMinute}|${timeOrigin}`;
+  const isCentered = lastCenteredKeyRef.current === centerKey;
   useEffect(() => {
-    if (containerNode && channels.length > 0) {
-      const pastOffsetPx = PAST_HOURS * 60 * pixelsPerMinute;
-      const viewportThird = containerNode.clientWidth / 3;
-      containerNode.scrollLeft = Math.max(0, pastOffsetPx - viewportThird);
+    if (!containerNode || containerWidth === 0 || isCentered) {
+      return;
     }
-  }, [containerNode, channels.length, pixelsPerMinute, timeOrigin]);
+    lastCenteredKeyRef.current = centerKey;
+    dispatch(centerOnTimeOrigin({ pixelsPerMinute, viewportWidth: containerWidth }));
+  }, [containerNode, containerWidth, pixelsPerMinute, dispatch, centerKey, isCentered]);
+
+  // Apply programmatic scroll changes to the DOM. We compare to the actual
+  // DOM scrollLeft to avoid feedback when the change came from a user
+  // scroll (which already updated the DOM before firing onScroll).
+  useEffect(() => {
+    if (containerNode && Math.round(containerNode.scrollLeft) !== Math.round(scrollLeft)) {
+      containerNode.scrollLeft = scrollLeft;
+    }
+  }, [containerNode, scrollLeft]);
 
   const { visibleChannels, startIndex, totalHeight } = useVirtualChannels({
     channels,
@@ -64,8 +80,12 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     containerHeight: containerHeight - TIME_HEADER_HEIGHT,
   });
 
+  // Hold off the first fetch batch until the centring dispatch has landed,
+  // otherwise the hook would issue queries against the default scrollLeft
+  // and then re-issue them once centred.
   const { programs, isLoading: isLoadingPrograms } = useEpgViewport(
-    containerNode?.clientWidth ?? DEFAULT_VIEWPORT_WIDTH,
+    visibleChannels,
+    isCentered ? containerWidth : 0,
     pixelsPerMinute,
   );
 
@@ -84,15 +104,12 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     dispatch(selectProgram({ programId, channelUuid }));
   }, [dispatch]);
 
-  const getChannelPrograms = useCallback((channelUuid) =>
-    programs.get(channelUuid) ?? [], [programs]);
-
   const gridContent = useMemo(() =>
     visibleChannels.map((channel, index) => (
       <ChannelRow
         key={channel.uuid}
         channel={channel}
-        programs={getChannelPrograms(channel.uuid)}
+        programs={programs.get(channel.uuid) ?? []}
         rowIndex={startIndex + index}
         timeOrigin={timeOrigin}
         pixelsPerMinute={pixelsPerMinute}
@@ -102,13 +119,13 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
       />
     )), [
     visibleChannels,
+    programs,
     startIndex,
     timeOrigin,
     pixelsPerMinute,
     sidebarWidth,
     isMobile,
     handleSelectProgram,
-    getChannelPrograms,
   ]);
 
   if (isLoadingChannels) {

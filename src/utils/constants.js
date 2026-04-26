@@ -15,8 +15,11 @@ export const SIDEBAR_WIDTH = 120;
 /** Height of the time header in pixels */
 export const TIME_HEADER_HEIGHT = 48;
 
-/** Number of extra rows to render above/below the viewport */
-export const OVERSCAN_ROWS = 5;
+/** Number of extra channel rows to render above/below the viewport.
+ *  Drives both rendering AND fetching: each extra row triggers
+ *  `nb_buckets` extra by_channel requests up front, so increasing this
+ *  value multiplies network traffic linearly. Profile before changing. */
+export const OVERSCAN_ROWS = 10;
 
 /** Number of extra hours to prefetch before/after the viewport */
 export const OVERSCAN_HOURS = 1;

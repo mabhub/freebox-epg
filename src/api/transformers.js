@@ -4,25 +4,6 @@
  */
 
 /**
- * Transform EPG by_time response into a Map of channel UUID → sorted programs
- * API returns: { uuid: { "ts_hash": program, ... }, ... }
- * @param {Object} data - Raw API result
- * @returns {Map<string, Array>} Map of channel UUID to sorted program arrays
- */
-export const transformEpgByTime = (data) => {
-  const result = new Map();
-
-  for (const [uuid, programs] of Object.entries(data)) {
-    const programList = Object.values(programs).toSorted(
-      (a, b) => a.date - b.date,
-    );
-    result.set(uuid, programList);
-  }
-
-  return result;
-};
-
-/**
  * Transform EPG by_channel response into a sorted program array
  * API returns: { "ts_hash": program, ... }
  * @param {Object} data - Raw API result
@@ -61,33 +42,33 @@ export const mergeChannels = (channelsMap, bouquetChannels) =>
     .toSorted((a, b) => a.number - b.number);
 
 /**
- * Merge multiple EPG by_time Maps into a single Map
- * Deduplicates programs by ID since adjacent hourly buckets can overlap
- * @param {Array<Map<string, Array>>} maps - Array of Maps from transformEpgByTime
- * @returns {Map<string, Array>} Merged Map of channel UUID to sorted programs
+ * Merge per-channel/per-bucket query results into a single
+ * Map<channelUuid, sortedPrograms> for the grid.
+ * Adjacent 2-hour buckets can repeat the same program at the boundary,
+ * so we deduplicate by program id (last entry wins).
+ * @param {Array<{ uuid: string, programs: Array }>} entries - One entry per loaded query
+ * @returns {Map<string, Array>} Map of channel UUID to sorted program arrays
  */
-export const mergeEpgMaps = (maps) => {
-  const result = new Map();
+export const mergeByChannelEntries = (entries) => {
+  const byUuid = new Map();
 
-  for (const map of maps) {
-    for (const [uuid, programs] of map) {
-      if (!result.has(uuid)) {
-        result.set(uuid, new Map());
-      }
-      const channelMap = result.get(uuid);
-      for (const program of programs) {
-        channelMap.set(program.id, program);
-      }
+  for (const { uuid, programs } of entries) {
+    let programMap = byUuid.get(uuid);
+    if (!programMap) {
+      programMap = new Map();
+      byUuid.set(uuid, programMap);
+    }
+    for (const program of programs) {
+      programMap.set(program.id, program);
     }
   }
 
-  const merged = new Map();
-  for (const [uuid, programMap] of result) {
-    merged.set(
+  for (const [uuid, programMap] of byUuid) {
+    byUuid.set(
       uuid,
       [...programMap.values()].toSorted((a, b) => a.date - b.date),
     );
   }
 
-  return merged;
+  return byUuid;
 };
