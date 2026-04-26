@@ -35,7 +35,6 @@ import {
 import useProgramDetail from '@/hooks/useProgramDetail';
 import RecordModal from './RecordModal';
 import { formatTime, formatDate, formatDuration } from '@/utils/time';
-import { getLargeImageUrl } from '@/utils/images';
 
 /**
  * Render cast members grouped by role
@@ -93,7 +92,7 @@ const ProgramModalContent = ({ program, isLoading, onRecord }) => {
     return null;
   }
 
-  const imageUrl = getLargeImageUrl(program.picture_big);
+  const imageUrl = program.picture_big ?? null;
   const startTime = formatTime(program.date);
   const endTime = formatTime(program.date + program.duration);
   const date = formatDate(program.date);

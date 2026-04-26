@@ -13,7 +13,6 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, Tooltip, styled, useMediaQuery } from '@mui/material';
-import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
 import { getCategoryColor, getCategoryAccent } from '@/utils/categories';
 import formatSeasonEpisode from '@/utils/programs';
@@ -90,7 +89,7 @@ const ProgramCell = memo(({
   const durationMinutes = program.duration / 60;
   const leftPx = sidebarWidth + offsetMinutes * pixelsPerMinute;
   const widthPx = Math.max(MIN_CELL_WIDTH, durationMinutes * pixelsPerMinute - CELL_GAP);
-  const thumbnailUrl = getThumbnailUrl(program.picture);
+  const thumbnailUrl = program.picture ?? null;
   const categoryBg = getCategoryColor(program.category);
   const categoryAccent = getCategoryAccent(program.category);
   const isOnAir = now >= program.date && now < program.date + program.duration;
