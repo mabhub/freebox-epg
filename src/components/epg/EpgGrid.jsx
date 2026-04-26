@@ -26,6 +26,11 @@ import NowIndicator from './NowIndicator';
 
 const HOURS_TO_RENDER = PAST_HOURS + FUTURE_HOURS;
 
+// Shared empty array so channels with no loaded programs yet keep a stable
+// `programs` prop identity across renders — otherwise React.memo on
+// ChannelRow would bust its cache for every empty row on each scroll tick.
+const EMPTY_PROGRAMS = Object.freeze([]);
+
 const GridContent = styled('div')({
   position: 'relative',
   marginTop: TIME_HEADER_HEIGHT,
@@ -112,7 +117,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
       <ChannelRow
         key={channel.uuid}
         channel={channel}
-        programs={programs.get(channel.uuid) ?? []}
+        programs={programs.get(channel.uuid) ?? EMPTY_PROGRAMS}
         rowIndex={startIndex + index}
         timeOrigin={timeOrigin}
         pixelsPerMinute={pixelsPerMinute}
