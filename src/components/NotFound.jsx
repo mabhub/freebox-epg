@@ -1,3 +1,7 @@
+/**
+ * 404 fallback shown for any unmatched route inside the authenticated app.
+ */
+
 import { Button, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router';
 
