@@ -16,6 +16,7 @@ import { Box, Typography, Tooltip, styled, useMediaQuery } from '@mui/material';
 import { getThumbnailUrl } from '@/utils/images';
 import { formatTime } from '@/utils/time';
 import { getCategoryColor, getCategoryAccent } from '@/utils/categories';
+import formatSeasonEpisode from '@/utils/programs';
 import { ROW_HEIGHT } from '@/utils/constants';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import { usePrefetchProgram } from '@/hooks/useProgramDetail';
@@ -141,9 +142,7 @@ const ProgramCell = memo(({
   const tooltipContent = useMemo(() => {
     const startTime = formatTime(program.date);
     const endTime = formatTime(program.date + program.duration);
-    const seasonEp = program.season_number
-      ? ` s${program.season_number}${program.episode_number ? `e${program.episode_number}` : ''}`
-      : '';
+    const seasonEp = formatSeasonEpisode(program);
     const desc = program.desc ?? program.short_desc ?? '';
     const truncatedDesc = desc.length > 200 ? `${desc.slice(0, 200)}…` : desc;
 
@@ -153,7 +152,7 @@ const ProgramCell = memo(({
           {program.category_name} &bull; {startTime} - {endTime}
         </Typography>
         <Typography variant="body2" fontWeight="bold">
-          {program.title}{seasonEp}
+          {program.title}{seasonEp ? ` ${seasonEp}` : ''}
         </Typography>
         {program.sub_title && (
           <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
@@ -217,7 +216,7 @@ const ProgramCell = memo(({
             noWrap
             sx={{ display: 'block', lineHeight: 1.2 }}
           >
-            {program.sub_title ?? `s${program.season_number}${program.episode_number ? `e${program.episode_number}` : ''}`}
+            {program.sub_title ?? formatSeasonEpisode(program)}
           </Typography>
         )}
       </TextContainer>
