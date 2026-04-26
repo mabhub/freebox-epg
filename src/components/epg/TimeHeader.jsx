@@ -9,7 +9,7 @@
  * @returns {React.ReactElement} Time header
  */
 
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Typography, styled } from '@mui/material';
 import { formatTime, roundToHour } from '@/utils/time';
 import { TIME_HEADER_HEIGHT } from '@/utils/constants';
@@ -30,7 +30,7 @@ const Marker = styled('div')(({ theme }) => ({
   paddingLeft: theme.spacing(0.5),
 }));
 
-const TimeHeader = ({ timeOrigin, pixelsPerMinute, totalWidth, sidebarWidth }) => {
+const TimeHeader = memo(({ timeOrigin, pixelsPerMinute, totalWidth, sidebarWidth }) => {
   const markers = useMemo(() => {
     const pixelsPerHour = pixelsPerMinute * 60;
     const hoursVisible = Math.ceil(totalWidth / pixelsPerHour) + 2;
@@ -59,6 +59,8 @@ const TimeHeader = ({ timeOrigin, pixelsPerMinute, totalWidth, sidebarWidth }) =
       ))}
     </HeaderRoot>
   );
-};
+});
+
+TimeHeader.displayName = 'TimeHeader';
 
 export default TimeHeader;
