@@ -14,7 +14,7 @@
  * @module hooks/useEpgViewport
  */
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useQueries } from '@tanstack/react-query';
 
@@ -27,7 +27,8 @@ import { OVERSCAN_HOURS } from '@/utils/constants';
 // Shared sentinel for the "no pairs to fetch" case so that the hook return
 // value keeps a stable identity across renders. Treat as immutable: never
 // mutate `programs` on it (consumers only read the Map via `.get`).
-const EMPTY_RESULT = { programs: new Map(), isLoading: false, error: null };
+const EMPTY_PROGRAMS = new Map();
+const EMPTY_RESULT = { programs: EMPTY_PROGRAMS, isLoading: false, error: null };
 
 /**
  * Compute which channel/bucket pairs to fetch based on viewport position
@@ -70,6 +71,13 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
     return uuids.flatMap((uuid) => buckets.map((ts) => ({ uuid, ts })));
   }, [visibleUuidsKey, buckets]);
 
+  // `combine` re-runs whenever any individual query toggles a flag
+  // (isLoading, isFetching…), so we cache the merged Map keyed on the
+  // tuple of dataUpdatedAt timestamps + uuid identity. That way the
+  // returned `programs` keeps its identity until real data actually
+  // changed, and ChannelRow.memo can short-circuit on most renders.
+  const cacheRef = useRef({ key: '', value: EMPTY_PROGRAMS });
+
   return useQueries({
     queries: pairs.map(({ uuid, ts }) => ({
       queryKey: ['epg', 'byChannel', uuid, ts],
@@ -82,15 +90,28 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
       if (results.length === 0) {
         return EMPTY_RESULT;
       }
+      const fingerprintParts = [];
       const entries = [];
       for (let i = 0; i < results.length; i += 1) {
-        const { data } = results[i];
-        if (data) {
-          entries.push({ uuid: pairs[i].uuid, programs: data });
+        const result = results[i];
+        const { uuid } = pairs[i];
+        fingerprintParts.push(`${uuid}:${result.dataUpdatedAt ?? 0}`);
+        if (result.data) {
+          entries.push({ uuid, programs: result.data });
         }
       }
+      const fingerprint = fingerprintParts.join('|');
+
+      let programs;
+      if (cacheRef.current.key === fingerprint) {
+        programs = cacheRef.current.value;
+      } else {
+        programs = entries.length === 0 ? EMPTY_PROGRAMS : mergeByChannelEntries(entries);
+        cacheRef.current = { key: fingerprint, value: programs };
+      }
+
       return {
-        programs: entries.length === 0 ? new Map() : mergeByChannelEntries(entries),
+        programs,
         isLoading: results.some((r) => r.isLoading),
         error: results.find((r) => r.error)?.error ?? null,
       };
