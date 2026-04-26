@@ -56,6 +56,15 @@ export const BREAKPOINTS = {
   tablet: 900,
 };
 
+/** Fraction of a row's height occupied by the recordings overlay strip */
+export const OVERLAY_HEIGHT_RATIO = 0.1;
+
+/** Minimum width in pixels for an overlay cell so the state icon stays readable */
+export const OVERLAY_MIN_WIDTH_PX = 24;
+
+/** Width of the coloured state border on the left of an overlay cell */
+export const OVERLAY_BORDER_LEFT_PX = 3;
+
 /** Responsive layout constants per breakpoint */
 export const RESPONSIVE_CONSTANTS = {
   desktop: {
