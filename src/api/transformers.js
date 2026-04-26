@@ -82,24 +82,18 @@ export const mergeByChannelEntries = (entries) => {
  * @param {string} state - Raw `state` from /pvr/programmed/
  * @returns {string} Normalised state
  */
-const normaliseProgrammedState = (state) => {
-  switch (state) {
-    case 'starting':
-    case 'running':
-      return 'running';
-    case 'failed':
-    case 'start_error':
-    case 'running_error':
-      return 'failed';
-    case 'finished':
-      return 'finished';
-    case 'disabled':
-      return 'disabled';
-    case 'waiting_start_time':
-    default:
-      return 'waiting';
-  }
+const PROGRAMMED_STATE_MAP = {
+  starting: 'running',
+  running: 'running',
+  failed: 'failed',
+  start_error: 'failed',
+  running_error: 'failed',
+  finished: 'finished',
+  disabled: 'disabled',
+  waiting_start_time: 'waiting',
 };
+
+const normaliseProgrammedState = (state) => PROGRAMMED_STATE_MAP[state] ?? 'waiting';
 
 /**
  * Normalise a raw recording (programmed timer or finished recording) into
