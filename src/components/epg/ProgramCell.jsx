@@ -7,6 +7,8 @@
  * @param {number} props.timeOrigin - Unix timestamp of the grid's left edge
  * @param {number} props.pixelsPerMinute - Scale factor
  * @param {number} props.sidebarWidth - Width of the channel sidebar
+ * @param {string} props.channelUuid - UUID of the parent channel
+ * @param {boolean} props.isOnAir - Whether the program is currently airing (computed by ChannelRow)
  * @param {Function} props.onSelect - Callback when program is clicked
  * @returns {React.ReactElement} Program cell
  */
@@ -17,7 +19,6 @@ import { formatTime } from '@/utils/time';
 import { getCategoryColor, getCategoryAccent } from '@/utils/categories';
 import formatSeasonEpisode from '@/utils/programs';
 import { ROW_HEIGHT } from '@/utils/constants';
-import useCurrentTime from '@/hooks/useCurrentTime';
 import { usePrefetchProgram } from '@/hooks/useProgramDetail';
 
 const MIN_CELL_WIDTH = 8;
@@ -82,9 +83,9 @@ const ProgramCell = memo(({
   pixelsPerMinute,
   sidebarWidth,
   channelUuid,
+  isOnAir,
   onSelect,
 }) => {
-  const now = useCurrentTime();
   const offsetMinutes = (program.date - timeOrigin) / 60;
   const durationMinutes = program.duration / 60;
   const leftPx = sidebarWidth + offsetMinutes * pixelsPerMinute;
@@ -92,7 +93,6 @@ const ProgramCell = memo(({
   const thumbnailUrl = program.picture ?? null;
   const categoryBg = getCategoryColor(program.category);
   const categoryAccent = getCategoryAccent(program.category);
-  const isOnAir = now >= program.date && now < program.date + program.duration;
   const prefetchProgram = usePrefetchProgram();
   const prefetchTimer = useRef(null);
   const idleTimer = useRef(null);
