@@ -54,6 +54,9 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   // (`Maintenant` / `20h30`). Dispatched to Redux *before* the first fetch
   // batch is computed, so `useEpgViewport` only ever sees the centred
   // scrollLeft and never wastes a batch on the default position.
+  // The ref is read non-reactively at render time; the effect both writes
+  // it and dispatches, so the next render observes isCentered=true and the
+  // effect bails out (StrictMode double-invocation included).
   const lastCenteredKeyRef = useRef(null);
   const centerKey = `${pixelsPerMinute}|${timeOrigin}`;
   const isCentered = lastCenteredKeyRef.current === centerKey;

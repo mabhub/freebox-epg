@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 
 import apiFetch from '@/api/client';
-import epgReducer, { setScroll } from '@/store/epgSlice';
+import epgReducer, { setScroll, centerOnTimeOrigin } from '@/store/epgSlice';
 import { PAST_HOURS, OVERSCAN_HOURS } from '@/utils/constants';
 import { roundTo2Hours, nowTimestamp } from '@/utils/time';
 import useEpgViewport from './useEpgViewport';
@@ -97,8 +97,9 @@ describe('useEpgViewport', () => {
     // different reference but the same overscan slice.
     rerender({ vc: [channel(1), channel(2)], vw: 1200, ppm: 4 });
 
-    // Wait long enough that any in-flight observer or scheduler tick would
-    // have surfaced a new fetch by now.
+    // 100 ms comfortably exceeds any React Query observer reschedule
+    // (≈ 0 ms in practice) plus a few microtasks. If a fetch surfaces
+    // beyond this window, that is a real refetch bug — not a timing race.
     await new Promise((r) => { setTimeout(r, 100); });
     expect(apiFetch.mock.calls.length).toBe(firstCallCount);
   });
@@ -113,19 +114,32 @@ describe('useEpgViewport', () => {
   });
 
   it('keeps the bucket window inside the viewport (+/- overscan)', async () => {
-    const { result } = renderViewport({
+    const { result, store } = renderViewport({
       visibleChannels: [channel(1)],
       viewportWidth: 1200,
     });
+    // Centre the viewport like EpgGrid does on mount, then ignore the
+    // pre-centring fetches: only the post-centring window should match
+    // the assertion below.
+    act(() => {
+      store.dispatch(centerOnTimeOrigin({ viewportWidth: 1200, pixelsPerMinute: 4 }));
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    const buckets = apiFetch.mock.calls
-      .map(([p]) => parseInt(p.match(/by_channel\/uuid-1\/(\d+)/)[1], 10))
+    apiFetch.mockClear();
+    // Trigger a no-op scroll write to force the hook to re-emit its
+    // current window — gives us a clean record of the active buckets.
+    act(() => {
+      store.dispatch(setScroll({ scrollLeft: store.getState().epg.scrollLeft }));
+    });
+    await waitFor(() => expect(result.current.programs.get('uuid-1')).toBeDefined());
+    const buckets = [...result.current.programs.get('uuid-1')]
+      .map((p) => p.date)
       .toSorted((a, b) => a - b);
     const now = nowTimestamp();
     const timeOrigin = now - PAST_HOURS * 3600;
-    const PAST_OFFSET_PX = PAST_HOURS * 60 * 4;
     const pixelsPerSecond = 4 / 60;
-    const viewportStart = timeOrigin + PAST_OFFSET_PX / pixelsPerSecond;
+    const { scrollLeft } = store.getState().epg;
+    const viewportStart = timeOrigin + scrollLeft / pixelsPerSecond;
     const viewportEnd = viewportStart + 1200 / pixelsPerSecond;
     expect(buckets[0]).toBeGreaterThanOrEqual(
       roundTo2Hours(viewportStart - OVERSCAN_HOURS * 3600),

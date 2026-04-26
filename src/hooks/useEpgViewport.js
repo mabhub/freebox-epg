@@ -57,23 +57,17 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
 
   // Stabilise visibleChannels by uuid so that scroll-driven re-renders that
   // do not actually change the slice keep the same `pairs` identity, and
-  // useQueries keeps the same observers.
-  const visibleUuids = useMemo(
-    () => visibleChannels.map((c) => c.uuid),
+  // useQueries keeps the same observers. The key is both the dependency
+  // and the data source — splitting it back into uuids makes the memo
+  // self-contained and lets exhaustive-deps stay enabled.
+  const visibleUuidsKey = useMemo(
+    () => visibleChannels.map((c) => c.uuid).join('|'),
     [visibleChannels],
   );
-  const visibleUuidsKey = visibleUuids.join('|');
 
   const pairs = useMemo(() => {
-    const result = [];
-    for (const uuid of visibleUuids) {
-      for (const ts of buckets) {
-        result.push({ uuid, ts });
-      }
-    }
-    return result;
-    // visibleUuidsKey captures the identity-by-content of visibleUuids.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const uuids = visibleUuidsKey ? visibleUuidsKey.split('|') : [];
+    return uuids.flatMap((uuid) => buckets.map((ts) => ({ uuid, ts })));
   }, [visibleUuidsKey, buckets]);
 
   return useQueries({

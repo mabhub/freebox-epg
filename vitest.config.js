@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react-swc';
 
-import aliases from './vite.aliases';
+import aliases from './vite.aliases.js';
 
 // https://vitejs.dev/config/
 export default defineConfig({

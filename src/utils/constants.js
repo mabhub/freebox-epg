@@ -27,6 +27,16 @@ export const OVERSCAN_HOURS = 1;
 /** Hours of past content available before the current time origin */
 export const PAST_HOURS = 6;
 
+/**
+ * Pixels between the grid's left edge and the time origin, given the
+ * current responsive scale factor. Centralised so that anything wanting
+ * to position relative to the origin uses the runtime `pixelsPerMinute`
+ * instead of the desktop default.
+ * @param {number} pixelsPerMinute - Current responsive scale factor
+ * @returns {number} Past offset in pixels
+ */
+export const pastOffsetPx = (pixelsPerMinute) => PAST_HOURS * 60 * pixelsPerMinute;
+
 /** Hours of future content rendered after the current time origin */
 export const FUTURE_HOURS = 24;
 

@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-import aliases from './vite.aliases';
+import aliases from './vite.aliases.js';
 
 // Load all env variables (including non-VITE_ prefixed) for proxy config
 const env = loadEnv('development', process.cwd(), '');
