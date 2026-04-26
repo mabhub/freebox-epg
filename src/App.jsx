@@ -1,3 +1,8 @@
+/**
+ * Top-level component: gates the router on the auth status, falling
+ * back to the LoginPage when the session check returns logged_in=false.
+ */
+
 import {
   BrowserRouter,
   Routes,

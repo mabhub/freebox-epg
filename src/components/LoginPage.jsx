@@ -1,3 +1,9 @@
+/**
+ * Login form for the Freebox session. Handles a 30-second client-side
+ * lockout after a `ratelimited` error from the API, mirroring the
+ * Freebox OS behaviour.
+ */
+
 import { useEffect, useState } from 'react';
 import {
   Alert,
