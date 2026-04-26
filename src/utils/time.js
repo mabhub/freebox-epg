@@ -86,6 +86,25 @@ export const getHourBuckets = (startTs, endTs) => {
 };
 
 /**
+ * Generate an array of 2-hour bucket timestamps covering a time range.
+ * The Freebox `by_channel` endpoint requires timestamps aligned to 7200s.
+ * @param {number} startTs - Start Unix timestamp in seconds
+ * @param {number} endTs - End Unix timestamp in seconds
+ * @returns {Array<number>} Array of rounded 2-hour timestamps
+ */
+export const get2HourBuckets = (startTs, endTs) => {
+  const start = roundTo2Hours(startTs);
+  const end = roundTo2Hours(endTs);
+  const buckets = [];
+
+  for (let ts = start; ts <= end; ts += SECONDS_PER_2_HOURS) {
+    buckets.push(ts);
+  }
+
+  return buckets;
+};
+
+/**
  * Get current Unix timestamp in seconds
  * @returns {number} Current timestamp
  */
