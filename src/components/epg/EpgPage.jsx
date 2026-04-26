@@ -66,6 +66,11 @@ const EpgPage = () => {
     getChannelProgramsFromCache(queryClient, selectedChannelUuid),
   [queryClient, selectedChannelUuid, selectedProgramId]);
 
+  const selectedChannel = useMemo(
+    () => channels.find((ch) => ch.uuid === selectedChannelUuid) ?? null,
+    [channels, selectedChannelUuid],
+  );
+
   const handleToggleFilter = useCallback(() => {
     setFilterOpen((prev) => !prev);
   }, []);
@@ -97,6 +102,7 @@ const EpgPage = () => {
         <ProgramModal
           programId={selectedProgramId}
           channelPrograms={channelPrograms}
+          selectedChannel={selectedChannel}
           onNavigate={handleNavigateProgram}
           onClose={handleCloseModal}
         />
