@@ -10,7 +10,7 @@
 
 import { memo, useMemo } from 'react';
 import { Box, Typography, Tooltip, styled } from '@mui/material';
-import { getLogoUrl } from '@/utils/images';
+import getLogoUrl from '@/utils/images';
 
 const SidebarRoot = styled('div')(({ theme }) => ({
   position: 'sticky',

@@ -29,7 +29,7 @@ import {
 import { Search as SearchIcon } from '@mui/icons-material';
 
 import { toggleChannel, setHiddenChannels } from '@/store/channelsSlice';
-import { getLogoUrl } from '@/utils/images';
+import getLogoUrl from '@/utils/images';
 
 const DRAWER_WIDTH = 320;
 const ITEM_HEIGHT = 40;
@@ -78,11 +78,14 @@ const ChannelFilter = ({ open, onClose, channels }) => {
 
   const listHeight = listRef.current?.clientHeight ?? 400;
   const totalHeight = filteredChannels.length * ITEM_HEIGHT;
-  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
-  const visibleItems = filteredChannels.slice(
-    startIndex,
-    Math.min(filteredChannels.length, Math.ceil((scrollTop + listHeight) / ITEM_HEIGHT) + OVERSCAN),
-  );
+  const { visibleItems, startIndex } = useMemo(() => {
+    const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
+    const end = Math.min(
+      filteredChannels.length,
+      Math.ceil((scrollTop + listHeight) / ITEM_HEIGHT) + OVERSCAN,
+    );
+    return { visibleItems: filteredChannels.slice(start, end), startIndex: start };
+  }, [filteredChannels, scrollTop, listHeight]);
 
   const handleToggle = useCallback((uuid) => {
     dispatch(toggleChannel(uuid));
