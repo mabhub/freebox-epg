@@ -5,15 +5,18 @@
 
 import { createSlice } from '@reduxjs/toolkit';
 import { nowTimestamp } from '@/utils/time';
-import { PAST_HOURS, PIXELS_PER_MINUTE } from '@/utils/constants';
-
-const PAST_OFFSET_PX = PAST_HOURS * 60 * PIXELS_PER_MINUTE;
+import { PAST_HOURS, pastOffsetPx } from '@/utils/constants';
 
 const initialState = {
   /** Unix timestamp of the left edge of the viewport (includes past buffer) */
   timeOrigin: nowTimestamp() - PAST_HOURS * 3600,
-  /** Horizontal scroll position in pixels */
-  scrollLeft: PAST_OFFSET_PX,
+  /**
+   * Horizontal scroll position in pixels. The desktop-default offset is a
+   * placeholder: EpgGrid dispatches `centerOnTimeOrigin` with the actual
+   * viewport size on mount and after every `setTimeOrigin`, which
+   * overrides this value before the first fetch batch is computed.
+   */
+  scrollLeft: 0,
   /** Vertical scroll position in pixels */
   scrollTop: 0,
   /** Selected program ID for the detail modal (null = closed) */
@@ -42,28 +45,26 @@ const epgSlice = createSlice({
     },
 
     /**
-     * Jump to a specific time
-     * Resets scrollLeft to the past-hours offset so the target time
-     * appears at the expected viewport position after navigation
+     * Jump to a specific time. EpgGrid observes `timeOrigin` and
+     * dispatches `centerOnTimeOrigin` with the runtime viewport size,
+     * which sets the correct `scrollLeft` for the new origin.
      * @param {Object} state - Current state
      * @param {{ payload: number }} action - Target Unix timestamp
      */
     setTimeOrigin (state, action) {
       state.timeOrigin = action.payload - PAST_HOURS * 3600;
-      state.scrollLeft = PAST_OFFSET_PX;
     },
 
     /**
      * Centre the current time origin at ~1/3 of the viewport width.
-     * Pure: needs the runtime viewport dimensions in the payload because
-     * they live in the DOM, not in Redux state.
+     * Needs the runtime viewport dimensions in the payload because they
+     * live in the DOM, not in Redux state.
      * @param {Object} state - Current state
      * @param {{ payload: { viewportWidth: number, pixelsPerMinute: number } }} action - Viewport dimensions
      */
     centerOnTimeOrigin (state, action) {
       const { viewportWidth, pixelsPerMinute } = action.payload;
-      const pastOffsetPx = PAST_HOURS * 60 * pixelsPerMinute;
-      state.scrollLeft = Math.max(0, pastOffsetPx - viewportWidth / 3);
+      state.scrollLeft = Math.max(0, pastOffsetPx(pixelsPerMinute) - viewportWidth / 3);
     },
 
     /**
