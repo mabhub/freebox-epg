@@ -62,9 +62,12 @@ const EpgPage = () => {
     channels.filter((ch) => !hiddenChannels.includes(ch.uuid)),
   [channels, hiddenChannels]);
 
+  // The list is keyed only by the channel: the prev/next arrows in the
+  // modal navigate inside the array we already computed, and re-reading
+  // the cache on every keystroke would re-iterate every byChannel bucket.
   const channelPrograms = useMemo(() =>
     getChannelProgramsFromCache(queryClient, selectedChannelUuid),
-  [queryClient, selectedChannelUuid, selectedProgramId]);
+  [queryClient, selectedChannelUuid]);
 
   const selectedChannel = useMemo(
     () => channels.find((ch) => ch.uuid === selectedChannelUuid) ?? null,
