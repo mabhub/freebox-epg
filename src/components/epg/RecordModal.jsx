@@ -92,14 +92,22 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
 
   // Reset all mutation states + delete confirmation when the modal opens
   // — otherwise stale success/error alerts would flash on the next open.
+  // Only `open` is a dependency: React Query returns a new object on every
+  // internal state transition (isPending → isSuccess), so listing the
+  // mutations here would re-fire the effect mid-flight and reset() the
+  // pending mutation, leaving the UI stuck while the request still lands.
+  const createReset = createRecording.reset;
+  const updateReset = updateRecording.reset;
+  const deleteReset = deleteRecording.reset;
   useEffect(() => {
     if (open) {
-      createRecording.reset();
-      updateRecording.reset();
-      deleteRecording.reset();
+      createReset();
+      updateReset();
+      deleteReset();
       setConfirmDelete(false);
     }
-  }, [open, createRecording, updateRecording, deleteRecording]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: see comment above
+  }, [open]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
