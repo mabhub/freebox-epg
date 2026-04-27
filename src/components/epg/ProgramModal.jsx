@@ -29,10 +29,14 @@ import {
 } from '@mui/material';
 import {
   Close as CloseIcon,
+  Edit as EditIcon,
   FiberManualRecord as RecordIcon,
 } from '@mui/icons-material';
 
 import useProgramDetail from '@/hooks/useProgramDetail';
+import useRecordingsByChannel from '@/hooks/useRecordingsByChannel';
+import useCurrentTime from '@/hooks/useCurrentTime';
+import { findRecordingCoveringProgram } from '@/utils/recordingPosition';
 import RecordModal from './RecordModal';
 import { formatTime, formatDate, formatDuration } from '@/utils/time';
 
@@ -76,7 +80,44 @@ const CastSection = ({ cast }) => {
   );
 };
 
-const ProgramModalContent = ({ program, isLoading, onRecord }) => {
+const RecordingActionButton = ({ coveringRecording, programIsOver, onRecord, onEditRecording }) => {
+  if (coveringRecording) {
+    return (
+      <Button
+        variant="outlined"
+        color="primary"
+        size="small"
+        startIcon={<EditIcon />}
+        onClick={() => onEditRecording(coveringRecording)}
+      >
+        Modifier l&apos;enregistrement
+      </Button>
+    );
+  }
+  if (programIsOver) {
+    return null;
+  }
+  return (
+    <Button
+      variant="contained"
+      color="error"
+      size="small"
+      startIcon={<RecordIcon />}
+      onClick={onRecord}
+    >
+      Enregistrer
+    </Button>
+  );
+};
+
+const ProgramModalContent = ({
+  program,
+  isLoading,
+  coveringRecording,
+  programIsOver,
+  onRecord,
+  onEditRecording,
+}) => {
   if (isLoading) {
     return (
       <Box sx={{ p: 2 }}>
@@ -151,15 +192,12 @@ const ProgramModalContent = ({ program, isLoading, onRecord }) => {
       <CastSection cast={program.cast} />
 
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          color="error"
-          size="small"
-          startIcon={<RecordIcon />}
-          onClick={onRecord}
-        >
-          Enregistrer
-        </Button>
+        <RecordingActionButton
+          coveringRecording={coveringRecording}
+          programIsOver={programIsOver}
+          onRecord={onRecord}
+          onEditRecording={onEditRecording}
+        />
       </Box>
     </>
   );
@@ -171,8 +209,16 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isOpen = Boolean(programId);
   const [recordOpen, setRecordOpen] = useState(false);
+  const [editingRecording, setEditingRecording] = useState(null);
   const channelUuid = selectedChannel?.uuid ?? '';
   const channelName = selectedChannel?.name ?? '';
+
+  const recordingsByChannel = useRecordingsByChannel();
+  const now = useCurrentTime();
+  const coveringRecording = program
+    ? findRecordingCoveringProgram(recordingsByChannel.get(channelUuid), program)
+    : null;
+  const programIsOver = program ? program.date + program.duration <= now : false;
 
   const handleKeyDown = useCallback((event) => {
     if (!programId || !channelPrograms?.length) {
@@ -210,11 +256,22 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
     />
   );
 
+  const editRecordingModal = editingRecording && (
+    <RecordModal
+      open
+      onClose={() => setEditingRecording(null)}
+      recording={editingRecording}
+    />
+  );
+
   const content = (
     <ProgramModalContent
       program={program}
       isLoading={isLoading}
+      coveringRecording={coveringRecording}
+      programIsOver={programIsOver}
       onRecord={() => setRecordOpen(true)}
+      onEditRecording={setEditingRecording}
     />
   );
 
@@ -244,6 +301,7 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
           </Box>
         </Drawer>
         {recordModal}
+        {editRecordingModal}
       </>
     );
   }
@@ -269,6 +327,7 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
         </DialogContent>
       </Dialog>
       {recordModal}
+      {editRecordingModal}
     </>
   );
 };
