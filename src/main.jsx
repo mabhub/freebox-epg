@@ -36,6 +36,10 @@ const queryClient = new QueryClient({
       // limit, this is enough to absorb a full-viewport burst.
       retry: (failureCount, error) => {
         if (error instanceof AuthError) return false;
+        // AbortError: the caller (typically React Query unmounting an
+        // observer scrolled out of the viewport) deliberately cancelled
+        // the request. Retrying would defeat the cancellation.
+        if (error?.name === 'AbortError') return false;
         const status = error instanceof ApiHttpError ? error.status : null;
         const transient = status === null || status === 503 || status === 429;
         return transient && failureCount < 5;
