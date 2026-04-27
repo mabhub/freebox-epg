@@ -57,7 +57,7 @@ export const BREAKPOINTS = {
 };
 
 /** Fraction of a row's height occupied by the recordings overlay strip */
-export const OVERLAY_HEIGHT_RATIO = 0.1;
+export const OVERLAY_HEIGHT_RATIO = 0.18;
 
 /** Minimum width in pixels for an overlay cell so the state icon stays readable */
 export const OVERLAY_MIN_WIDTH_PX = 24;

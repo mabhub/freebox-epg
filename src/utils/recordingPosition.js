@@ -50,3 +50,20 @@ export const computeRecordingRect = ({
  */
 export const isRecordingInViewport = (recording, viewportStart, viewportEnd) =>
   recording.end > viewportStart && recording.start < viewportEnd;
+
+/**
+ * Find a recording from a per-channel list whose time window fully covers
+ * the given program. Programmed recordings include user-defined margins,
+ * so this is the right level for "is this program already being recorded
+ * (or has been)?". Returns null when no recording covers the program.
+ *
+ * @param {Array|undefined} recordings - List for the program's channel (already filtered by useRecordingsByChannel)
+ * @param {{ date: number, duration: number }} program - Program timestamps
+ * @returns {Object|null} The covering recording, or null
+ */
+export const findRecordingCoveringProgram = (recordings, program) => {
+  if (!recordings || !program) return null;
+  const programStart = program.date;
+  const programEnd = program.date + program.duration;
+  return recordings.find((r) => r.start <= programStart && r.end >= programEnd) ?? null;
+};

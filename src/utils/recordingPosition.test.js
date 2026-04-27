@@ -1,4 +1,8 @@
-import { computeRecordingRect, isRecordingInViewport } from './recordingPosition';
+import {
+  computeRecordingRect,
+  isRecordingInViewport,
+  findRecordingCoveringProgram,
+} from './recordingPosition';
 import { ROW_HEIGHT, OVERLAY_HEIGHT_RATIO, OVERLAY_MIN_WIDTH_PX } from './constants';
 
 describe('computeRecordingRect', () => {
@@ -61,5 +65,42 @@ describe('isRecordingInViewport', () => {
   it('rejects recordings entirely after the viewport', () => {
     expect(isRecordingInViewport({ start: 300, end: 400 }, 150, 300)).toBeFalsy();
     expect(isRecordingInViewport({ start: 350, end: 400 }, 150, 300)).toBeFalsy();
+  });
+});
+
+describe('findRecordingCoveringProgram', () => {
+  const program = { date: 1000, duration: 600 }; // 1000 → 1600
+
+  it('returns the recording when it covers the program exactly', () => {
+    const recordings = [{ id: 1, start: 1000, end: 1600 }];
+    expect(findRecordingCoveringProgram(recordings, program)).toBe(recordings[0]);
+  });
+
+  it('returns the recording when it covers the program with margins', () => {
+    const recordings = [{ id: 1, start: 990, end: 1700 }];
+    expect(findRecordingCoveringProgram(recordings, program)).toBe(recordings[0]);
+  });
+
+  it('returns null when the recording is shorter than the program', () => {
+    const recordings = [{ id: 1, start: 1100, end: 1600 }];
+    expect(findRecordingCoveringProgram(recordings, program)).toBeNull();
+  });
+
+  it('returns null when the recording ends before the program ends', () => {
+    const recordings = [{ id: 1, start: 1000, end: 1500 }];
+    expect(findRecordingCoveringProgram(recordings, program)).toBeNull();
+  });
+
+  it('returns null when there are no recordings for the channel', () => {
+    expect(findRecordingCoveringProgram(undefined, program)).toBeNull();
+    expect(findRecordingCoveringProgram([], program)).toBeNull();
+  });
+
+  it('returns the first matching recording when several cover the program', () => {
+    const recordings = [
+      { id: 1, start: 990, end: 1700 },
+      { id: 2, start: 800, end: 2000 },
+    ];
+    expect(findRecordingCoveringProgram(recordings, program).id).toBe(1);
   });
 });
