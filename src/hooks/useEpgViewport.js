@@ -81,7 +81,7 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
   return useQueries({
     queries: pairs.map(({ uuid, ts }) => ({
       queryKey: ['epg', 'byChannel', uuid, ts],
-      queryFn: () => apiFetch(epgByChannelPath(uuid, ts)),
+      queryFn: ({ signal }) => apiFetch(epgByChannelPath(uuid, ts), { signal }),
       select: transformEpgByChannel,
       staleTime: 5 * 60 * 1000,
       gcTime: 30 * 60 * 1000,
