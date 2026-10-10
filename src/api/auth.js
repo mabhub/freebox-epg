@@ -56,13 +56,29 @@ const resolveChallenge = (challenge) =>
     ? challenge.map((fragment) => String((0, eval)(fragment))).join('')
     : challenge;
 
+/**
+ * Parse a Freebox auth response. The Freebox answers JSON even on errors
+ * (e.g. a wrong password), so only a body that is not JSON means the box
+ * itself was not reached (proxy 502/504 page, captive portal).
+ * @param {Response} response - Fetch response
+ * @returns {Promise<Object>} Parsed Freebox payload
+ * @throws {Error} When the body is not JSON
+ */
+const readPayload = async (response) => {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(`La Freebox ne répond pas (HTTP ${response.status})`);
+  }
+};
+
 export const checkAuth = async () => {
   const response = await fetch(`${API_BASE_URL}/login/`, {
     credentials: 'include',
     headers: FBX_HEADERS,
   });
 
-  const data = await response.json();
+  const data = await readPayload(response);
 
   if (!data.success) {
     throw new Error(data.msg ?? 'Failed to check auth status');
@@ -87,7 +103,7 @@ export const login = async (password) => {
     body: new URLSearchParams({ login: 'freebox', password: hash }),
   });
 
-  const data = await response.json();
+  const data = await readPayload(response);
 
   if (!data.success) {
     const error = new Error(data.msg ?? 'Identifiants invalides');
@@ -105,7 +121,7 @@ export const logout = async () => {
     headers: FBX_HEADERS,
   });
 
-  const data = await response.json();
+  const data = await readPayload(response);
 
   if (!data.success) {
     throw new Error(data.msg ?? 'Logout failed');
