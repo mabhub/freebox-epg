@@ -6,6 +6,10 @@ import {
 } from './transformers';
 
 describe('transformEpgByChannel', () => {
+  it('returns an empty list when the API omits result', () => {
+    expect(transformEpgByChannel()).toStrictEqual([]);
+  });
+
   it('converts dict to sorted array', () => {
     const data = {
       '2000_abc': { id: 'pluri_2', title: 'B', date: 2000 },
