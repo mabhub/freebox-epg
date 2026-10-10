@@ -9,20 +9,18 @@ const DRAG_THRESHOLD = 5;
 
 /**
  * Enable drag-to-scroll on a container DOM node (both axes)
- * Suppresses click events after a drag to prevent accidental program selection
+ * Suppresses click events after a drag to prevent accidental program selection.
+ * Scroll position changes surface through the container's native `scroll` event.
  * @param {HTMLElement|null} container - The scrollable DOM node (or null when not yet mounted)
- * @param {Function} onScrollChange - Callback with { scrollLeft, scrollTop } when scroll position changes
  * @returns {void}
  */
-const useDragScroll = (container, onScrollChange) => {
+const useDragScroll = (container) => {
   const isDragging = useRef(false);
   const hasMoved = useRef(false);
   const startX = useRef(0);
   const startY = useRef(0);
   const scrollStartX = useRef(0);
   const scrollStartY = useRef(0);
-  const onScrollChangeRef = useRef(onScrollChange);
-  onScrollChangeRef.current = onScrollChange;
 
   const handleMouseDown = useCallback((event) => {
     if (event.button !== 0) {
@@ -57,10 +55,6 @@ const useDragScroll = (container, onScrollChange) => {
     if (container) {
       container.scrollLeft = scrollStartX.current - deltaX;
       container.scrollTop = scrollStartY.current - deltaY;
-      onScrollChangeRef.current?.({
-        scrollLeft: container.scrollLeft,
-        scrollTop: container.scrollTop,
-      });
     }
   }, [container]);
 
