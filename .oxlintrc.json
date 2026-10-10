@@ -26,6 +26,18 @@
     // https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#env
     // https://eslint.org/docs/v8.x/use/configure/language-options#specifying-environments
   },
+  "overrides": [
+    {
+      // Node scripts run at build time: builtins, process and console are expected there
+      "files": ["scripts/**", "vite.aliases.js"],
+      "rules": {
+        "import/no-nodejs-modules": "off",
+        "unicorn/no-process-exit": "off",
+        "no-console": "off",
+        "node/no-process-env": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     "/coverage",
     "/dist",
@@ -64,6 +76,22 @@
     "unicorn/no-null": "off",
     "unicorn/numeric-separators-style": "off",
     "unicorn/no-array-for-each": "off",
+    // Single-statement cases read better without braces; no-case-declarations guards the rest
+    "unicorn/switch-case-braces": ["warn", "avoid"],
+    // Lowercase continuation lines of multi-line // comments are flagged: oxlint has no ignoreConsecutiveComments
+    "capitalized-comments": "off",
+
+    // Tests
+    // Conflicts with vitest/prefer-strict-boolean-matchers, which wins: toBe(true) over toBeTruthy()
+    "vitest/prefer-to-be-falsy": "off",
+    "vitest/prefer-to-be-truthy": "off",
+    // File-level beforeEach is the usual Testing Library setup
+    "jest/no-hooks": "off",
+    "jest/require-top-level-describe": "off",
+    // vi.mock(import('…')) only brings type inference, useless in plain JS
+    "vitest/prefer-import-in-mock": "off",
+    // The top-level describe carries the name of the unit under test (App, useEpgViewport…)
+    "jest/prefer-lowercase-title": ["warn", { "ignoreTopLevelDescribe": true }],
 
     // Best Practices
     "array-callback-return": ["error", { "allowImplicit": true, "checkForEach": false, "allowVoid": false }],
