@@ -12,6 +12,8 @@
     "test:coverage": "vitest --coverage",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
     "start": "vite",
     "version": "git changelog -n -t $npm_package_version && git add CHANGELOG.md"
   },
@@ -37,6 +39,7 @@
     "@vitest/coverage-v8": "^4.1.2",
     "@vitest/ui": "^4.1.2",
     "jsdom": "^29.0.1",
+    "oxfmt": "^0.72.0",
     "oxlint": "^1.57.0",
     "terser": "^5.46.1",
     "vitest": "^4.1.2"
