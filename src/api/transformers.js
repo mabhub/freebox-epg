@@ -13,13 +13,17 @@ export const transformEpgByChannel = (data) =>
   Object.values(data).toSorted((a, b) => a.date - b.date);
 
 /**
- * Merge channel details with bouquet channel list
+ * Merge channel details with bouquet channel list.
+ * The bouquet can list the same channel under several numbers (e.g.
+ * Eurosport 1 as 35 and 237); only the lowest number is kept so each
+ * UUID — the React key of a grid row — appears once.
  * @param {Object} channelsMap - Channels map from /tv/channels/ (keyed by UUID)
  * @param {Array} bouquetChannels - Bouquet channel list from /tv/bouquets/freeboxtv/channels/
- * @returns {Array} Merged and sorted channel list
+ * @returns {Array} Merged channel list, sorted by number, unique by UUID
  */
-export const mergeChannels = (channelsMap, bouquetChannels) =>
-  bouquetChannels
+export const mergeChannels = (channelsMap, bouquetChannels) => {
+  const seen = new Set();
+  return bouquetChannels
     .filter((bc) => bc.sub_number === 0 && bc.available)
     .map((bc) => {
       const channel = channelsMap[bc.uuid];
@@ -39,7 +43,15 @@ export const mergeChannels = (channelsMap, bouquetChannels) =>
       };
     })
     .filter(Boolean)
-    .toSorted((a, b) => a.number - b.number);
+    .toSorted((a, b) => a.number - b.number)
+    .filter((channel) => {
+      if (seen.has(channel.uuid)) {
+        return false;
+      }
+      seen.add(channel.uuid);
+      return true;
+    });
+};
 
 /**
  * Merge per-channel/per-bucket query results into a single

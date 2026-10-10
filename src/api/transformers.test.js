@@ -44,6 +44,28 @@ describe('mergeChannels', () => {
     expect(result[0].name).toBe('TF1');
     expect(result[1].number).toBe(2);
   });
+
+  it('keeps a single entry per uuid, under its lowest number', () => {
+    // The bouquet lists some channels twice (e.g. Eurosport 1 as 35 and
+    // 237). Duplicate uuids become duplicate React keys in the grid.
+    const channelsMap = {
+      'uuid-webtv-1199': { name: 'Eurosport 1' },
+      'uuid-webtv-211': { name: 'AB1' },
+    };
+    const bouquetChannels = [
+      { uuid: 'uuid-webtv-1199', number: 237, sub_number: 0, available: true },
+      { uuid: 'uuid-webtv-211', number: 52, sub_number: 0, available: true },
+      { uuid: 'uuid-webtv-1199', number: 35, sub_number: 0, available: true },
+      { uuid: 'uuid-webtv-211', number: 136, sub_number: 0, available: true },
+    ];
+
+    const result = mergeChannels(channelsMap, bouquetChannels);
+
+    expect(result.map((c) => [c.uuid, c.number])).toStrictEqual([
+      ['uuid-webtv-1199', 35],
+      ['uuid-webtv-211', 52],
+    ]);
+  });
 });
 
 describe('mergeByChannelEntries', () => {
