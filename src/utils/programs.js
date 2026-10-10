@@ -4,7 +4,7 @@
  */
 
 /**
- * Format a season/episode pair as `s2e3`, falling back gracefully when
+ * Format a season/episode pair as `S2E3`, falling back gracefully when
  * the episode number is missing. Returns null when the program has no
  * season metadata at all, so callers can skip rendering entirely.
  * @param {{ season_number?: number, episode_number?: number }} program - EPG program
@@ -15,7 +15,7 @@ const formatSeasonEpisode = (program) => {
     return null;
   }
   const episode = program.episode_number ?? '?';
-  return `s${program.season_number}e${episode}`;
+  return `S${program.season_number}E${episode}`;
 };
 
 export default formatSeasonEpisode;

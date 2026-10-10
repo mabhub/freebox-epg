@@ -39,6 +39,7 @@ import useCurrentTime from '@/hooks/useCurrentTime';
 import { findRecordingCoveringProgram } from '@/utils/recordingPosition';
 import RecordModal from './RecordModal';
 import { formatTime, formatDate, formatDuration } from '@/utils/time';
+import formatSeasonEpisode from '@/utils/programs';
 
 /**
  * Render cast members grouped by role
@@ -138,6 +139,7 @@ const ProgramModalContent = ({
   const endTime = formatTime(program.date + program.duration);
   const date = formatDate(program.date);
   const duration = formatDuration(program.duration);
+  const seasonEpisode = formatSeasonEpisode(program);
 
   return (
     <>
@@ -164,12 +166,8 @@ const ProgramModalContent = ({
         {program.year && (
           <Chip label={String(program.year)} size="small" variant="outlined" />
         )}
-        {program.season_number && (
-          <Chip
-            label={`S${program.season_number}E${program.episode_number ?? '?'}`}
-            size="small"
-            variant="outlined"
-          />
+        {seasonEpisode && (
+          <Chip label={seasonEpisode} size="small" variant="outlined" />
         )}
       </Box>
 

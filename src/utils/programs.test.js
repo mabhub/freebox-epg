@@ -8,10 +8,10 @@ describe('formatSeasonEpisode', () => {
   });
 
   it('renders season + episode when both are present', () => {
-    expect(formatSeasonEpisode({ season_number: 2, episode_number: 5 })).toBe('s2e5');
+    expect(formatSeasonEpisode({ season_number: 2, episode_number: 5 })).toBe('S2E5');
   });
 
   it('falls back to ? when the episode number is missing', () => {
-    expect(formatSeasonEpisode({ season_number: 3 })).toBe('s3e?');
+    expect(formatSeasonEpisode({ season_number: 3 })).toBe('S3E?');
   });
 });
