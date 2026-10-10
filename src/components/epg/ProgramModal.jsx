@@ -238,13 +238,16 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
     }
   }, [programId, channelPrograms, onNavigate]);
 
+  /* Arrows belong to the record modal while it is stacked on top: its
+     datetime inputs use them, and navigating would re-prefill its form
+     with the neighbouring program. */
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || recordOpen || editingRecording !== null) {
       return;
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleKeyDown]);
+  }, [isOpen, recordOpen, editingRecording, handleKeyDown]);
 
   const recordModal = recordOpen && (
     <RecordModal
