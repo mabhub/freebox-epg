@@ -9,7 +9,7 @@
  * @returns {React.ReactElement} Channel filter drawer
  */
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Drawer,
@@ -29,6 +29,7 @@ import {
 import { Search as SearchIcon } from '@mui/icons-material';
 
 import { toggleChannel, setHiddenChannels } from '@/store/channelsSlice';
+import useElementSize from '@/hooks/useElementSize';
 import getLogoUrl from '@/utils/images';
 
 const DRAWER_WIDTH = 320;
@@ -62,7 +63,8 @@ const ChannelFilter = ({ open, onClose, channels }) => {
   const hiddenChannels = useSelector((state) => state.channels.hiddenChannels);
   const [search, setSearch] = useState('');
   const [scrollTop, setScrollTop] = useState(0);
-  const listRef = useRef(null);
+  const [listNode, setListNode] = useState(null);
+  const { height: listHeight } = useElementSize(listNode);
 
   const filteredChannels = useMemo(() => {
     if (!search) {
@@ -76,7 +78,6 @@ const ChannelFilter = ({ open, onClose, channels }) => {
     );
   }, [channels, search]);
 
-  const listHeight = listRef.current?.clientHeight ?? 400;
   const totalHeight = filteredChannels.length * ITEM_HEIGHT;
   const { visibleItems, startIndex } = useMemo(() => {
     const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
@@ -108,10 +109,10 @@ const ChannelFilter = ({ open, onClose, channels }) => {
   const handleSearchChange = useCallback((event) => {
     setSearch(event.target.value);
     setScrollTop(0);
-    if (listRef.current) {
-      listRef.current.scrollTop = 0;
+    if (listNode) {
+      listNode.scrollTop = 0;
     }
-  }, []);
+  }, [listNode]);
 
   const handleListScroll = useCallback((event) => {
     setScrollTop(event.target.scrollTop);
@@ -170,7 +171,7 @@ const ChannelFilter = ({ open, onClose, channels }) => {
       <Divider />
 
       <Box
-        ref={listRef}
+        ref={setListNode}
         onScroll={handleListScroll}
         sx={{ overflowY: 'auto', flexGrow: 1 }}
       >

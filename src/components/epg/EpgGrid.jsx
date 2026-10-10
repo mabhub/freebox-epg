@@ -18,6 +18,7 @@ import useEpgViewport from '@/hooks/useEpgViewport';
 import useDragScroll from '@/hooks/useDragScroll';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import useLayoutConstants from '@/hooks/useLayoutConstants';
+import useElementSize from '@/hooks/useElementSize';
 import { useDeleteRecording } from '@/hooks/usePvr';
 import { TIME_HEADER_HEIGHT, PAST_HOURS, FUTURE_HOURS } from '@/utils/constants';
 
@@ -55,8 +56,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   const { sidebarWidth, pixelsPerMinute, isMobile } = useLayoutConstants();
   const now = useCurrentTime();
 
-  const containerHeight = containerNode?.clientHeight ?? 0;
-  const containerWidth = containerNode?.clientWidth ?? 0;
+  const { width: containerWidth, height: containerHeight } = useElementSize(containerNode);
   const totalWidth = sidebarWidth + HOURS_TO_RENDER * 60 * pixelsPerMinute;
 
   // Re-centre the viewport whenever a new (pixelsPerMinute, timeOrigin)
