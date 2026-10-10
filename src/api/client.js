@@ -10,6 +10,25 @@ import ApiHttpError from './httpError';
 export { default as ApiHttpError } from './httpError';
 export { default as AuthError } from './errors';
 
+/** HTTP statuses the Freebox returns when saturated or rate limiting */
+const TRANSIENT_STATUSES = new Set([503, 429]);
+
+/**
+ * Tell whether a failed request is worth retrying. Only saturation (503,
+ * 429) and network failures (fetch rejects with a TypeError) are
+ * transient; auth errors, other HTTP statuses, `success: false` payloads
+ * and non-JSON bodies would fail the same way again. An AbortError is a
+ * deliberate cancellation and must not be retried either.
+ * @param {Error} error - Error thrown by apiFetch
+ * @returns {boolean} True if a retry may succeed
+ */
+export const isTransientError = (error) => {
+  if (error instanceof ApiHttpError) {
+    return TRANSIENT_STATUSES.has(error.status);
+  }
+  return error instanceof TypeError;
+};
+
 /** Maximum number of in-flight requests to the Freebox at any time.
  *  The router caps simultaneous HTTP connections (observed 503
  *  "Limite de connexion dépassée" past ~6-8 in flight); throttling

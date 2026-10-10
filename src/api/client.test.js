@@ -1,4 +1,4 @@
-import apiFetch, { AuthError } from './client';
+import apiFetch, { AuthError, ApiHttpError, isTransientError } from './client';
 
 const buildResponse = (body, init = {}) =>
   Response.json(body, {
@@ -118,5 +118,27 @@ describe('apiFetch', () => {
 
     expect(fetchedUrls.some((u) => u.endsWith('/x/queued'))).toBe(false);
     expect(fetchedUrls.some((u) => u.endsWith('/x/other'))).toBe(true);
+  });
+});
+
+describe('isTransientError', () => {
+  it('retries saturation and rate limiting', () => {
+    expect(isTransientError(new ApiHttpError(503, 'Service Unavailable'))).toBe(true);
+    expect(isTransientError(new ApiHttpError(429, 'Too Many Requests'))).toBe(true);
+  });
+
+  it('retries network failures raised by fetch', () => {
+    expect(isTransientError(new TypeError('Failed to fetch'))).toBe(true);
+  });
+
+  it('does not retry permanent failures', () => {
+    expect(isTransientError(new ApiHttpError(404, 'Not Found'))).toBe(false);
+    expect(isTransientError(new AuthError('Session expired'))).toBe(false);
+    expect(isTransientError(new Error('API error: invalid_request'))).toBe(false);
+    expect(isTransientError(new SyntaxError('Unexpected token <'))).toBe(false);
+  });
+
+  it('does not retry deliberate cancellations', () => {
+    expect(isTransientError(new DOMException('Aborted', 'AbortError'))).toBe(false);
   });
 });

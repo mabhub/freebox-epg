@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthError, ApiHttpError } from '@/api/client';
+import { AuthError, isTransientError } from '@/api/client';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 
@@ -29,21 +29,11 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // The Freebox returns 503 "Limite de connexion dépassée" under
-      // load. Auth and 4xx other than 503 are not worth retrying; for
-      // 503 (and bare network errors with no status, typical of an
-      // aborted connection), retry up to 5 times with exponential
-      // backoff capped at 30 s. Combined with the apiFetch concurrency
-      // limit, this is enough to absorb a full-viewport burst.
-      retry: (failureCount, error) => {
-        if (error instanceof AuthError) return false;
-        // AbortError: the caller (typically React Query unmounting an
-        // observer scrolled out of the viewport) deliberately cancelled
-        // the request. Retrying would defeat the cancellation.
-        if (error?.name === 'AbortError') return false;
-        const status = error instanceof ApiHttpError ? error.status : null;
-        const transient = status === null || status === 503 || status === 429;
-        return transient && failureCount < 5;
-      },
+      // load. Transient failures (503, 429, network errors) are retried
+      // up to 5 times with exponential backoff capped at 30 s; see
+      // isTransientError. Combined with the apiFetch concurrency limit,
+      // this is enough to absorb a full-viewport burst.
+      retry: (failureCount, error) => isTransientError(error) && failureCount < 5,
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30_000),
       refetchOnWindowFocus: false,
       // 5 minutes
