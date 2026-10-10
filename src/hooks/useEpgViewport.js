@@ -30,6 +30,28 @@ import { OVERSCAN_HOURS } from '@/utils/constants';
 const EMPTY_PROGRAMS = new Map();
 const EMPTY_RESULT = { programs: EMPTY_PROGRAMS, isLoading: false, error: null };
 
+const BY_CHANNEL_KEY = ['epg', 'byChannel'];
+
+/**
+ * Read every cached `by_channel` bucket of one channel, outside of any
+ * observer. The cache holds the raw API dict (`select` only runs inside
+ * observers), so each bucket goes through the same transform and merge as
+ * the grid.
+ * @param {import('@tanstack/react-query').QueryClient} queryClient - React Query client
+ * @param {string|null} channelUuid - Channel UUID
+ * @returns {Array} Programs of the channel, deduplicated and sorted by date
+ */
+export const getCachedChannelPrograms = (queryClient, channelUuid) => {
+  if (!channelUuid) {
+    return [];
+  }
+  const entries = queryClient
+    .getQueriesData({ queryKey: [...BY_CHANNEL_KEY, channelUuid] })
+    .filter(([, data]) => data)
+    .map(([, data]) => ({ uuid: channelUuid, programs: transformEpgByChannel(data) }));
+  return mergeByChannelEntries(entries).get(channelUuid) ?? [];
+};
+
 /**
  * Compute which channel/bucket pairs to fetch based on viewport position
  * and the visible (overscanned) channel slice.
@@ -80,7 +102,7 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
 
   return useQueries({
     queries: pairs.map(({ uuid, ts }) => ({
-      queryKey: ['epg', 'byChannel', uuid, ts],
+      queryKey: [...BY_CHANNEL_KEY, uuid, ts],
       queryFn: ({ signal }) => apiFetch(epgByChannelPath(uuid, ts), { signal }),
       select: transformEpgByChannel,
       staleTime: 5 * 60 * 1000,

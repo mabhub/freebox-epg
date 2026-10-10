@@ -7,7 +7,7 @@ import apiFetch from '@/api/client';
 import epgReducer, { setScroll, centerOnTimeOrigin } from '@/store/epgSlice';
 import { PAST_HOURS, OVERSCAN_HOURS } from '@/utils/constants';
 import { roundTo2Hours, nowTimestamp } from '@/utils/time';
-import useEpgViewport from './useEpgViewport';
+import useEpgViewport, { getCachedChannelPrograms } from './useEpgViewport';
 
 vi.mock('@/api/client', () => ({
   default: vi.fn(),
@@ -171,5 +171,31 @@ describe('useEpgViewport', () => {
     );
     const newBuckets = [...allBuckets].filter((b) => !initialBuckets.has(b));
     expect(newBuckets.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('getCachedChannelPrograms', () => {
+  it('merges the raw cached buckets of one channel, deduplicated and sorted', () => {
+    const queryClient = new QueryClient();
+    // The cache holds the raw API dict: `select` only runs in observers.
+    queryClient.setQueryData(['epg', 'byChannel', 'uuid-1', 7200], {
+      k2: { id: 'b', date: 8000 },
+      k1: { id: 'a', date: 7000 },
+    });
+    queryClient.setQueryData(['epg', 'byChannel', 'uuid-1', 14_400], {
+      k2: { id: 'b', date: 8000 },
+      k3: { id: 'c', date: 15_000 },
+    });
+    queryClient.setQueryData(['epg', 'byChannel', 'uuid-2', 7200], {
+      k4: { id: 'z', date: 7100 },
+    });
+
+    const ids = getCachedChannelPrograms(queryClient, 'uuid-1').map((p) => p.id);
+
+    expect(ids).toStrictEqual(['a', 'b', 'c']);
+  });
+
+  it('returns an empty list without a channel', () => {
+    expect(getCachedChannelPrograms(new QueryClient(), null)).toStrictEqual([]);
   });
 });

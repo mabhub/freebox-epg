@@ -12,42 +12,13 @@ import { Box } from '@mui/material';
 
 import Layout from '@/components/Layout';
 import useChannels from '@/hooks/useChannels';
+import { getCachedChannelPrograms } from '@/hooks/useEpgViewport';
 import { NowProvider } from '@/hooks/useCurrentTime';
 import { selectProgram, clearSelection } from '@/store/epgSlice';
 import EpgToolbar from './EpgToolbar';
 import EpgGrid from './EpgGrid';
 import ProgramModal from './ProgramModal';
 import ChannelFilter from './ChannelFilter';
-
-/**
- * Extract programs for a channel from the TanStack Query cache.
- * Each cached entry under ['epg', 'byChannel', uuid, ts] holds an
- * `Array<Program>` produced by `transformEpgByChannel` (one per 2-hour
- * bucket). Adjacent buckets can repeat the same program at the boundary,
- * so we deduplicate by id.
- * @param {Object} queryClient - TanStack Query client
- * @param {string} channelUuid - Channel UUID
- * @returns {Array} Sorted and deduplicated programs for the channel
- */
-const getChannelProgramsFromCache = (queryClient, channelUuid) => {
-  if (!channelUuid) {
-    return [];
-  }
-  const queries = queryClient.getQueriesData({
-    queryKey: ['epg', 'byChannel', channelUuid],
-  });
-  const seen = new Map();
-
-  for (const [, programs] of queries) {
-    if (Array.isArray(programs)) {
-      for (const prog of programs) {
-        seen.set(prog.id, prog);
-      }
-    }
-  }
-
-  return [...seen.values()].toSorted((a, b) => a.date - b.date);
-};
 
 const EpgPage = () => {
   const dispatch = useDispatch();
@@ -66,7 +37,7 @@ const EpgPage = () => {
   // modal navigate inside the array we already computed, and re-reading
   // the cache on every keystroke would re-iterate every byChannel bucket.
   const channelPrograms = useMemo(() =>
-    getChannelProgramsFromCache(queryClient, selectedChannelUuid),
+    getCachedChannelPrograms(queryClient, selectedChannelUuid),
   [queryClient, selectedChannelUuid]);
 
   const selectedChannel = useMemo(
