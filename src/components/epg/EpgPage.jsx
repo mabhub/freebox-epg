@@ -14,6 +14,7 @@ import Layout from '@/components/Layout';
 import useChannels from '@/hooks/useChannels';
 import { getCachedChannelPrograms } from '@/hooks/useEpgViewport';
 import { NowProvider } from '@/hooks/useCurrentTime';
+import useRecenterOnReturn from '@/hooks/useRecenterOnReturn';
 import { selectProgram, clearSelection } from '@/store/epgSlice';
 import EpgToolbar from './EpgToolbar';
 import EpgGrid from './EpgGrid';
@@ -28,6 +29,7 @@ const EpgPage = () => {
   const hiddenChannels = useSelector((state) => state.channels.hiddenChannels);
   const selectedProgramId = useSelector((state) => state.epg.selectedProgramId);
   const selectedChannelUuid = useSelector((state) => state.epg.selectedChannelUuid);
+  useRecenterOnReturn();
 
   const visibleChannels = useMemo(() =>
     channels.filter((ch) => !hiddenChannels.includes(ch.uuid)),
