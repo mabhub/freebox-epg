@@ -20,38 +20,16 @@ export const epgByChannelPath = (channelUuid, timestamp) =>
 export const programDetailPath = (programId) => `/tv/epg/programs/${programId}`;
 
 /**
- * Build path for EPG highlights (prime time)
- * @param {string} channelUuid - Channel UUID
- * @param {number} timestamp - Unix timestamp
- * @returns {string} API path
- */
-export const epgHighlightsPath = (channelUuid, timestamp) =>
-  `/tv/epg/highlights/${channelUuid}/${timestamp}/`;
-
-/**
  * Path for listing all channels
  * @returns {string} API path
  */
 export const channelsPath = () => '/tv/channels/';
 
 /**
- * Path for listing all bouquets
- * @returns {string} API path
- */
-export const bouquetsPath = () => '/tv/bouquets/';
-
-/**
  * Path for listing Freebox TV bouquet channels
  * @returns {string} API path
  */
 export const bouquetFreeboxTvChannelsPath = () => '/tv/bouquets/freeboxtv/channels/';
-
-/**
- * Build path for bouquet channels by ID
- * @param {number} bouquetId - Bouquet ID
- * @returns {string} API path
- */
-export const bouquetChannelsPath = (bouquetId) => `/tv/bouquets/${bouquetId}/channels/`;
 
 /**
  * Path for PVR programmed recordings (list / create)

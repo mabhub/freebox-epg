@@ -9,9 +9,6 @@ export const API_BASE_URL = '/api/latest';
 /** Height of a single channel row in pixels */
 export const ROW_HEIGHT = 80;
 
-/** Width of the channel sidebar in pixels (desktop) */
-export const SIDEBAR_WIDTH = 120;
-
 /** Height of the time header in pixels */
 export const TIME_HEADER_HEIGHT = 48;
 
@@ -40,21 +37,9 @@ export const pastOffsetPx = (pixelsPerMinute) => PAST_HOURS * 60 * pixelsPerMinu
 /** Hours of future content rendered after the current time origin */
 export const FUTURE_HOURS = 24;
 
-/** Pixels per minute (desktop) */
-export const PIXELS_PER_MINUTE = 4;
-
-/** Pixels per second (derived from PIXELS_PER_MINUTE) */
-export const PIXELS_PER_SECOND = PIXELS_PER_MINUTE / 60;
-
 /** Default prime time hour (20:30) */
 export const PRIME_TIME_HOUR = 20;
 export const PRIME_TIME_MINUTE = 30;
-
-/** Responsive breakpoint values */
-export const BREAKPOINTS = {
-  mobile: 600,
-  tablet: 900,
-};
 
 /** Fraction of a row's height occupied by the recordings overlay strip */
 export const OVERLAY_HEIGHT_RATIO = 0.18;

@@ -2,7 +2,6 @@ import {
   roundToHour,
   roundTo2Hours,
   formatDuration,
-  getHourBuckets,
   nowTimestamp,
 } from './time';
 
@@ -55,23 +54,6 @@ describe('formatDuration', () => {
 
   it('pads minutes with leading zero', () => {
     expect(formatDuration(3900)).toBe('1h05');
-  });
-});
-
-describe('getHourBuckets', () => {
-  it('returns correct buckets for a 3-hour range', () => {
-    const buckets = getHourBuckets(3600, 14400);
-    expect(buckets).toStrictEqual([3600, 7200, 10800, 14400]);
-  });
-
-  it('rounds start and end timestamps down', () => {
-    const buckets = getHourBuckets(3601, 7201);
-    expect(buckets).toStrictEqual([3600, 7200]);
-  });
-
-  it('returns single bucket when start equals end', () => {
-    const buckets = getHourBuckets(3600, 3600);
-    expect(buckets).toStrictEqual([3600]);
   });
 });
 

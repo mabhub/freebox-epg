@@ -12,7 +12,6 @@ import {
  *
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Child components
- * @param {Function} props.fallback - Optional custom fallback component
  * @returns {React.ReactElement} Error boundary wrapper
  */
 class ErrorBoundary extends React.Component {
@@ -39,13 +38,9 @@ class ErrorBoundary extends React.Component {
 
   render () {
     const { hasError, error } = this.state;
-    const { children, fallback } = this.props;
+    const { children } = this.props;
 
     if (hasError) {
-      if (fallback) {
-        return fallback(error, this.handleRetry);
-      }
-
       return (
         <Container maxWidth="sm" sx={{ mt: 4 }}>
           <Box sx={{ textAlign: 'center' }}>
