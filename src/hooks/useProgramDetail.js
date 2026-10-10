@@ -46,16 +46,19 @@ const useProgramDetail = (programId) => {
 export const usePrefetchProgram = () => {
   const queryClient = useQueryClient();
 
-  return useCallback((programId) => {
-    if (!programId) {
-      return;
-    }
-    queryClient.prefetchQuery({
-      queryKey: programQueryKey(programId),
-      queryFn: () => apiFetch(programDetailPath(programId)),
-      staleTime: PROGRAM_STALE_TIME,
-    });
-  }, [queryClient]);
+  return useCallback(
+    (programId) => {
+      if (!programId) {
+        return;
+      }
+      queryClient.prefetchQuery({
+        queryKey: programQueryKey(programId),
+        queryFn: () => apiFetch(programDetailPath(programId)),
+        staleTime: PROGRAM_STALE_TIME,
+      });
+    },
+    [queryClient],
+  );
 };
 
 export default useProgramDetail;

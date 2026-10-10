@@ -14,14 +14,11 @@ import { transformRecording } from '@/api/transformers';
 const PVR_LIST_STALE_MS = 5 * 60_000;
 const SIX_HOURS_S = 6 * 60 * 60;
 
-const transformProgrammedList = (data) =>
-  (data ?? []).map((raw) => transformRecording(raw, 'programmed'));
+const transformProgrammedList = (data) => (data ?? []).map((raw) => transformRecording(raw, 'programmed'));
 
 const buildFinishedSelector = (now) => (data) => {
   const cutoff = now - SIX_HOURS_S;
-  return (data ?? [])
-    .filter((raw) => raw.end >= cutoff)
-    .map((raw) => transformRecording(raw, 'finished'));
+  return (data ?? []).filter((raw) => raw.end >= cutoff).map((raw) => transformRecording(raw, 'finished'));
 };
 
 /**
@@ -113,9 +110,7 @@ export const useUpdateRecording = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, kind, payload }) => {
-      const path = kind === 'finished'
-        ? pvrFinishedItemPath(id)
-        : pvrProgrammedItemPath(id);
+      const path = kind === 'finished' ? pvrFinishedItemPath(id) : pvrProgrammedItemPath(id);
       return apiFetch(path, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -135,9 +130,7 @@ export const useDeleteRecording = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, kind }) => {
-      const path = kind === 'finished'
-        ? pvrFinishedItemPath(id)
-        : pvrProgrammedItemPath(id);
+      const path = kind === 'finished' ? pvrFinishedItemPath(id) : pvrProgrammedItemPath(id);
       return apiFetch(path, { method: 'DELETE' });
     },
     onSuccess: () => invalidatePvrLists(queryClient),

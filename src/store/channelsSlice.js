@@ -19,7 +19,7 @@ const channelsSlice = createSlice({
      * @param {Object} state - Current state
      * @param {{ payload: string }} action - Channel UUID to toggle
      */
-    toggleChannel (state, action) {
+    toggleChannel(state, action) {
       const uuid = action.payload;
       const index = state.hiddenChannels.indexOf(uuid);
       if (index === -1) {
@@ -34,7 +34,7 @@ const channelsSlice = createSlice({
      * @param {Object} state - Current state
      * @param {{ payload: Array<string> }} action - Array of UUIDs to hide
      */
-    setHiddenChannels (state, action) {
+    setHiddenChannels(state, action) {
       state.hiddenChannels = action.payload;
     },
   },

@@ -9,8 +9,7 @@
  * @param {number} timestamp - Unix timestamp rounded to 7200s
  * @returns {string} API path
  */
-export const epgByChannelPath = (channelUuid, timestamp) =>
-  `/tv/epg/by_channel/${channelUuid}/${timestamp}/`;
+export const epgByChannelPath = (channelUuid, timestamp) => `/tv/epg/by_channel/${channelUuid}/${timestamp}/`;
 
 /**
  * Build path for EPG program detail

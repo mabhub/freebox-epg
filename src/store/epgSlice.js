@@ -34,7 +34,7 @@ const epgSlice = createSlice({
      * @param {Object} state - Current state
      * @param {{ payload: { scrollLeft?: number, scrollTop?: number } }} action - Scroll values
      */
-    setScroll (state, action) {
+    setScroll(state, action) {
       const { scrollLeft, scrollTop } = action.payload;
       if (scrollLeft !== undefined) {
         state.scrollLeft = scrollLeft;
@@ -51,7 +51,7 @@ const epgSlice = createSlice({
      * @param {Object} state - Current state
      * @param {{ payload: number }} action - Target Unix timestamp
      */
-    setTimeOrigin (state, action) {
+    setTimeOrigin(state, action) {
       state.timeOrigin = action.payload - PAST_HOURS * 3600;
     },
 
@@ -62,7 +62,7 @@ const epgSlice = createSlice({
      * @param {Object} state - Current state
      * @param {{ payload: { viewportWidth: number, pixelsPerMinute: number } }} action - Viewport dimensions
      */
-    centerOnTimeOrigin (state, action) {
+    centerOnTimeOrigin(state, action) {
       const { viewportWidth, pixelsPerMinute } = action.payload;
       state.scrollLeft = Math.max(0, pastOffsetPx(pixelsPerMinute) - viewportWidth / 3);
     },
@@ -72,7 +72,7 @@ const epgSlice = createSlice({
      * @param {Object} state - Current state
      * @param {{ payload: { programId: string, channelUuid: string } }} action - Program and channel IDs
      */
-    selectProgram (state, action) {
+    selectProgram(state, action) {
       state.selectedProgramId = action.payload.programId;
       state.selectedChannelUuid = action.payload.channelUuid;
     },
@@ -81,18 +81,12 @@ const epgSlice = createSlice({
      * Close the detail modal
      * @param {Object} state - Current state
      */
-    clearSelection (state) {
+    clearSelection(state) {
       state.selectedProgramId = null;
       state.selectedChannelUuid = null;
     },
   },
 });
 
-export const {
-  setScroll,
-  setTimeOrigin,
-  centerOnTimeOrigin,
-  selectProgram,
-  clearSelection,
-} = epgSlice.actions;
+export const { setScroll, setTimeOrigin, centerOnTimeOrigin, selectProgram, clearSelection } = epgSlice.actions;
 export default epgSlice.reducer;

@@ -35,13 +35,10 @@ const renderViewport = ({ visibleChannels, viewportWidth, pixelsPerMinute = 4 })
   return {
     store,
     queryClient,
-    ...renderHook(
-      ({ vc, vw, ppm }) => useEpgViewport(vc, vw, ppm),
-      {
-        wrapper,
-        initialProps: { vc: visibleChannels, vw: viewportWidth, ppm: pixelsPerMinute },
-      },
-    ),
+    ...renderHook(({ vc, vw, ppm }) => useEpgViewport(vc, vw, ppm), {
+      wrapper,
+      initialProps: { vc: visibleChannels, vw: viewportWidth, ppm: pixelsPerMinute },
+    }),
   };
 };
 
@@ -73,12 +70,8 @@ describe('useEpgViewport', () => {
       viewportWidth: 1200,
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    const distinctBuckets = new Set(
-      apiFetch.mock.calls.map(([p]) => p.match(/by_channel\/uuid-\d+\/(\d+)/)[1]),
-    );
-    const expectedBuckets = Math.ceil(
-      ((1200 / (4 / 60)) + 2 * OVERSCAN_HOURS * 3600) / 7200,
-    );
+    const distinctBuckets = new Set(apiFetch.mock.calls.map(([p]) => p.match(/by_channel\/uuid-\d+\/(\d+)/)[1]));
+    const expectedBuckets = Math.ceil((1200 / (4 / 60) + 2 * OVERSCAN_HOURS * 3600) / 7200);
     expect(distinctBuckets.size).toBeGreaterThanOrEqual(expectedBuckets);
     expect(distinctBuckets.size).toBeLessThanOrEqual(expectedBuckets + 1);
     expect(apiFetch).toHaveBeenCalledTimes(channels.length * distinctBuckets.size);
@@ -102,7 +95,9 @@ describe('useEpgViewport', () => {
     // 100 ms comfortably exceeds any React Query observer reschedule
     // (≈ 0 ms in practice) plus a few microtasks. If a fetch surfaces
     // beyond this window, that is a real refetch bug — not a timing race.
-    await new Promise((resolve) => { setTimeout(resolve, 100); });
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
     expect(apiFetch).toHaveBeenCalledTimes(firstCallCount);
   });
 
@@ -134,21 +129,15 @@ describe('useEpgViewport', () => {
       store.dispatch(setScroll({ scrollLeft: store.getState().epg.scrollLeft }));
     });
     await waitFor(() => expect(result.current.programs.get('uuid-1')).toBeDefined());
-    const buckets = [...result.current.programs.get('uuid-1')]
-      .map((p) => p.date)
-      .toSorted((a, b) => a - b);
+    const buckets = [...result.current.programs.get('uuid-1')].map((p) => p.date).toSorted((a, b) => a - b);
     const now = nowTimestamp();
     const timeOrigin = now - PAST_HOURS * 3600;
     const pixelsPerSecond = 4 / 60;
     const { scrollLeft } = store.getState().epg;
     const viewportStart = timeOrigin + scrollLeft / pixelsPerSecond;
     const viewportEnd = viewportStart + 1200 / pixelsPerSecond;
-    expect(buckets[0]).toBeGreaterThanOrEqual(
-      roundTo2Hours(viewportStart - OVERSCAN_HOURS * 3600),
-    );
-    expect(buckets.at(-1)).toBeLessThanOrEqual(
-      roundTo2Hours(viewportEnd + OVERSCAN_HOURS * 3600),
-    );
+    expect(buckets[0]).toBeGreaterThanOrEqual(roundTo2Hours(viewportStart - OVERSCAN_HOURS * 3600));
+    expect(buckets.at(-1)).toBeLessThanOrEqual(roundTo2Hours(viewportEnd + OVERSCAN_HOURS * 3600));
   });
 
   it('fetches the new window when the user scrolls horizontally', async () => {
@@ -157,18 +146,14 @@ describe('useEpgViewport', () => {
       viewportWidth: 1200,
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    const initialBuckets = new Set(
-      apiFetch.mock.calls.map(([p]) => p.match(/by_channel\/uuid-1\/(\d+)/)[1]),
-    );
+    const initialBuckets = new Set(apiFetch.mock.calls.map(([p]) => p.match(/by_channel\/uuid-1\/(\d+)/)[1]));
     // Scroll forward by a full extra viewport (1200px / (4px/min) = 5h),
     // which guarantees at least 2 entirely new 2-hour buckets become visible.
     act(() => {
       store.dispatch(setScroll({ scrollLeft: 1200 + 1200 }));
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    const allBuckets = new Set(
-      apiFetch.mock.calls.map(([p]) => p.match(/by_channel\/uuid-1\/(\d+)/)[1]),
-    );
+    const allBuckets = new Set(apiFetch.mock.calls.map(([p]) => p.match(/by_channel\/uuid-1\/(\d+)/)[1]));
     const newBuckets = [...allBuckets].filter((b) => !initialBuckets.has(b));
     expect(newBuckets.length).toBeGreaterThanOrEqual(2);
   });

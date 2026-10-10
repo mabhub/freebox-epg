@@ -9,12 +9,12 @@ import channelsReducer from './channelsSlice';
 
 const HIDDEN_CHANNELS_KEY = 'freebox-epg:hiddenChannels';
 
-function loadHiddenChannels () {
+function loadHiddenChannels() {
   try {
     const raw = localStorage.getItem(HIDDEN_CHANNELS_KEY);
     if (!raw) return;
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || !parsed.every(item => typeof item === 'string')) {
+    if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === 'string')) {
       return;
     }
     return { channels: { hiddenChannels: parsed } };

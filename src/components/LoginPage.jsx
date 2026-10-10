@@ -5,15 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Container, TextField, Typography } from '@mui/material';
 
 import { useLogin } from '@/hooks/useAuth';
 
@@ -68,12 +60,7 @@ const LoginPage = () => {
             disabled={loginMutation.isPending || locked}
           />
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            disabled={loginMutation.isPending || locked || !password}
-          >
+          <Button type="submit" variant="contained" fullWidth disabled={loginMutation.isPending || locked || !password}>
             {loginMutation.isPending && <CircularProgress size={24} />}
             {!loginMutation.isPending && (locked ? `Patientez ${remainingSeconds}s` : 'Connexion')}
           </Button>

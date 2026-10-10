@@ -46,13 +46,11 @@ const CATEGORY_ACCENTS = {
  * @param {number} categoryId - Category ID
  * @returns {string|null} CSS color value, or null if no category match
  */
-export const getCategoryColor = (categoryId) =>
-  CATEGORY_COLORS[categoryId] ?? null;
+export const getCategoryColor = (categoryId) => CATEGORY_COLORS[categoryId] ?? null;
 
 /**
  * Get the accent border color for highlighted categories
  * @param {number} categoryId - Category ID
  * @returns {string|null} CSS color value, or null if no accent
  */
-export const getCategoryAccent = (categoryId) =>
-  CATEGORY_ACCENTS[categoryId] ?? null;
+export const getCategoryAccent = (categoryId) => CATEGORY_ACCENTS[categoryId] ?? null;

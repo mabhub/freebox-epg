@@ -39,9 +39,7 @@ const CellRoot = styled('button')(({ theme }) => ({
   font: 'inherit',
   color: 'inherit',
   textAlign: 'left',
-  backgroundColor: theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.12)'
-    : 'rgba(0, 0, 0, 0.08)',
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
   cursor: 'pointer',
   overflow: 'hidden',
   fontSize: '0.7rem',
@@ -49,9 +47,7 @@ const CellRoot = styled('button')(({ theme }) => ({
   whiteSpace: 'nowrap',
   textOverflow: 'ellipsis',
   '&:hover': {
-    backgroundColor: theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, 0.2)'
-      : 'rgba(0, 0, 0, 0.16)',
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.16)',
     '& .recording-cell__delete': {
       opacity: 1,
     },
@@ -98,9 +94,7 @@ const StateIcon = ({ state, color }) => {
   const baseSx = { fontSize: '0.85rem', color, flexShrink: 0 };
   if (state === 'running') {
     return (
-      <Icon
-        sx={{ ...baseSx, ...RUNNING_PULSE_KEYFRAMES, animation: 'recording-pulse 1.6s ease-in-out infinite' }}
-      />
+      <Icon sx={{ ...baseSx, ...RUNNING_PULSE_KEYFRAMES, animation: 'recording-pulse 1.6s ease-in-out infinite' }} />
     );
   }
   return <Icon sx={baseSx} />;

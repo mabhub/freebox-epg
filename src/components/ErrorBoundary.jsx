@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  Alert,
-  Button,
-  Container,
-  Typography,
-  Box,
-} from '@mui/material';
+import { Alert, Button, Container, Typography, Box } from '@mui/material';
 
 /**
  * Error Boundary component to catch and handle React errors gracefully
@@ -15,16 +9,16 @@ import {
  * @returns {React.ReactElement} Error boundary wrapper
  */
 class ErrorBoundary extends React.Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError (error) {
+  static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
 
-  componentDidCatch (error, errorInfo) {
+  componentDidCatch(error, errorInfo) {
     // Log error to console in development
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
@@ -36,7 +30,7 @@ class ErrorBoundary extends React.Component {
     this.setState({ hasError: false, error: null });
   };
 
-  render () {
+  render() {
     const { hasError, error } = this.state;
     const { children } = this.props;
 
@@ -49,8 +43,8 @@ class ErrorBoundary extends React.Component {
                 Une erreur inattendue s'est produite
               </Typography>
               <Typography variant="body2" sx={{ mb: 2 }}>
-                L'application a rencontré un problème. Veuillez réessayer ou contacter le
-                support si le problème persiste.
+                L'application a rencontré un problème. Veuillez réessayer ou contacter le support si le problème
+                persiste.
               </Typography>
               {import.meta.env.DEV && error && (
                 <Typography
@@ -69,11 +63,7 @@ class ErrorBoundary extends React.Component {
                 </Typography>
               )}
             </Alert>
-            <Button
-              variant="contained"
-              onClick={this.handleRetry}
-              size="large"
-            >
+            <Button variant="contained" onClick={this.handleRetry} size="large">
               Réessayer
             </Button>
           </Box>

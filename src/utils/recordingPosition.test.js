@@ -1,8 +1,4 @@
-import {
-  computeRecordingRect,
-  isRecordingInViewport,
-  findRecordingCoveringProgram,
-} from './recordingPosition';
+import { computeRecordingRect, isRecordingInViewport, findRecordingCoveringProgram } from './recordingPosition';
 import { ROW_HEIGHT, OVERLAY_HEIGHT_RATIO, OVERLAY_MIN_WIDTH_PX } from './constants';
 
 describe('computeRecordingRect', () => {

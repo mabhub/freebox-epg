@@ -29,47 +29,36 @@ const RowRoot = styled('div')({
   display: 'flex',
 });
 
-const ChannelRow = memo(({
-  channel,
-  programs,
-  rowIndex,
-  timeOrigin,
-  pixelsPerMinute,
-  sidebarWidth,
-  isMobile,
-  onSelectProgram,
-}) => {
-  // Resolve the on-air program once per row instead of letting every cell
-  // subscribe to the minute tick context — a row of 30 cells used to
-  // re-render in full each minute even though at most one of them flips.
-  const now = useCurrentTime();
-  const onAirProgramId = useMemo(() => {
-    const onAir = programs.find((p) => now >= p.date && now < p.date + p.duration);
-    return onAir?.id ?? null;
-  }, [programs, now]);
+const ChannelRow = memo(
+  ({ channel, programs, rowIndex, timeOrigin, pixelsPerMinute, sidebarWidth, isMobile, onSelectProgram }) => {
+    // Resolve the on-air program once per row instead of letting every cell
+    // subscribe to the minute tick context — a row of 30 cells used to
+    // re-render in full each minute even though at most one of them flips.
+    const now = useCurrentTime();
+    const onAirProgramId = useMemo(() => {
+      const onAir = programs.find((p) => now >= p.date && now < p.date + p.duration);
+      return onAir?.id ?? null;
+    }, [programs, now]);
 
-  return (
-    <RowRoot style={{ top: rowIndex * ROW_HEIGHT }}>
-      <ChannelSidebar
-        channel={channel}
-        sidebarWidth={sidebarWidth}
-        isMobile={isMobile}
-      />
-      {programs.map((program) => (
-        <ProgramCell
-          key={program.id}
-          program={program}
-          timeOrigin={timeOrigin}
-          pixelsPerMinute={pixelsPerMinute}
-          sidebarWidth={sidebarWidth}
-          channelUuid={channel.uuid}
-          isOnAir={program.id === onAirProgramId}
-          onSelect={onSelectProgram}
-        />
-      ))}
-    </RowRoot>
-  );
-});
+    return (
+      <RowRoot style={{ top: rowIndex * ROW_HEIGHT }}>
+        <ChannelSidebar channel={channel} sidebarWidth={sidebarWidth} isMobile={isMobile} />
+        {programs.map((program) => (
+          <ProgramCell
+            key={program.id}
+            program={program}
+            timeOrigin={timeOrigin}
+            pixelsPerMinute={pixelsPerMinute}
+            sidebarWidth={sidebarWidth}
+            channelUuid={channel.uuid}
+            isOnAir={program.id === onAirProgramId}
+            onSelect={onSelectProgram}
+          />
+        ))}
+      </RowRoot>
+    );
+  },
+);
 
 ChannelRow.displayName = 'ChannelRow';
 

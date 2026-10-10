@@ -22,15 +22,33 @@ const ALL_LOCKS_FREE = {
 };
 
 const FINISHED_LOCKS = {
-  name: true, subname: true, start: false, end: false, quality: false, media: false, path: true,
+  name: true,
+  subname: true,
+  start: false,
+  end: false,
+  quality: false,
+  media: false,
+  path: true,
 };
 
 const RUNNING_LOCKS = {
-  name: false, subname: true, start: false, end: true, quality: false, media: false, path: false,
+  name: false,
+  subname: true,
+  start: false,
+  end: true,
+  quality: false,
+  media: false,
+  path: false,
 };
 
 const OCCURRENCE_LOCKS = {
-  name: true, subname: true, start: false, end: false, quality: false, media: false, path: false,
+  name: true,
+  subname: true,
+  start: false,
+  end: false,
+  quality: false,
+  media: false,
+  path: false,
 };
 
 /**
@@ -98,8 +116,13 @@ const valuesFromRecording = (recording) => ({
 const useRecordingForm = ({ open, recording, program, pvrConfig, mediaList }) => {
   const isEdit = recording !== null && recording !== undefined;
   const [values, setValues] = useState({
-    name: '', subname: '', start: '', end: '',
-    quality: DEFAULT_QUALITY, media: '', path: DEFAULT_PATH,
+    name: '',
+    subname: '',
+    start: '',
+    end: '',
+    quality: DEFAULT_QUALITY,
+    media: '',
+    path: DEFAULT_PATH,
   });
 
   const locks = useMemo(() => computeFieldLocks(recording), [recording]);

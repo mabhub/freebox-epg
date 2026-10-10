@@ -9,8 +9,7 @@
  * @param {Object|undefined} data - Raw API result
  * @returns {Array} Sorted program array
  */
-export const transformEpgByChannel = (data) =>
-  Object.values(data ?? {}).toSorted((a, b) => a.date - b.date);
+export const transformEpgByChannel = (data) => Object.values(data ?? {}).toSorted((a, b) => a.date - b.date);
 
 /**
  * Merge channel details with bouquet channel list.
@@ -124,6 +123,6 @@ export const transformRecording = (raw, kind) => ({
   start: raw.start,
   end: raw.end,
   state: kind === 'finished' ? 'finished' : normaliseProgrammedState(raw.state),
-  generatorId: raw.has_record_gen ? raw.record_gen_id ?? null : null,
+  generatorId: raw.has_record_gen ? (raw.record_gen_id ?? null) : null,
   raw,
 });

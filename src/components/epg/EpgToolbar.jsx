@@ -6,19 +6,8 @@
 
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Box,
-} from '@mui/material';
-import {
-  FilterList as FilterListIcon,
-  AccessTime as AccessTimeIcon,
-  Logout as LogoutIcon,
-} from '@mui/icons-material';
+import { AppBar, Toolbar, Typography, Button, IconButton, Box } from '@mui/material';
+import { FilterList as FilterListIcon, AccessTime as AccessTimeIcon, Logout as LogoutIcon } from '@mui/icons-material';
 
 import { setTimeOrigin } from '@/store/epgSlice';
 import { nowTimestamp, todayAt } from '@/utils/time';
@@ -45,12 +34,7 @@ const EpgToolbar = ({ onToggleFilter }) => {
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 1, flexGrow: 1 }}>
-          <Button
-            color="inherit"
-            size="small"
-            startIcon={<AccessTimeIcon />}
-            onClick={handleGoToNow}
-          >
+          <Button color="inherit" size="small" startIcon={<AccessTimeIcon />} onClick={handleGoToNow}>
             Maintenant
           </Button>
           <Button
@@ -63,11 +47,7 @@ const EpgToolbar = ({ onToggleFilter }) => {
           </Button>
         </Box>
 
-        <IconButton
-          color="inherit"
-          onClick={onToggleFilter}
-          aria-label="Filtrer les chaînes"
-        >
+        <IconButton color="inherit" onClick={onToggleFilter} aria-label="Filtrer les chaînes">
           <FilterListIcon />
         </IconButton>
 

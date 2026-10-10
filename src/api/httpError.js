@@ -6,7 +6,7 @@
  */
 
 class ApiHttpError extends Error {
-  constructor (status, statusText) {
+  constructor(status, statusText) {
     super(`API error: ${status} ${statusText}`);
     this.name = 'ApiHttpError';
     this.status = status;

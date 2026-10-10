@@ -22,7 +22,7 @@ const RecordingTooltip = ({ recording }) => {
   const { name, subname, channelName, start, end, state, generatorId, raw } = recording;
   const stateLabel = RECORDING_STATE_LABELS[state] ?? state;
   const error = raw?.error && raw.error !== 'none' ? raw.error : null;
-  const quality = raw?.channel_quality ? QUALITY_LABELS[raw.channel_quality] ?? raw.channel_quality : null;
+  const quality = raw?.channel_quality ? (QUALITY_LABELS[raw.channel_quality] ?? raw.channel_quality) : null;
 
   return (
     <Box sx={{ maxWidth: 300 }}>

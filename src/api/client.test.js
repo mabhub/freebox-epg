@@ -6,9 +6,10 @@ const buildResponse = (body, init = {}) =>
     statusText: init.statusText ?? 'OK',
   });
 
-const flush = () => new Promise((resolve) => {
-  setTimeout(resolve, 0);
-});
+const flush = () =>
+  new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
 
 beforeEach(() => {
   vi.restoreAllMocks();
@@ -16,16 +17,12 @@ beforeEach(() => {
 
 describe('apiFetch', () => {
   it('unwraps the result on success', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      buildResponse({ success: true, result: { ok: 1 } }),
-    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(buildResponse({ success: true, result: { ok: 1 } }));
     await expect(apiFetch('/x')).resolves.toStrictEqual({ ok: 1 });
   });
 
   it('throws AuthError on 403', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('', { status: 403, statusText: 'Forbidden' }),
-    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 403, statusText: 'Forbidden' }));
     await expect(apiFetch('/x')).rejects.toBeInstanceOf(AuthError);
   });
 

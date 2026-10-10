@@ -38,25 +38,28 @@ const useDragScroll = (container) => {
     document.body.style.userSelect = 'none';
   }, []);
 
-  const handleMouseMove = useCallback((event) => {
-    if (!isDragging.current) {
-      return;
-    }
+  const handleMouseMove = useCallback(
+    (event) => {
+      if (!isDragging.current) {
+        return;
+      }
 
-    const deltaX = event.clientX - startX.current;
-    const deltaY = event.clientY - startY.current;
+      const deltaX = event.clientX - startX.current;
+      const deltaY = event.clientY - startY.current;
 
-    if (Math.abs(deltaX) > DRAG_THRESHOLD || Math.abs(deltaY) > DRAG_THRESHOLD) {
-      hasMoved.current = true;
-    }
+      if (Math.abs(deltaX) > DRAG_THRESHOLD || Math.abs(deltaY) > DRAG_THRESHOLD) {
+        hasMoved.current = true;
+      }
 
-    event.preventDefault();
+      event.preventDefault();
 
-    if (container) {
-      container.scrollLeft = scrollStartX.current - deltaX;
-      container.scrollTop = scrollStartY.current - deltaY;
-    }
-  }, [container]);
+      if (container) {
+        container.scrollLeft = scrollStartX.current - deltaX;
+        container.scrollTop = scrollStartY.current - deltaY;
+      }
+    },
+    [container],
+  );
 
   const handleMouseUp = useCallback(() => {
     if (!isDragging.current) {

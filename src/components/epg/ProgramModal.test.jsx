@@ -25,18 +25,23 @@ vi.mock('@/hooks/useCurrentTime', () => ({
 }));
 
 vi.mock('./RecordModal', () => ({
-  default: () => <div role="dialog" aria-label="record-modal"><input aria-label="Début" /></div>,
+  default: () => (
+    <div role="dialog" aria-label="record-modal">
+      <input aria-label="Début" />
+    </div>
+  ),
 }));
 
-const renderModal = (onNavigate) => render(
-  <ProgramModal
-    programId="b"
-    channelPrograms={PROGRAMS}
-    selectedChannel={{ uuid: 'uuid-1', name: 'Chaîne' }}
-    onNavigate={onNavigate}
-    onClose={() => {}}
-  />,
-);
+const renderModal = (onNavigate) =>
+  render(
+    <ProgramModal
+      programId="b"
+      channelPrograms={PROGRAMS}
+      selectedChannel={{ uuid: 'uuid-1', name: 'Chaîne' }}
+      onNavigate={onNavigate}
+      onClose={() => {}}
+    />,
+  );
 
 describe('arrow navigation in ProgramModal', () => {
   it('navigates to the previous and next programs', () => {

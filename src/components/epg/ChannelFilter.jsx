@@ -71,26 +71,27 @@ const ChannelFilter = ({ open, onClose, channels }) => {
       return channels;
     }
     const query = search.toLowerCase();
-    return channels.filter((ch) =>
-      ch.name.toLowerCase().includes(query)
-      || ch.shortName?.toLowerCase().includes(query)
-      || String(ch.number).includes(query),
+    return channels.filter(
+      (ch) =>
+        ch.name.toLowerCase().includes(query) ||
+        ch.shortName?.toLowerCase().includes(query) ||
+        String(ch.number).includes(query),
     );
   }, [channels, search]);
 
   const totalHeight = filteredChannels.length * ITEM_HEIGHT;
   const { visibleItems, startIndex } = useMemo(() => {
     const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
-    const end = Math.min(
-      filteredChannels.length,
-      Math.ceil((scrollTop + listHeight) / ITEM_HEIGHT) + OVERSCAN,
-    );
+    const end = Math.min(filteredChannels.length, Math.ceil((scrollTop + listHeight) / ITEM_HEIGHT) + OVERSCAN);
     return { visibleItems: filteredChannels.slice(start, end), startIndex: start };
   }, [filteredChannels, scrollTop, listHeight]);
 
-  const handleToggle = useCallback((uuid) => {
-    dispatch(toggleChannel(uuid));
-  }, [dispatch]);
+  const handleToggle = useCallback(
+    (uuid) => {
+      dispatch(toggleChannel(uuid));
+    },
+    [dispatch],
+  );
 
   const handleShowAll = useCallback(() => {
     dispatch(setHiddenChannels([]));
@@ -101,18 +102,19 @@ const ChannelFilter = ({ open, onClose, channels }) => {
   }, [dispatch, channels]);
 
   const handleShowTnt = useCallback(() => {
-    dispatch(setHiddenChannels(
-      channels.filter((ch) => !ch.pubService).map((ch) => ch.uuid),
-    ));
+    dispatch(setHiddenChannels(channels.filter((ch) => !ch.pubService).map((ch) => ch.uuid)));
   }, [dispatch, channels]);
 
-  const handleSearchChange = useCallback((event) => {
-    setSearch(event.target.value);
-    setScrollTop(0);
-    if (listNode) {
-      listNode.scrollTop = 0;
-    }
-  }, [listNode]);
+  const handleSearchChange = useCallback(
+    (event) => {
+      setSearch(event.target.value);
+      setScrollTop(0);
+      if (listNode) {
+        listNode.scrollTop = 0;
+      }
+    },
+    [listNode],
+  );
 
   const handleListScroll = useCallback((event) => {
     setScrollTop(event.target.scrollTop);
@@ -170,11 +172,7 @@ const ChannelFilter = ({ open, onClose, channels }) => {
 
       <Divider />
 
-      <Box
-        ref={setListNode}
-        onScroll={handleListScroll}
-        sx={{ overflowY: 'auto', flexGrow: 1 }}
-      >
+      <Box ref={setListNode} onScroll={handleListScroll} sx={{ overflowY: 'auto', flexGrow: 1 }}>
         <VirtualList style={{ height: totalHeight }}>
           {visibleItems.map((channel, index) => {
             const isHidden = hiddenChannels.includes(channel.uuid);
@@ -187,19 +185,9 @@ const ChannelFilter = ({ open, onClose, channels }) => {
                 style={{ top: itemIndex * ITEM_HEIGHT }}
               >
                 <CompactListItemIcon>
-                  <Checkbox
-                    edge="start"
-                    checked={!isHidden}
-                    tabIndex={-1}
-                    disableRipple
-                    size="small"
-                  />
+                  <Checkbox edge="start" checked={!isHidden} tabIndex={-1} disableRipple size="small" />
                 </CompactListItemIcon>
-                <ChannelLogo
-                  src={getLogoUrl(channel.uuid)}
-                  alt=""
-                  loading="lazy"
-                />
+                <ChannelLogo src={getLogoUrl(channel.uuid)} alt="" loading="lazy" />
                 <ListItemText
                   primary={`${channel.number} - ${channel.name}`}
                   slotProps={{ primary: { variant: 'body2', noWrap: true } }}

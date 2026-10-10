@@ -1,9 +1,4 @@
-import {
-  roundToHour,
-  roundTo2Hours,
-  formatDuration,
-  nowTimestamp,
-} from './time';
+import { roundToHour, roundTo2Hours, formatDuration, nowTimestamp } from './time';
 
 describe('roundToHour', () => {
   it('rounds down to the nearest hour', () => {

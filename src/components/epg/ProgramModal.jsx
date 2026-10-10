@@ -27,11 +27,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  Edit as EditIcon,
-  FiberManualRecord as RecordIcon,
-} from '@mui/icons-material';
+import { Close as CloseIcon, Edit as EditIcon, FiberManualRecord as RecordIcon } from '@mui/icons-material';
 
 import useProgramDetail from '@/hooks/useProgramDetail';
 import useRecordingsByChannel from '@/hooks/useRecordingsByChannel';
@@ -72,9 +68,7 @@ const CastSection = ({ cast }) => {
           <Typography variant="subtitle2" color="text.secondary">
             {job}
           </Typography>
-          <Typography variant="body2">
-            {names.join(', ')}
-          </Typography>
+          <Typography variant="body2">{names.join(', ')}</Typography>
         </Box>
       ))}
     </Box>
@@ -99,26 +93,13 @@ const RecordingActionButton = ({ coveringRecording, programIsOver, onRecord, onE
     return null;
   }
   return (
-    <Button
-      variant="contained"
-      color="error"
-      size="small"
-      startIcon={<RecordIcon />}
-      onClick={onRecord}
-    >
+    <Button variant="contained" color="error" size="small" startIcon={<RecordIcon />} onClick={onRecord}>
       Enregistrer
     </Button>
   );
 };
 
-const ProgramModalContent = ({
-  program,
-  isLoading,
-  coveringRecording,
-  programIsOver,
-  onRecord,
-  onEditRecording,
-}) => {
+const ProgramModalContent = ({ program, isLoading, coveringRecording, programIsOver, onRecord, onEditRecording }) => {
   if (isLoading) {
     return (
       <Box sx={{ p: 2 }}>
@@ -160,15 +141,9 @@ const ProgramModalContent = ({
       )}
 
       <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-        {program.category_name && (
-          <Chip label={program.category_name} size="small" color="primary" />
-        )}
-        {program.year && (
-          <Chip label={String(program.year)} size="small" variant="outlined" />
-        )}
-        {seasonEpisode && (
-          <Chip label={seasonEpisode} size="small" variant="outlined" />
-        )}
+        {program.category_name && <Chip label={program.category_name} size="small" color="primary" />}
+        {program.year && <Chip label={String(program.year)} size="small" variant="outlined" />}
+        {seasonEpisode && <Chip label={seasonEpisode} size="small" variant="outlined" />}
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -218,23 +193,26 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
     : null;
   const programIsOver = program ? program.date + program.duration <= now : false;
 
-  const handleKeyDown = useCallback((event) => {
-    if (!programId || !channelPrograms?.length) {
-      return;
-    }
-    const currentIndex = channelPrograms.findIndex((p) => p.id === programId);
-    if (currentIndex === -1) {
-      return;
-    }
+  const handleKeyDown = useCallback(
+    (event) => {
+      if (!programId || !channelPrograms?.length) {
+        return;
+      }
+      const currentIndex = channelPrograms.findIndex((p) => p.id === programId);
+      if (currentIndex === -1) {
+        return;
+      }
 
-    if (event.key === 'ArrowLeft' && currentIndex > 0) {
-      event.stopPropagation();
-      onNavigate(channelPrograms[currentIndex - 1].id);
-    } else if (event.key === 'ArrowRight' && currentIndex < channelPrograms.length - 1) {
-      event.stopPropagation();
-      onNavigate(channelPrograms[currentIndex + 1].id);
-    }
-  }, [programId, channelPrograms, onNavigate]);
+      if (event.key === 'ArrowLeft' && currentIndex > 0) {
+        event.stopPropagation();
+        onNavigate(channelPrograms[currentIndex - 1].id);
+      } else if (event.key === 'ArrowRight' && currentIndex < channelPrograms.length - 1) {
+        event.stopPropagation();
+        onNavigate(channelPrograms[currentIndex + 1].id);
+      }
+    },
+    [programId, channelPrograms, onNavigate],
+  );
 
   /* Arrows belong to the record modal while it is stacked on top: its
      datetime inputs use them, and navigating would re-prefill its form
@@ -258,11 +236,7 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
   );
 
   const editRecordingModal = editingRecording && (
-    <RecordModal
-      open
-      onClose={() => setEditingRecording(null)}
-      recording={editingRecording}
-    />
+    <RecordModal open onClose={() => setEditingRecording(null)} recording={editingRecording} />
   );
 
   const content = (
@@ -297,9 +271,7 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
               <CloseIcon />
             </IconButton>
           </Box>
-          <Box sx={{ p: 2, overflowY: 'auto' }}>
-            {content}
-          </Box>
+          <Box sx={{ p: 2, overflowY: 'auto' }}>{content}</Box>
         </Drawer>
         {recordModal}
         {editRecordingModal}
@@ -309,12 +281,7 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
 
   return (
     <>
-      <Dialog
-        open={isOpen}
-        onClose={onClose}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" component="span" noWrap sx={{ flexGrow: 1, mr: 1 }}>
             {program?.title ?? ''}
@@ -323,9 +290,7 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent>
-          {content}
-        </DialogContent>
+        <DialogContent>{content}</DialogContent>
       </Dialog>
       {recordModal}
       {editRecordingModal}

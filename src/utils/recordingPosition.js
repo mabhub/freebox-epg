@@ -3,11 +3,7 @@
  * @module utils/recordingPosition
  */
 
-import {
-  ROW_HEIGHT,
-  OVERLAY_HEIGHT_RATIO,
-  OVERLAY_MIN_WIDTH_PX,
-} from './constants';
+import { ROW_HEIGHT, OVERLAY_HEIGHT_RATIO, OVERLAY_MIN_WIDTH_PX } from './constants';
 
 /**
  * Compute the absolute pixel position of a recording overlay cell.
@@ -23,13 +19,7 @@ import {
  * @param {number} args.sidebarWidth - Sidebar width offset added to `left`
  * @returns {{ left: number, top: number, width: number, height: number }} Pixel rect
  */
-export const computeRecordingRect = ({
-  recording,
-  rowIndex,
-  timeOrigin,
-  pixelsPerMinute,
-  sidebarWidth,
-}) => {
+export const computeRecordingRect = ({ recording, rowIndex, timeOrigin, pixelsPerMinute, sidebarWidth }) => {
   const offsetMinutes = (recording.start - timeOrigin) / 60;
   const durationMinutes = (recording.end - recording.start) / 60;
   const left = sidebarWidth + offsetMinutes * pixelsPerMinute;

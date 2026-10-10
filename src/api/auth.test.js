@@ -13,9 +13,7 @@ beforeEach(() => {
 
 describe('checkAuth', () => {
   it('returns the login status', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      Response.json({ success: true, result: { logged_in: true } }),
-    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(Response.json({ success: true, result: { logged_in: true } }));
     await expect(checkAuth()).resolves.toStrictEqual({ logged_in: true });
   });
 

@@ -1,9 +1,4 @@
-import {
-  transformEpgByChannel,
-  mergeChannels,
-  mergeByChannelEntries,
-  transformRecording,
-} from './transformers';
+import { transformEpgByChannel, mergeChannels, mergeByChannelEntries, transformRecording } from './transformers';
 
 describe('transformEpgByChannel', () => {
   it('returns an empty list when the API omits result', () => {
@@ -29,8 +24,22 @@ describe('transformEpgByChannel', () => {
 describe('mergeChannels', () => {
   it('merges and filters channels correctly', () => {
     const channelsMap = {
-      'uuid-webtv-201': { name: 'TF1', short_name: 'TF1', logo_url: '/logo.png', available: true, has_service: true, has_abo: false },
-      'uuid-webtv-202': { name: 'France 2', short_name: 'Fr2', logo_url: '/logo2.png', available: true, has_service: true, has_abo: false },
+      'uuid-webtv-201': {
+        name: 'TF1',
+        short_name: 'TF1',
+        logo_url: '/logo.png',
+        available: true,
+        has_service: true,
+        has_abo: false,
+      },
+      'uuid-webtv-202': {
+        name: 'France 2',
+        short_name: 'Fr2',
+        logo_url: '/logo2.png',
+        available: true,
+        has_service: true,
+        has_abo: false,
+      },
     };
 
     const bouquetChannels = [
@@ -91,7 +100,13 @@ describe('mergeByChannelEntries', () => {
   it('deduplicates programs with the same id across buckets', () => {
     const entries = [
       { uuid: 'uuid-1', programs: [{ id: 'dup', date: 1000, title: 'First' }] },
-      { uuid: 'uuid-1', programs: [{ id: 'dup', date: 1000, title: 'Second' }, { id: 'unique', date: 2000 }] },
+      {
+        uuid: 'uuid-1',
+        programs: [
+          { id: 'dup', date: 1000, title: 'Second' },
+          { id: 'unique', date: 2000 },
+        ],
+      },
     ];
 
     const result = mergeByChannelEntries(entries);

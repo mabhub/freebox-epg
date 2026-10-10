@@ -31,16 +31,18 @@ const EpgPage = () => {
   const selectedChannelUuid = useSelector((state) => state.epg.selectedChannelUuid);
   useRecenterOnReturn();
 
-  const visibleChannels = useMemo(() =>
-    channels.filter((ch) => !hiddenChannels.includes(ch.uuid)),
-  [channels, hiddenChannels]);
+  const visibleChannels = useMemo(
+    () => channels.filter((ch) => !hiddenChannels.includes(ch.uuid)),
+    [channels, hiddenChannels],
+  );
 
   // The list is keyed only by the channel: the prev/next arrows in the
   // modal navigate inside the array we already computed, and re-reading
   // the cache on every keystroke would re-iterate every byChannel bucket.
-  const channelPrograms = useMemo(() =>
-    getCachedChannelPrograms(queryClient, selectedChannelUuid),
-  [queryClient, selectedChannelUuid]);
+  const channelPrograms = useMemo(
+    () => getCachedChannelPrograms(queryClient, selectedChannelUuid),
+    [queryClient, selectedChannelUuid],
+  );
 
   const selectedChannel = useMemo(
     () => channels.find((ch) => ch.uuid === selectedChannelUuid) ?? null,
@@ -55,9 +57,12 @@ const EpgPage = () => {
     dispatch(clearSelection());
   }, [dispatch]);
 
-  const handleNavigateProgram = useCallback((programId) => {
-    dispatch(selectProgram({ programId, channelUuid: selectedChannelUuid }));
-  }, [dispatch, selectedChannelUuid]);
+  const handleNavigateProgram = useCallback(
+    (programId) => {
+      dispatch(selectProgram({ programId, channelUuid: selectedChannelUuid }));
+    },
+    [dispatch, selectedChannelUuid],
+  );
 
   return (
     <NowProvider>
@@ -70,10 +75,7 @@ const EpgPage = () => {
             position: 'relative',
           }}
         >
-          <EpgGrid
-            channels={visibleChannels}
-            isLoadingChannels={isLoadingChannels}
-          />
+          <EpgGrid channels={visibleChannels} isLoadingChannels={isLoadingChannels} />
         </Box>
         <ProgramModal
           programId={selectedProgramId}
@@ -82,11 +84,7 @@ const EpgPage = () => {
           onNavigate={handleNavigateProgram}
           onClose={handleCloseModal}
         />
-        <ChannelFilter
-          open={filterOpen}
-          onClose={handleToggleFilter}
-          channels={channels}
-        />
+        <ChannelFilter open={filterOpen} onClose={handleToggleFilter} channels={channels} />
       </Layout>
     </NowProvider>
   );

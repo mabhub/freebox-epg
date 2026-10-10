@@ -104,14 +104,20 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
 
   useDragScroll(containerNode);
 
-  const handleScroll = useCallback((event) => {
-    const { scrollTop: sTop, scrollLeft: sLeft } = event.target;
-    dispatch(setScroll({ scrollTop: sTop, scrollLeft: sLeft }));
-  }, [dispatch]);
+  const handleScroll = useCallback(
+    (event) => {
+      const { scrollTop: sTop, scrollLeft: sLeft } = event.target;
+      dispatch(setScroll({ scrollTop: sTop, scrollLeft: sLeft }));
+    },
+    [dispatch],
+  );
 
-  const handleSelectProgram = useCallback((programId, channelUuid) => {
-    dispatch(selectProgram({ programId, channelUuid }));
-  }, [dispatch]);
+  const handleSelectProgram = useCallback(
+    (programId, channelUuid) => {
+      dispatch(selectProgram({ programId, channelUuid }));
+    },
+    [dispatch],
+  );
 
   const handleSelectRecording = useCallback((recording) => {
     setEditingRecording(recording);
@@ -121,43 +127,38 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     setEditingRecording(null);
   }, []);
 
-  const handleDeleteRecording = useCallback((recording) => {
-    const confirmed = globalThis.confirm(
-      `Supprimer l'enregistrement « ${recording.name} » ?`,
-    );
-    if (confirmed) {
-      deleteRecording.mutate({ id: recording.id, kind: recording.kind });
-    }
-  }, [deleteRecording]);
+  const handleDeleteRecording = useCallback(
+    (recording) => {
+      const confirmed = globalThis.confirm(`Supprimer l'enregistrement « ${recording.name} » ?`);
+      if (confirmed) {
+        deleteRecording.mutate({ id: recording.id, kind: recording.kind });
+      }
+    },
+    [deleteRecording],
+  );
 
   // Time window currently rendered by the grid, used by RecordingsOverlay
   // to skip cells outside the visible range.
   const viewportStart = timeOrigin;
   const viewportEnd = timeOrigin + HOURS_TO_RENDER * 3600;
 
-  const gridContent = useMemo(() =>
-    visibleChannels.map((channel, index) => (
-      <ChannelRow
-        key={channel.uuid}
-        channel={channel}
-        programs={programs.get(channel.uuid) ?? EMPTY_PROGRAMS}
-        rowIndex={startIndex + index}
-        timeOrigin={timeOrigin}
-        pixelsPerMinute={pixelsPerMinute}
-        sidebarWidth={sidebarWidth}
-        isMobile={isMobile}
-        onSelectProgram={handleSelectProgram}
-      />
-    )), [
-    visibleChannels,
-    programs,
-    startIndex,
-    timeOrigin,
-    pixelsPerMinute,
-    sidebarWidth,
-    isMobile,
-    handleSelectProgram,
-  ]);
+  const gridContent = useMemo(
+    () =>
+      visibleChannels.map((channel, index) => (
+        <ChannelRow
+          key={channel.uuid}
+          channel={channel}
+          programs={programs.get(channel.uuid) ?? EMPTY_PROGRAMS}
+          rowIndex={startIndex + index}
+          timeOrigin={timeOrigin}
+          pixelsPerMinute={pixelsPerMinute}
+          sidebarWidth={sidebarWidth}
+          isMobile={isMobile}
+          onSelectProgram={handleSelectProgram}
+        />
+      )),
+    [visibleChannels, programs, startIndex, timeOrigin, pixelsPerMinute, sidebarWidth, isMobile, handleSelectProgram],
+  );
 
   if (isLoadingChannels) {
     return (
@@ -234,11 +235,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
         </GridContent>
       </Box>
 
-      <RecordModal
-        open={editingRecording !== null}
-        onClose={handleCloseRecordingModal}
-        recording={editingRecording}
-      />
+      <RecordModal open={editingRecording !== null} onClose={handleCloseRecordingModal} recording={editingRecording} />
 
       {isLoadingPrograms && (
         <CircularProgress

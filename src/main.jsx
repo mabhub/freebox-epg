@@ -1,13 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-import {
-  createTheme,
-  CssBaseline,
-  responsiveFontSizes,
-  ThemeProvider,
-  useMediaQuery,
-} from '@mui/material';
+import { createTheme, CssBaseline, responsiveFontSizes, ThemeProvider, useMediaQuery } from '@mui/material';
 
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthError, isTransientError } from '@/api/client';
@@ -45,40 +39,46 @@ const queryClient = new QueryClient({
 const ThemeWrapper = () => {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
-  const theme = React.useMemo(() => responsiveFontSizes(createTheme({
-    palette: {
-      mode: prefersDarkMode ? 'dark' : 'light',
-      primary: {
-        main: '#adb31b',
-      },
-      secondary: {
-        main: '#ff6b35',
-      },
-    },
-    typography: {
-      fontFamily: [
-        '-apple-system',
-        'BlinkMacSystemFont',
-        '"Segoe UI"',
-        'Roboto',
-        '"Helvetica Neue"',
-        'Arial',
-        'sans-serif',
-        '"Apple Color Emoji"',
-        '"Segoe UI Emoji"',
-        '"Segoe UI Symbol"',
-      ].join(','),
-    },
-    components: {
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'none',
+  const theme = React.useMemo(
+    () =>
+      responsiveFontSizes(
+        createTheme({
+          palette: {
+            mode: prefersDarkMode ? 'dark' : 'light',
+            primary: {
+              main: '#adb31b',
+            },
+            secondary: {
+              main: '#ff6b35',
+            },
           },
-        },
-      },
-    },
-  })), [prefersDarkMode]);
+          typography: {
+            fontFamily: [
+              '-apple-system',
+              'BlinkMacSystemFont',
+              '"Segoe UI"',
+              'Roboto',
+              '"Helvetica Neue"',
+              'Arial',
+              'sans-serif',
+              '"Apple Color Emoji"',
+              '"Segoe UI Emoji"',
+              '"Segoe UI Symbol"',
+            ].join(','),
+          },
+          components: {
+            MuiButton: {
+              styleOverrides: {
+                root: {
+                  textTransform: 'none',
+                },
+              },
+            },
+          },
+        }),
+      ),
+    [prefersDarkMode],
+  );
 
   return (
     <ThemeProvider theme={theme}>

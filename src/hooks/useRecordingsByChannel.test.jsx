@@ -15,7 +15,15 @@ vi.mock('@/hooks/useCurrentTime', () => ({
   default: () => 10_000,
 }));
 
-const programmedRaw = ({ id, channel_uuid, start, end, state = 'waiting_start_time', has_record_gen = false, record_gen_id }) => ({
+const programmedRaw = ({
+  id,
+  channel_uuid,
+  start,
+  end,
+  state = 'waiting_start_time',
+  has_record_gen = false,
+  record_gen_id,
+}) => ({
   id,
   channel_uuid,
   channel_name: `Ch-${channel_uuid}`,
@@ -41,16 +49,13 @@ const renderRecordings = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: Infinity } },
   });
-  const wrapper = ({ children }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  const wrapper = ({ children }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   return renderHook(() => useRecordingsByChannel(), { wrapper });
 };
 
 // Serves the given raw lists to the programmed and finished PVR endpoints
 const mockPvrLists = ({ programmed = [], finished = [] }) => {
-  apiFetch.mockImplementation((path) =>
-    Promise.resolve(path.includes('programmed') ? programmed : finished));
+  apiFetch.mockImplementation((path) => Promise.resolve(path.includes('programmed') ? programmed : finished));
 };
 
 beforeEach(() => {

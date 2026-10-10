@@ -12,10 +12,7 @@ import { API_BASE_URL } from '@/utils/constants';
 
 const FBX_HEADERS = { 'X-FBX-FREEBOX0S': '1' };
 
-const hexFromBuffer = (buffer) =>
-  [...new Uint8Array(buffer)]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+const hexFromBuffer = (buffer) => [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
 
 const sha1Hex = async (text) => {
   const encoded = new TextEncoder().encode(text);
@@ -25,13 +22,7 @@ const sha1Hex = async (text) => {
 
 const hmacSha1Hex = async (key, message) => {
   const encodedKey = new TextEncoder().encode(key);
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    encodedKey,
-    { name: 'HMAC', hash: 'SHA-1' },
-    false,
-    ['sign'],
-  );
+  const cryptoKey = await crypto.subtle.importKey('raw', encodedKey, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
   const encodedMessage = new TextEncoder().encode(message);
   const signature = await crypto.subtle.sign('HMAC', cryptoKey, encodedMessage);
   return hexFromBuffer(signature);
@@ -52,8 +43,8 @@ const hashPassword = async (password, challenge, passwordSalt) => {
  */
 const resolveChallenge = (challenge) =>
   Array.isArray(challenge)
-    // eslint-disable-next-line no-eval
-    ? challenge.map((fragment) => String((0, eval)(fragment))).join('')
+    ? // eslint-disable-next-line no-eval
+      challenge.map((fragment) => String((0, eval)(fragment))).join('')
     : challenge;
 
 /**
@@ -90,11 +81,7 @@ export const checkAuth = async () => {
 export const login = async (password) => {
   const { challenge, password_salt } = await checkAuth();
 
-  const hash = await hashPassword(
-    password,
-    resolveChallenge(challenge),
-    password_salt,
-  );
+  const hash = await hashPassword(password, resolveChallenge(challenge), password_salt);
 
   const response = await fetch(`${API_BASE_URL}/login/`, {
     method: 'POST',

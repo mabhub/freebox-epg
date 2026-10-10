@@ -83,10 +83,7 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
   // useQueries keeps the same observers. The key is both the dependency
   // and the data source — splitting it back into uuids makes the memo
   // self-contained and lets exhaustive-deps stay enabled.
-  const visibleUuidsKey = useMemo(
-    () => visibleChannels.map((c) => c.uuid).join('|'),
-    [visibleChannels],
-  );
+  const visibleUuidsKey = useMemo(() => visibleChannels.map((c) => c.uuid).join('|'), [visibleChannels]);
 
   const pairs = useMemo(() => {
     const uuids = visibleUuidsKey ? visibleUuidsKey.split('|') : [];

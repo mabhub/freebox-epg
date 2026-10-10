@@ -11,16 +11,14 @@ const SECONDS_PER_2_HOURS = 7200;
  * @param {number} timestamp - Unix timestamp in seconds
  * @returns {number} Rounded timestamp
  */
-export const roundToHour = (timestamp) =>
-  Math.floor(timestamp / SECONDS_PER_HOUR) * SECONDS_PER_HOUR;
+export const roundToHour = (timestamp) => Math.floor(timestamp / SECONDS_PER_HOUR) * SECONDS_PER_HOUR;
 
 /**
  * Round a Unix timestamp down to the nearest 2-hour boundary
  * @param {number} timestamp - Unix timestamp in seconds
  * @returns {number} Rounded timestamp
  */
-export const roundTo2Hours = (timestamp) =>
-  Math.floor(timestamp / SECONDS_PER_2_HOURS) * SECONDS_PER_2_HOURS;
+export const roundTo2Hours = (timestamp) => Math.floor(timestamp / SECONDS_PER_2_HOURS) * SECONDS_PER_2_HOURS;
 
 /**
  * Format a Unix timestamp as HH:MM
@@ -126,5 +124,4 @@ export const timestampToDatetimeLocal = (timestamp) => {
  * @param {string} str - String in YYYY-MM-DDTHH:MM format
  * @returns {number} Unix timestamp in seconds
  */
-export const datetimeLocalToTimestamp = (str) =>
-  Math.floor(new Date(str).getTime() / 1000);
+export const datetimeLocalToTimestamp = (str) => Math.floor(new Date(str).getTime() / 1000);

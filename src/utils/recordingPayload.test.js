@@ -111,7 +111,13 @@ describe('buildUpdatePayload', () => {
 describe('computeFieldLocks', () => {
   it('frees all fields in create mode', () => {
     expect(computeFieldLocks(null)).toMatchObject({
-      name: true, subname: true, start: true, end: true, quality: true, media: true, path: true,
+      name: true,
+      subname: true,
+      start: true,
+      end: true,
+      quality: true,
+      media: true,
+      path: true,
     });
   });
 

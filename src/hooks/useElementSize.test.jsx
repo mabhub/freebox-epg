@@ -16,18 +16,21 @@ describe('useElementSize', () => {
 
   beforeEach(() => {
     observers = [];
-    vi.stubGlobal('ResizeObserver', class {
-      disconnect = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        disconnect = vi.fn();
 
-      constructor(onResize) {
-        this.onResize = onResize;
-        observers.push(this);
-      }
+        constructor(onResize) {
+          this.onResize = onResize;
+          observers.push(this);
+        }
 
-      observe(node) {
-        this.node = node;
-      }
-    });
+        observe(node) {
+          this.node = node;
+        }
+      },
+    );
   });
 
   afterEach(() => {

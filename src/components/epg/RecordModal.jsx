@@ -22,24 +22,9 @@
  */
 
 import { useEffect, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-} from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
-import {
-  usePvrConfig,
-  usePvrMedia,
-  useCreateRecording,
-  useUpdateRecording,
-  useDeleteRecording,
-} from '@/hooks/usePvr';
+import { usePvrConfig, usePvrMedia, useCreateRecording, useUpdateRecording, useDeleteRecording } from '@/hooks/usePvr';
 import useRecordingForm from '@/hooks/useRecordingForm';
 import { buildCreatePayload, buildUpdatePayload } from '@/utils/recordingPayload';
 
@@ -87,7 +72,11 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const { values, setField, locks, startTs, endTs, duration, isEdit } = useRecordingForm({
-    open, recording, program, pvrConfig, mediaList,
+    open,
+    recording,
+    program,
+    pvrConfig,
+    mediaList,
   });
 
   // Reset all mutation states + delete confirmation when the modal opens
@@ -118,9 +107,7 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
         payload: buildUpdatePayload({ recording, values, locks, startTs, endTs }),
       });
     } else {
-      createRecording.mutate(
-        buildCreatePayload({ values, channelUuid, channelName, startTs, endTs }),
-      );
+      createRecording.mutate(buildCreatePayload({ values, channelUuid, channelName, startTs, endTs }));
     }
   };
 
@@ -152,14 +139,13 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>
-          {isEdit ? 'Modifier l\'enregistrement' : 'Programmer un enregistrement'}
-        </DialogTitle>
+        <DialogTitle>{isEdit ? "Modifier l'enregistrement" : 'Programmer un enregistrement'}</DialogTitle>
 
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '16px !important' }}>
           {isOccurrence && (
             <Alert severity="info">
-              Cet enregistrement fait partie d&apos;une programmation récurrente. Modifier la série pour changer les autres champs.
+              Cet enregistrement fait partie d&apos;une programmation récurrente. Modifier la série pour changer les
+              autres champs.
             </Alert>
           )}
 
@@ -172,9 +158,7 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
           />
 
           {confirmDelete && !deleteRecording.isSuccess && (
-            <Alert severity="warning">
-              Confirmer la suppression de cet enregistrement ?
-            </Alert>
+            <Alert severity="warning">Confirmer la suppression de cet enregistrement ?</Alert>
           )}
           {successFlag && <Alert severity="success">{successMessage}</Alert>}
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}

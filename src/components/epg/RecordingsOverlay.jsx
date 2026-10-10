@@ -41,44 +41,8 @@ const OverlayRoot = styled('div')({
   },
 });
 
-const RecordingsOverlay = memo(({
-  visibleChannels,
-  startIndex,
-  timeOrigin,
-  pixelsPerMinute,
-  sidebarWidth,
-  viewportStart,
-  viewportEnd,
-  onSelect,
-  onDelete,
-}) => {
-  const recordingsByChannel = useRecordingsByChannel();
-
-  const cells = useMemo(() => {
-    if (recordingsByChannel.size === 0) return [];
-
-    const result = [];
-    for (const [index, channel] of visibleChannels.entries()) {
-      const channelRecordings = recordingsByChannel.get(channel.uuid);
-      if (channelRecordings) {
-        const rowIndex = startIndex + index;
-        for (const recording of channelRecordings) {
-          if (isRecordingInViewport(recording, viewportStart, viewportEnd)) {
-            const rect = computeRecordingRect({
-              recording,
-              rowIndex,
-              timeOrigin,
-              pixelsPerMinute,
-              sidebarWidth,
-            });
-            result.push({ recording, rect });
-          }
-        }
-      }
-    }
-    return result;
-  }, [
-    recordingsByChannel,
+const RecordingsOverlay = memo(
+  ({
     visibleChannels,
     startIndex,
     timeOrigin,
@@ -86,24 +50,62 @@ const RecordingsOverlay = memo(({
     sidebarWidth,
     viewportStart,
     viewportEnd,
-  ]);
+    onSelect,
+    onDelete,
+  }) => {
+    const recordingsByChannel = useRecordingsByChannel();
 
-  if (cells.length === 0) return null;
+    const cells = useMemo(() => {
+      if (recordingsByChannel.size === 0) return [];
 
-  return (
-    <OverlayRoot>
-      {cells.map(({ recording, rect }) => (
-        <RecordingCell
-          key={`${recording.kind}-${recording.id}`}
-          recording={recording}
-          rect={rect}
-          onSelect={onSelect}
-          onDelete={onDelete}
-        />
-      ))}
-    </OverlayRoot>
-  );
-});
+      const result = [];
+      for (const [index, channel] of visibleChannels.entries()) {
+        const channelRecordings = recordingsByChannel.get(channel.uuid);
+        if (channelRecordings) {
+          const rowIndex = startIndex + index;
+          for (const recording of channelRecordings) {
+            if (isRecordingInViewport(recording, viewportStart, viewportEnd)) {
+              const rect = computeRecordingRect({
+                recording,
+                rowIndex,
+                timeOrigin,
+                pixelsPerMinute,
+                sidebarWidth,
+              });
+              result.push({ recording, rect });
+            }
+          }
+        }
+      }
+      return result;
+    }, [
+      recordingsByChannel,
+      visibleChannels,
+      startIndex,
+      timeOrigin,
+      pixelsPerMinute,
+      sidebarWidth,
+      viewportStart,
+      viewportEnd,
+    ]);
+
+    if (cells.length === 0) return null;
+
+    return (
+      <OverlayRoot>
+        {cells.map(({ recording, rect }) => (
+          <RecordingCell
+            key={`${recording.kind}-${recording.id}`}
+            recording={recording}
+            rect={rect}
+            onSelect={onSelect}
+            onDelete={onDelete}
+          />
+        ))}
+      </OverlayRoot>
+    );
+  },
+);
 
 RecordingsOverlay.displayName = 'RecordingsOverlay';
 

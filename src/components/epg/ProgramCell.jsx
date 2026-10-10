@@ -77,15 +77,7 @@ const TOOLTIP_SLOT_PROPS = {
   },
 };
 
-const ProgramCell = memo(({
-  program,
-  timeOrigin,
-  pixelsPerMinute,
-  sidebarWidth,
-  channelUuid,
-  isOnAir,
-  onSelect,
-}) => {
+const ProgramCell = memo(({ program, timeOrigin, pixelsPerMinute, sidebarWidth, channelUuid, isOnAir, onSelect }) => {
   const offsetMinutes = (program.date - timeOrigin) / 60;
   const durationMinutes = program.duration / 60;
   const leftPx = sidebarWidth + offsetMinutes * pixelsPerMinute;
@@ -133,10 +125,13 @@ const ProgramCell = memo(({
     setTooltipOpen(false);
   }, []);
 
-  useEffect(() => () => {
-    clearTimeout(prefetchTimer.current);
-    clearTimeout(idleTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      clearTimeout(prefetchTimer.current);
+      clearTimeout(idleTimer.current);
+    },
+    [],
+  );
 
   const tooltipContent = useMemo(() => {
     const startTime = formatTime(program.date);
@@ -151,7 +146,8 @@ const ProgramCell = memo(({
           {program.category_name} &bull; {startTime} - {endTime}
         </Typography>
         <Typography variant="body2" fontWeight="bold">
-          {program.title}{seasonEp ? ` ${seasonEp}` : ''}
+          {program.title}
+          {seasonEp ? ` ${seasonEp}` : ''}
         </Typography>
         {program.sub_title && (
           <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
@@ -179,47 +175,31 @@ const ProgramCell = memo(({
       disableTouchListener
       slotProps={TOOLTIP_SLOT_PROPS}
     >
-    <CellRoot
-      onClick={handleClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        left: leftPx,
-        width: widthPx,
-        ...(categoryBg && { backgroundColor: categoryBg }),
-        ...(isOnAir && { opacity: 1 }),
-        ...(categoryAccent && { borderLeft: `3px solid ${categoryAccent}` }),
-      }}
-    >
-      {thumbnailUrl && widthPx >= THUMBNAIL_MIN_WIDTH && (
-        <Thumbnail
-          src={thumbnailUrl}
-          alt=""
-          loading="lazy"
-        />
-      )}
-      <TextContainer>
-        <Typography
-          variant="caption"
-          fontWeight="bold"
-          noWrap
-          sx={{ display: 'block', lineHeight: 1.3 }}
-        >
-          {program.title}
-        </Typography>
-        {widthPx >= SUBTITLE_MIN_WIDTH && (program.sub_title || program.season_number) && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            noWrap
-            sx={{ display: 'block', lineHeight: 1.2 }}
-          >
-            {program.sub_title ?? formatSeasonEpisode(program)}
+      <CellRoot
+        onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          left: leftPx,
+          width: widthPx,
+          ...(categoryBg && { backgroundColor: categoryBg }),
+          ...(isOnAir && { opacity: 1 }),
+          ...(categoryAccent && { borderLeft: `3px solid ${categoryAccent}` }),
+        }}
+      >
+        {thumbnailUrl && widthPx >= THUMBNAIL_MIN_WIDTH && <Thumbnail src={thumbnailUrl} alt="" loading="lazy" />}
+        <TextContainer>
+          <Typography variant="caption" fontWeight="bold" noWrap sx={{ display: 'block', lineHeight: 1.3 }}>
+            {program.title}
           </Typography>
-        )}
-      </TextContainer>
-    </CellRoot>
+          {widthPx >= SUBTITLE_MIN_WIDTH && (program.sub_title || program.season_number) && (
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', lineHeight: 1.2 }}>
+              {program.sub_title ?? formatSeasonEpisode(program)}
+            </Typography>
+          )}
+        </TextContainer>
+      </CellRoot>
     </Tooltip>
   );
 });

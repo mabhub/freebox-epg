@@ -102,7 +102,10 @@ const withConcurrencyLimit = async (task, signal) => {
     let next;
     while (queue.length > 0) {
       const candidate = queue.shift();
-      if (!candidate.aborted) { next = candidate; break; }
+      if (!candidate.aborted) {
+        next = candidate;
+        break;
+      }
     }
     if (next) next.run();
   }

@@ -4,11 +4,7 @@
  * or to a retry screen when the check itself failed (Freebox unreachable).
  */
 
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-} from 'react-router';
+import { BrowserRouter, Routes, Route } from 'react-router';
 import { Alert, Box, Button, CircularProgress } from '@mui/material';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -34,7 +30,11 @@ const App = () => {
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', p: 2 }}>
         <Alert
           severity="error"
-          action={<Button color="inherit" size="small" onClick={() => refetch()}>Réessayer</Button>}
+          action={
+            <Button color="inherit" size="small" onClick={() => refetch()}>
+              Réessayer
+            </Button>
+          }
         >
           {error.message}
         </Alert>

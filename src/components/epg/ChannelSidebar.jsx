@@ -37,17 +37,20 @@ const TextBlock = styled('div')({
 });
 
 const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
-  const tooltipContent = useMemo(() => (
-    <Box>
-      <Typography variant="subtitle2">{channel.name}</Typography>
-      <Typography variant="body2">N° {channel.number}</Typography>
-      {channel.hasAbo && (
-        <Typography variant="caption" color="warning.main">
-          Abonnement requis
-        </Typography>
-      )}
-    </Box>
-  ), [channel.name, channel.number, channel.hasAbo]);
+  const tooltipContent = useMemo(
+    () => (
+      <Box>
+        <Typography variant="subtitle2">{channel.name}</Typography>
+        <Typography variant="body2">N° {channel.number}</Typography>
+        {channel.hasAbo && (
+          <Typography variant="caption" color="warning.main">
+            Abonnement requis
+          </Typography>
+        )}
+      </Box>
+    ),
+    [channel.name, channel.number, channel.hasAbo],
+  );
 
   return (
     <Tooltip title={tooltipContent} placement="right" arrow>
@@ -63,19 +66,10 @@ const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
         />
         {!isMobile && (
           <TextBlock>
-            <Typography
-              variant="caption"
-              fontWeight="bold"
-              noWrap
-              sx={{ display: 'block', lineHeight: 1.2 }}
-            >
+            <Typography variant="caption" fontWeight="bold" noWrap sx={{ display: 'block', lineHeight: 1.2 }}>
               {channel.number}
             </Typography>
-            <Typography
-              variant="caption"
-              noWrap
-              sx={{ display: 'block', lineHeight: 1.2 }}
-            >
+            <Typography variant="caption" noWrap sx={{ display: 'block', lineHeight: 1.2 }}>
               {channel.shortName ?? channel.name}
             </Typography>
           </TextBlock>
