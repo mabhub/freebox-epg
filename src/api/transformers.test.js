@@ -189,6 +189,16 @@ describe('transformRecording', () => {
     expect(transformRecording(finished, 'finished').state).toBe('finished');
   });
 
+  it('widens a programmed timer by its margins to the actually recorded window', () => {
+    const withMargins = { ...baseProgrammed, margin_before: 300, margin_after: 900 };
+    expect(transformRecording(withMargins, 'programmed')).toMatchObject({ start: 700, end: 2900 });
+  });
+
+  it('keeps finished bounds as is, margins being already included', () => {
+    const finished = { id: 99, start: 700, end: 2900, margin_before: null, margin_after: null };
+    expect(transformRecording(finished, 'finished')).toMatchObject({ start: 700, end: 2900 });
+  });
+
   it('coerces missing optional strings to empty strings', () => {
     const sparse = { id: 1, start: 0, end: 0 };
     const result = transformRecording(sparse, 'programmed');

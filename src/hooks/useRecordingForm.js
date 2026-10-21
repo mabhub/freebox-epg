@@ -87,15 +87,17 @@ const valuesFromProgram = (program, pvrConfig) => {
 };
 
 /**
- * Derive the edit-mode initial values from an existing recording.
+ * Derive the edit-mode initial values from an existing recording. The
+ * bounds come from `raw`: the unified `start`/`end` include the timer's
+ * margins, which the Freebox would add a second time on save.
  * @param {Object} recording - Recording in unified shape
  * @returns {Object} Initial form values
  */
 const valuesFromRecording = (recording) => ({
   name: recording.name ?? '',
   subname: recording.subname ?? '',
-  start: timestampToDatetimeLocal(recording.start),
-  end: timestampToDatetimeLocal(recording.end),
+  start: timestampToDatetimeLocal(recording.raw?.start ?? recording.start),
+  end: timestampToDatetimeLocal(recording.raw?.end ?? recording.end),
   quality: recording.raw?.channel_quality ?? DEFAULT_QUALITY,
   media: recording.raw?.media ?? '',
   path: recording.raw?.path ?? DEFAULT_PATH,

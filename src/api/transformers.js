@@ -109,6 +109,10 @@ const normaliseProgrammedState = (state) => PROGRAMMED_STATE_MAP[state] ?? 'wait
 /**
  * Normalise a raw recording (programmed timer or finished recording) into
  * the unified shape consumed by the EPG overlay.
+ *
+ * `start`/`end` span the window actually recorded: a programmed timer keeps
+ * its margins aside (`margin_before`/`margin_after`), whereas a finished
+ * recording already includes them. The timer's own bounds stay in `raw`.
  * @param {Object} raw - Raw API payload
  * @param {'programmed'|'finished'} kind - Which endpoint it came from
  * @returns {Object} Recording in the unified shape
@@ -120,8 +124,8 @@ export const transformRecording = (raw, kind) => ({
   channelName: raw.channel_name ?? '',
   name: raw.name ?? '',
   subname: raw.subname ?? '',
-  start: raw.start,
-  end: raw.end,
+  start: raw.start - (raw.margin_before ?? 0),
+  end: raw.end + (raw.margin_after ?? 0),
   state: kind === 'finished' ? 'finished' : normaliseProgrammedState(raw.state),
   generatorId: raw.has_record_gen ? (raw.record_gen_id ?? null) : null,
   raw,
