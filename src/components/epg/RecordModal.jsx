@@ -71,13 +71,14 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
   const deleteRecording = useDeleteRecording();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const { values, setField, locks, startTs, endTs, marginBefore, marginAfter, duration, isEdit } = useRecordingForm({
-    open,
-    recording,
-    program,
-    pvrConfig,
-    mediaList,
-  });
+  const { values, setField, setFieldValue, locks, startTs, endTs, marginBefore, marginAfter, duration, isEdit } =
+    useRecordingForm({
+      open,
+      recording,
+      program,
+      pvrConfig,
+      mediaList,
+    });
 
   // Reset all mutation states + delete confirmation when the modal opens
   // — otherwise stale success/error alerts would flash on the next open.
@@ -154,6 +155,7 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
           <RecordingFormFields
             values={values}
             setField={setField}
+            setFieldValue={setFieldValue}
             locks={locks}
             startTs={startTs}
             endTs={endTs}

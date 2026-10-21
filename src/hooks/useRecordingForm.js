@@ -141,7 +141,8 @@ const valuesFromRecording = (recording) => ({
  * @param {Object|null} args.program - Program for create mode
  * @param {Object|null|undefined} args.pvrConfig - PVR config for default margins
  * @param {Array|null|undefined} args.mediaList - Available media (used to default the support in create mode)
- * @returns {Object} Form values, setter, timestamps and margins in seconds, and locks
+ * @returns {Object} Form values, setters (`setField` takes an input event,
+ *   `setFieldValue` a raw value), timestamps and margins in seconds, and locks
  */
 const useRecordingForm = ({ open, recording, program, pvrConfig, mediaList }) => {
   const isEdit = recording !== null && recording !== undefined;
@@ -179,6 +180,7 @@ const useRecordingForm = ({ open, recording, program, pvrConfig, mediaList }) =>
     () => (field) => (event) => setValues((prev) => ({ ...prev, [field]: event.target.value })),
     [],
   );
+  const setFieldValue = useMemo(() => (field) => (value) => setValues((prev) => ({ ...prev, [field]: value })), []);
 
   const startTs = values.start ? datetimeLocalToTimestamp(values.start) : 0;
   const endTs = values.end ? datetimeLocalToTimestamp(values.end) : 0;
@@ -186,6 +188,7 @@ const useRecordingForm = ({ open, recording, program, pvrConfig, mediaList }) =>
   return {
     values,
     setField,
+    setFieldValue,
     locks,
     startTs,
     endTs,

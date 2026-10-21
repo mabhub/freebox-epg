@@ -5,11 +5,13 @@
  * same field-locking matrix between create and edit modes.
  *
  * Start and end are the program slot; the margins extend it on each side,
- * and a summary line gives the window actually recorded.
+ * and a summary line gives the window actually recorded. Dates are typed in
+ * French with a 24-hour clock whatever the browser locale.
  *
  * @param {Object} props - Component props
  * @param {Object} props.values - Form values from useRecordingForm
  * @param {Function} props.setField - Input event setter from useRecordingForm
+ * @param {Function} props.setFieldValue - Raw value setter from useRecordingForm
  * @param {Object} props.locks - Lock matrix from useRecordingForm
  * @param {number} props.startTs - Program start (seconds)
  * @param {number} props.endTs - Program end (seconds)
@@ -20,7 +22,19 @@
  */
 
 import { Box, MenuItem, TextField, Typography } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { frFR } from '@mui/x-date-pickers/locales';
+import dayjs from 'dayjs';
+import 'dayjs/locale/fr';
+
 import { formatDuration, formatTime } from '@/utils/time';
+
+// Same string shape as the former datetime-local inputs, so the form state
+// and its timestamp conversions stay unchanged.
+const FORM_DATETIME_FORMAT = 'YYYY-MM-DDTHH:mm';
+const PICKER_LOCALE_TEXT = frFR.components.MuiLocalizationProvider.defaultProps.localeText;
 
 const QUALITY_OPTIONS = [
   { value: 'auto', label: 'Auto' },
@@ -32,16 +46,13 @@ const QUALITY_OPTIONS = [
 const formatBytes = (bytes) => `${(bytes / 1024 ** 3).toFixed(1)} Go`;
 
 const DateTimeField = ({ label, value, onChange, disabled }) => (
-  <TextField
+  <DateTimePicker
     label={label}
-    type="datetime-local"
-    value={value}
-    onChange={onChange}
-    fullWidth
-    required
-    size="small"
+    value={value ? dayjs(value) : null}
+    onChange={(date) => onChange(date?.isValid() ? date.format(FORM_DATETIME_FORMAT) : '')}
+    ampm={false}
     disabled={disabled}
-    slotProps={{ inputLabel: { shrink: true } }}
+    slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
   />
 );
 
@@ -58,7 +69,7 @@ const MarginField = ({ label, value, onChange, disabled }) => (
   />
 );
 
-const ScheduleFields = ({ values, setField, locks, startTs, endTs, marginBefore, marginAfter }) => {
+const ScheduleFields = ({ values, setField, setFieldValue, locks, startTs, endTs, marginBefore, marginAfter }) => {
   // A finished recording has no margins left to show or edit.
   const showMargins = locks.marginBefore || locks.marginAfter || marginBefore > 0 || marginAfter > 0;
   const recordedStart = startTs - marginBefore;
@@ -66,9 +77,9 @@ const ScheduleFields = ({ values, setField, locks, startTs, endTs, marginBefore,
   const duration = endTs - startTs;
 
   return (
-    <>
-      <DateTimeField label="Début" value={values.start} onChange={setField('start')} disabled={!locks.start} />
-      <DateTimeField label="Fin" value={values.end} onChange={setField('end')} disabled={!locks.end} />
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr" localeText={PICKER_LOCALE_TEXT}>
+      <DateTimeField label="Début" value={values.start} onChange={setFieldValue('start')} disabled={!locks.start} />
+      <DateTimeField label="Fin" value={values.end} onChange={setFieldValue('end')} disabled={!locks.end} />
 
       {showMargins && (
         <Box sx={{ display: 'flex', gap: 2 }}>
@@ -93,11 +104,21 @@ const ScheduleFields = ({ values, setField, locks, startTs, endTs, marginBefore,
           {formatDuration(recordedEnd - recordedStart)})
         </Typography>
       )}
-    </>
+    </LocalizationProvider>
   );
 };
 
-const RecordingFormFields = ({ values, setField, locks, startTs, endTs, marginBefore, marginAfter, mediaList }) => (
+const RecordingFormFields = ({
+  values,
+  setField,
+  setFieldValue,
+  locks,
+  startTs,
+  endTs,
+  marginBefore,
+  marginAfter,
+  mediaList,
+}) => (
   <>
     <TextField
       label="Nom"
@@ -120,6 +141,7 @@ const RecordingFormFields = ({ values, setField, locks, startTs, endTs, marginBe
     <ScheduleFields
       values={values}
       setField={setField}
+      setFieldValue={setFieldValue}
       locks={locks}
       startTs={startTs}
       endTs={endTs}
