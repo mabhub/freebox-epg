@@ -30,9 +30,15 @@ const useRecordingsByChannel = () => {
       return EMPTY_MAP;
     }
 
+    // A recording in progress is listed by both endpoints under the same id.
+    // Keep the programmed timer: it carries the live state and stopping it
+    // goes through /pvr/programmed/.
+    const programmedIds = new Set(programmedList.map((recording) => recording.id));
+    const finishedOnly = finishedList.filter((recording) => !programmedIds.has(recording.id));
+
     const byChannel = new Map();
 
-    for (const recording of [...programmedList, ...finishedList]) {
+    for (const recording of [...programmedList, ...finishedOnly]) {
       if (recording.channelUuid) {
         const list = byChannel.get(recording.channelUuid);
         if (list) {

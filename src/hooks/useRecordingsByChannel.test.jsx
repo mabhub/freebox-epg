@@ -36,13 +36,14 @@ const programmedRaw = ({
   record_gen_id,
 });
 
-const finishedRaw = ({ id, channel_uuid, start, end }) => ({
+const finishedRaw = ({ id, channel_uuid, start, end, state = 'finished' }) => ({
   id,
   channel_uuid,
   channel_name: `Ch-${channel_uuid}`,
   start,
   end,
   name: `Done ${id}`,
+  state,
 });
 
 const renderRecordings = () => {
@@ -92,6 +93,25 @@ describe('useRecordingsByChannel', () => {
 
     const b = result.current.get('b');
     expect(b.map((r) => r.id)).toStrictEqual([3, 91]);
+  });
+
+  it('keeps a single entry for a running recording listed by both endpoints', async () => {
+    // The Freebox also lists an in-progress recording under /pvr/finished/,
+    // with the same id and its margins included in start/end
+    mockPvrLists({
+      programmed: [programmedRaw({ id: 399, channel_uuid: 'a', start: 1000, end: 2000, state: 'running' })],
+      finished: [
+        finishedRaw({ id: 399, channel_uuid: 'a', start: 700, end: 2900, state: 'running' }),
+        finishedRaw({ id: 12, channel_uuid: 'b', start: 100, end: 500 }),
+      ],
+    });
+
+    const { result } = renderRecordings();
+    await waitFor(() => expect([...result.current.keys()].toSorted()).toStrictEqual(['a', 'b']));
+
+    const a = result.current.get('a');
+    expect(a).toHaveLength(1);
+    expect(a[0]).toMatchObject({ id: 399, kind: 'programmed', state: 'running' });
   });
 
   it('drops finished recordings older than 6 hours', async () => {
