@@ -1,20 +1,26 @@
 /**
- * Form fields for the recording modal: name, subname, start, end, quality,
- * media, path. The JSX-heavy markup is split out of RecordModal so that
- * file stays under the project's complexity budget while sharing the same
- * field-locking matrix between create and edit modes.
+ * Form fields for the recording modal: name, subname, program slot, margins,
+ * quality, media, path. The JSX-heavy markup is split out of RecordModal so
+ * that file stays under the project's complexity budget while sharing the
+ * same field-locking matrix between create and edit modes.
+ *
+ * Start and end are the program slot; the margins extend it on each side,
+ * and a summary line gives the window actually recorded.
  *
  * @param {Object} props - Component props
  * @param {Object} props.values - Form values from useRecordingForm
- * @param {Function} props.setField - Field setter from useRecordingForm
+ * @param {Function} props.setField - Input event setter from useRecordingForm
  * @param {Object} props.locks - Lock matrix from useRecordingForm
- * @param {number} props.duration - Duration in seconds (display-only)
+ * @param {number} props.startTs - Program start (seconds)
+ * @param {number} props.endTs - Program end (seconds)
+ * @param {number} props.marginBefore - Margin before start (seconds)
+ * @param {number} props.marginAfter - Margin after end (seconds)
  * @param {Array|null|undefined} props.mediaList - Available media options
  * @returns {React.ReactElement} Field group
  */
 
-import { MenuItem, TextField, Typography } from '@mui/material';
-import { formatDuration } from '@/utils/time';
+import { Box, MenuItem, TextField, Typography } from '@mui/material';
+import { formatDuration, formatTime } from '@/utils/time';
 
 const QUALITY_OPTIONS = [
   { value: 'auto', label: 'Auto' },
@@ -25,7 +31,73 @@ const QUALITY_OPTIONS = [
 
 const formatBytes = (bytes) => `${(bytes / 1024 ** 3).toFixed(1)} Go`;
 
-const RecordingFormFields = ({ values, setField, locks, duration, mediaList }) => (
+const DateTimeField = ({ label, value, onChange, disabled }) => (
+  <TextField
+    label={label}
+    type="datetime-local"
+    value={value}
+    onChange={onChange}
+    fullWidth
+    required
+    size="small"
+    disabled={disabled}
+    slotProps={{ inputLabel: { shrink: true } }}
+  />
+);
+
+const MarginField = ({ label, value, onChange, disabled }) => (
+  <TextField
+    label={label}
+    type="number"
+    value={value}
+    onChange={onChange}
+    size="small"
+    fullWidth
+    disabled={disabled}
+    slotProps={{ htmlInput: { min: 0, step: 1 } }}
+  />
+);
+
+const ScheduleFields = ({ values, setField, locks, startTs, endTs, marginBefore, marginAfter }) => {
+  // A finished recording has no margins left to show or edit.
+  const showMargins = locks.marginBefore || locks.marginAfter || marginBefore > 0 || marginAfter > 0;
+  const recordedStart = startTs - marginBefore;
+  const recordedEnd = endTs + marginAfter;
+  const duration = endTs - startTs;
+
+  return (
+    <>
+      <DateTimeField label="Début" value={values.start} onChange={setField('start')} disabled={!locks.start} />
+      <DateTimeField label="Fin" value={values.end} onChange={setField('end')} disabled={!locks.end} />
+
+      {showMargins && (
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <MarginField
+            label="Marge avant (min)"
+            value={values.marginBefore}
+            onChange={setField('marginBefore')}
+            disabled={!locks.marginBefore}
+          />
+          <MarginField
+            label="Marge après (min)"
+            value={values.marginAfter}
+            onChange={setField('marginAfter')}
+            disabled={!locks.marginAfter}
+          />
+        </Box>
+      )}
+
+      {duration > 0 && (
+        <Typography variant="caption" color="text.secondary">
+          Enregistrement de {formatTime(recordedStart)} à {formatTime(recordedEnd)} (
+          {formatDuration(recordedEnd - recordedStart)})
+        </Typography>
+      )}
+    </>
+  );
+};
+
+const RecordingFormFields = ({ values, setField, locks, startTs, endTs, marginBefore, marginAfter, mediaList }) => (
   <>
     <TextField
       label="Nom"
@@ -45,34 +117,15 @@ const RecordingFormFields = ({ values, setField, locks, duration, mediaList }) =
       disabled={!locks.subname}
     />
 
-    <TextField
-      label="Début"
-      type="datetime-local"
-      value={values.start}
-      onChange={setField('start')}
-      fullWidth
-      required
-      size="small"
-      disabled={!locks.start}
-      slotProps={{ inputLabel: { shrink: true } }}
+    <ScheduleFields
+      values={values}
+      setField={setField}
+      locks={locks}
+      startTs={startTs}
+      endTs={endTs}
+      marginBefore={marginBefore}
+      marginAfter={marginAfter}
     />
-    <TextField
-      label="Fin"
-      type="datetime-local"
-      value={values.end}
-      onChange={setField('end')}
-      fullWidth
-      required
-      size="small"
-      disabled={!locks.end}
-      slotProps={{ inputLabel: { shrink: true } }}
-    />
-
-    {duration > 0 && (
-      <Typography variant="caption" color="text.secondary">
-        Durée : {formatDuration(duration)}
-      </Typography>
-    )}
 
     <TextField
       label="Qualité"

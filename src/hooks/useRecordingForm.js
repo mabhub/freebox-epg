@@ -16,6 +16,8 @@ const ALL_LOCKS_FREE = {
   subname: true,
   start: true,
   end: true,
+  marginBefore: true,
+  marginAfter: true,
   quality: true,
   media: true,
   path: true,
@@ -26,6 +28,8 @@ const FINISHED_LOCKS = {
   subname: true,
   start: false,
   end: false,
+  marginBefore: false,
+  marginAfter: false,
   quality: false,
   media: false,
   path: true,
@@ -36,6 +40,8 @@ const RUNNING_LOCKS = {
   subname: true,
   start: false,
   end: true,
+  marginBefore: false,
+  marginAfter: true,
   quality: false,
   media: false,
   path: false,
@@ -46,6 +52,8 @@ const OCCURRENCE_LOCKS = {
   subname: true,
   start: false,
   end: false,
+  marginBefore: false,
+  marginAfter: false,
   quality: false,
   media: false,
   path: false,
@@ -55,7 +63,8 @@ const OCCURRENCE_LOCKS = {
  * Per-field editability matrix for an existing recording. In create mode
  * the caller passes `null` and gets the all-free matrix.
  * @param {Object|null} recording - Recording in edit mode (null in create mode)
- * @returns {{ name: boolean, subname: boolean, start: boolean, end: boolean, quality: boolean, media: boolean, path: boolean }} Per-field editability
+ * Each margin shares the lock of the bound it extends.
+ * @returns {{ name: boolean, subname: boolean, start: boolean, end: boolean, marginBefore: boolean, marginAfter: boolean, quality: boolean, media: boolean, path: boolean }} Per-field editability
  */
 export const computeFieldLocks = (recording) => {
   if (!recording) return ALL_LOCKS_FREE;
@@ -66,25 +75,42 @@ export const computeFieldLocks = (recording) => {
 };
 
 /**
+ * Format a margin in seconds as a whole number of minutes for the form.
+ * @param {number|null|undefined} seconds - Margin in seconds
+ * @returns {string} Minutes, as the margin inputs expect
+ */
+const marginToMinutes = (seconds) => String(Math.round((seconds ?? 0) / 60));
+
+/**
+ * Read a margin input (minutes) back as seconds; blank or invalid input
+ * counts as no margin.
+ * @param {string} minutes - Raw input value
+ * @returns {number} Margin in seconds
+ */
+const minutesToMargin = (minutes) => {
+  const value = Number.parseInt(minutes, 10);
+  return Number.isNaN(value) || value < 0 ? 0 : value * 60;
+};
+
+/**
  * Derive the create-mode initial values from a program payload and PVR
- * margins. Pulled out so the main hook keeps its statement count low.
+ * margins. The program slot and the margins stay apart, as the Freebox
+ * stores them. Pulled out so the main hook keeps its statement count low.
  * @param {Object} program - Program payload (from useProgramDetail)
  * @param {Object|null|undefined} pvrConfig - PVR config (margins)
  * @returns {Object} Initial form values
  */
-const valuesFromProgram = (program, pvrConfig) => {
-  const marginBefore = pvrConfig?.margin_before ?? 0;
-  const marginAfter = pvrConfig?.margin_after ?? 0;
-  return {
-    name: program.title ?? '',
-    subname: program.sub_title ?? '',
-    start: timestampToDatetimeLocal(program.date - marginBefore),
-    end: timestampToDatetimeLocal(program.date + program.duration + marginAfter),
-    quality: DEFAULT_QUALITY,
-    media: '',
-    path: DEFAULT_PATH,
-  };
-};
+const valuesFromProgram = (program, pvrConfig) => ({
+  name: program.title ?? '',
+  subname: program.sub_title ?? '',
+  start: timestampToDatetimeLocal(program.date),
+  end: timestampToDatetimeLocal(program.date + program.duration),
+  marginBefore: marginToMinutes(pvrConfig?.margin_before),
+  marginAfter: marginToMinutes(pvrConfig?.margin_after),
+  quality: DEFAULT_QUALITY,
+  media: '',
+  path: DEFAULT_PATH,
+});
 
 /**
  * Derive the edit-mode initial values from an existing recording. The
@@ -98,6 +124,8 @@ const valuesFromRecording = (recording) => ({
   subname: recording.subname ?? '',
   start: timestampToDatetimeLocal(recording.raw?.start ?? recording.start),
   end: timestampToDatetimeLocal(recording.raw?.end ?? recording.end),
+  marginBefore: marginToMinutes(recording.marginBefore),
+  marginAfter: marginToMinutes(recording.marginAfter),
   quality: recording.raw?.channel_quality ?? DEFAULT_QUALITY,
   media: recording.raw?.media ?? '',
   path: recording.raw?.path ?? DEFAULT_PATH,
@@ -113,7 +141,7 @@ const valuesFromRecording = (recording) => ({
  * @param {Object|null} args.program - Program for create mode
  * @param {Object|null|undefined} args.pvrConfig - PVR config for default margins
  * @param {Array|null|undefined} args.mediaList - Available media (used to default the support in create mode)
- * @returns {Object} Form values, setters, derived data, and locks
+ * @returns {Object} Form values, setter, timestamps and margins in seconds, and locks
  */
 const useRecordingForm = ({ open, recording, program, pvrConfig, mediaList }) => {
   const isEdit = recording !== null && recording !== undefined;
@@ -122,6 +150,8 @@ const useRecordingForm = ({ open, recording, program, pvrConfig, mediaList }) =>
     subname: '',
     start: '',
     end: '',
+    marginBefore: '0',
+    marginAfter: '0',
     quality: DEFAULT_QUALITY,
     media: '',
     path: DEFAULT_PATH,
@@ -159,6 +189,8 @@ const useRecordingForm = ({ open, recording, program, pvrConfig, mediaList }) =>
     locks,
     startTs,
     endTs,
+    marginBefore: minutesToMargin(values.marginBefore),
+    marginAfter: minutesToMargin(values.marginAfter),
     duration: endTs - startTs,
     isEdit,
   };

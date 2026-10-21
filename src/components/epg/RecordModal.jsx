@@ -71,7 +71,7 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
   const deleteRecording = useDeleteRecording();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const { values, setField, locks, startTs, endTs, duration, isEdit } = useRecordingForm({
+  const { values, setField, locks, startTs, endTs, marginBefore, marginAfter, duration, isEdit } = useRecordingForm({
     open,
     recording,
     program,
@@ -104,10 +104,12 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
       updateRecording.mutate({
         id: recording.id,
         kind: recording.kind,
-        payload: buildUpdatePayload({ recording, values, locks, startTs, endTs }),
+        payload: buildUpdatePayload({ recording, values, locks, startTs, endTs, marginBefore, marginAfter }),
       });
     } else {
-      createRecording.mutate(buildCreatePayload({ values, channelUuid, channelName, startTs, endTs }));
+      createRecording.mutate(
+        buildCreatePayload({ values, channelUuid, channelName, startTs, endTs, marginBefore, marginAfter }),
+      );
     }
   };
 
@@ -153,7 +155,10 @@ const RecordModal = ({ open, onClose, program, channelUuid, channelName, recordi
             values={values}
             setField={setField}
             locks={locks}
-            duration={duration}
+            startTs={startTs}
+            endTs={endTs}
+            marginBefore={marginBefore}
+            marginAfter={marginAfter}
             mediaList={mediaList}
           />
 

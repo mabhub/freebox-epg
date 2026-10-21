@@ -1,4 +1,9 @@
-import { computeRecordingRect, isRecordingInViewport, findRecordingCoveringProgram } from './recordingPosition';
+import {
+  computeRecordingRect,
+  isRecordingInViewport,
+  findRecordingCoveringProgram,
+  computeMarginRatios,
+} from './recordingPosition';
 import { ROW_HEIGHT, OVERLAY_HEIGHT_RATIO, OVERLAY_MIN_WIDTH_PX } from './constants';
 
 describe('computeRecordingRect', () => {
@@ -101,5 +106,26 @@ describe('findRecordingCoveringProgram', () => {
       { id: 2, start: 800, end: 2000 },
     ];
     expect(findRecordingCoveringProgram(recordings, program).id).toBe(1);
+  });
+});
+
+describe('computeMarginRatios', () => {
+  it('returns each margin as a share of the recorded window', () => {
+    const recording = { start: 0, end: 10_200, marginBefore: 300, marginAfter: 900 };
+    expect(computeMarginRatios(recording)).toStrictEqual({ before: 300 / 10_200, after: 900 / 10_200 });
+  });
+
+  it('returns zero shares when the recording has no margins', () => {
+    expect(computeMarginRatios({ start: 0, end: 3600, marginBefore: 0, marginAfter: 0 })).toStrictEqual({
+      before: 0,
+      after: 0,
+    });
+  });
+
+  it('returns zero shares for an empty window', () => {
+    expect(computeMarginRatios({ start: 100, end: 100, marginBefore: 0, marginAfter: 0 })).toStrictEqual({
+      before: 0,
+      after: 0,
+    });
   });
 });

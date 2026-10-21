@@ -57,3 +57,16 @@ export const findRecordingCoveringProgram = (recordings, program) => {
   const programEnd = program.date + program.duration;
   return recordings.find((r) => r.start <= programStart && r.end >= programEnd) ?? null;
 };
+
+/**
+ * Share of a recording's window taken by each of its margins, used to
+ * shade them on the overlay cell. Both shares are 0 for an empty window.
+ *
+ * @param {{ start: number, end: number, marginBefore: number, marginAfter: number }} recording - Unified recording
+ * @returns {{ before: number, after: number }} Shares between 0 and 1
+ */
+export const computeMarginRatios = ({ start, end, marginBefore, marginAfter }) => {
+  const span = end - start;
+  if (span <= 0) return { before: 0, after: 0 };
+  return { before: marginBefore / span, after: marginAfter / span };
+};

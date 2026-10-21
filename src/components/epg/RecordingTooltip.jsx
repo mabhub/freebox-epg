@@ -1,5 +1,6 @@
 /**
- * Tooltip content shown when hovering a recording overlay cell.
+ * Tooltip content shown when hovering a recording overlay cell. The time
+ * line gives the program slot, followed by the margins when there are any.
  *
  * @param {Object} props - Component props
  * @param {Object} props.recording - Unified recording (see transformers.js)
@@ -18,8 +19,13 @@ const QUALITY_LABELS = {
   '3d': '3D',
 };
 
+const formatMargins = (marginBefore, marginAfter) =>
+  marginBefore > 0 || marginAfter > 0 ? ` • marges +${marginBefore / 60} / +${marginAfter / 60} min` : '';
+
 const RecordingTooltip = ({ recording }) => {
-  const { name, subname, channelName, start, end, state, generatorId, raw } = recording;
+  const { name, subname, channelName, start, end, marginBefore, marginAfter, state, generatorId, raw } = recording;
+  const slotStart = start + marginBefore;
+  const slotEnd = end - marginAfter;
   const stateLabel = RECORDING_STATE_LABELS[state] ?? state;
   const error = raw?.error && raw.error !== 'none' ? raw.error : null;
   const quality = raw?.channel_quality ? (QUALITY_LABELS[raw.channel_quality] ?? raw.channel_quality) : null;
@@ -27,7 +33,9 @@ const RecordingTooltip = ({ recording }) => {
   return (
     <Box sx={{ maxWidth: 300 }}>
       <Typography variant="caption" color="text.secondary">
-        {channelName} &bull; {formatTime(start)} - {formatTime(end)} &bull; {formatDuration(end - start)}
+        {channelName} &bull; {formatTime(slotStart)} - {formatTime(slotEnd)} &bull;{' '}
+        {formatDuration(slotEnd - slotStart)}
+        {formatMargins(marginBefore, marginAfter)}
       </Typography>
       <Typography variant="body2" fontWeight="bold">
         {name}

@@ -2,6 +2,9 @@
  * Single recording cell rendered inside RecordingsOverlay. Displays a state
  * icon, the recording name, and a hover-only delete button on desktop.
  *
+ * The cell is tinted with its state color: the program slot in full, the
+ * margins on each side at a lighter tint.
+ *
  * @param {Object} props - Component props
  * @param {Object} props.recording - Unified recording (see transformers.js)
  * @param {{ left: number, top: number, width: number, height: number }} props.rect - Pre-computed rect
@@ -21,6 +24,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 import { OVERLAY_BORDER_LEFT_PX, OVERLAY_MIN_WIDTH_PX } from '@/utils/constants';
+import { computeMarginRatios } from '@/utils/recordingPosition';
 import { getRecordingStateColor, RECORDING_STATE_LABELS } from '@/utils/recordingStates';
 import RecordingTooltip from './RecordingTooltip';
 
@@ -39,7 +43,15 @@ const CellRoot = styled('button')(({ theme }) => ({
   font: 'inherit',
   color: 'inherit',
   textAlign: 'left',
-  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+  // --state-color, --margin-before and --margin-after are set per cell.
+  '--slot-mix': '30%',
+  '--margin-mix': '12%',
+  '--slot-bg': 'color-mix(in srgb, var(--state-color) var(--slot-mix), transparent)',
+  '--margin-bg': 'color-mix(in srgb, var(--state-color) var(--margin-mix), transparent)',
+  background: `linear-gradient(to right,
+    var(--margin-bg) var(--margin-before),
+    var(--slot-bg) var(--margin-before) calc(100% - var(--margin-after)),
+    var(--margin-bg) calc(100% - var(--margin-after)))`,
   cursor: 'pointer',
   overflow: 'hidden',
   fontSize: '0.7rem',
@@ -47,7 +59,8 @@ const CellRoot = styled('button')(({ theme }) => ({
   whiteSpace: 'nowrap',
   textOverflow: 'ellipsis',
   '&:hover': {
-    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.16)',
+    '--slot-mix': '45%',
+    '--margin-mix': '20%',
     '& .recording-cell__delete': {
       opacity: 1,
     },
@@ -105,6 +118,7 @@ const RecordingCell = memo(({ recording, rect, onSelect, onDelete }) => {
   const supportsHover = useMediaQuery('(hover: hover) and (pointer: fine)');
   const stateColor = getRecordingStateColor(theme, recording.state);
   const stateLabel = RECORDING_STATE_LABELS[recording.state] ?? recording.state;
+  const margins = computeMarginRatios(recording);
 
   const handleClick = useCallback(() => {
     onSelect(recording);
@@ -141,6 +155,9 @@ const RecordingCell = memo(({ recording, rect, onSelect, onDelete }) => {
           width: Math.max(OVERLAY_MIN_WIDTH_PX, rect.width),
           height: rect.height,
           borderLeft: `${OVERLAY_BORDER_LEFT_PX}px solid ${stateColor}`,
+          '--state-color': stateColor,
+          '--margin-before': `${margins.before * 100}%`,
+          '--margin-after': `${margins.after * 100}%`,
         }}
       >
         <StateIcon state={recording.state} color={stateColor} />
