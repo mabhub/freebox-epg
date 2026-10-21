@@ -122,6 +122,36 @@ export const useUpdateRecording = () => {
 };
 
 /**
+ * Move the program slot of a programmed recording, as a drag on its
+ * overlay cell does. The cached list shows the new slot at once so the
+ * cell does not jump back while the Freebox answers; it is put back if
+ * the Freebox refuses. The mutation accepts `{ recording, start, end }`.
+ * @returns {import('@tanstack/react-query').UseMutationResult} Mutation result
+ */
+export const useResizeRecording = () => {
+  const queryClient = useQueryClient();
+  const queryKey = ['pvr', 'programmed'];
+  return useMutation({
+    mutationFn: ({ recording, start, end }) =>
+      apiFetch(pvrProgrammedItemPath(recording.id), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...recording.raw, start, end }),
+      }),
+    onMutate: async ({ recording, start, end }) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (list) =>
+        list?.map((raw) => (raw.id === recording.id ? { ...raw, start, end } : raw)),
+      );
+      return { previous };
+    },
+    onError: (_error, _variables, context) => queryClient.setQueryData(queryKey, context?.previous),
+    onSettled: () => invalidatePvrLists(queryClient),
+  });
+};
+
+/**
  * Delete a recording. For a `running` programmed timer this is interpreted
  * as "stop" by the Freebox.
  * @returns {import('@tanstack/react-query').UseMutationResult} Mutation result

@@ -50,6 +50,18 @@ export const OVERLAY_MIN_WIDTH_PX = 24;
 /** Width of the coloured state border on the left of an overlay cell */
 export const OVERLAY_BORDER_LEFT_PX = 3;
 
+/** Width of the grab zone on each resizable edge of an overlay cell */
+export const RESIZE_HANDLE_PX = 7;
+
+/** Distance under which a dragged edge sticks to a program bound */
+export const RESIZE_SNAP_PX = 8;
+
+/** Step a dragged edge moves by when no program bound is near (5 min) */
+export const RESIZE_STEP_SECONDS = 300;
+
+/** Shortest program slot a drag can leave (5 min) */
+export const RESIZE_MIN_DURATION_SECONDS = 300;
+
 /** Responsive layout constants per breakpoint */
 export const RESPONSIVE_CONSTANTS = {
   desktop: {

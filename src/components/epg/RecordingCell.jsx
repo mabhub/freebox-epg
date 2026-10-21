@@ -3,13 +3,16 @@
  * icon, the recording name, and a hover-only delete button on desktop.
  *
  * The cell is tinted with its state color: the program slot in full, the
- * margins on each side at a lighter tint.
+ * margins on each side at a lighter tint. With a mouse, each edge the
+ * modal would let change carries a handle that starts a resize drag.
  *
  * @param {Object} props - Component props
  * @param {Object} props.recording - Unified recording (see transformers.js)
  * @param {{ left: number, top: number, width: number, height: number }} props.rect - Pre-computed rect
  * @param {Function} props.onSelect - Callback when the cell is clicked (opens edit modal)
  * @param {Function} props.onDelete - Callback for inline deletion
+ * @param {Function} props.onResizeStart - Called with `(event, recording, edge)` on mousedown on a handle
+ * @param {boolean} [props.isResizing] - True while this cell is being resized (hides the tooltip)
  * @returns {React.ReactElement} Recording cell
  */
 
@@ -23,8 +26,9 @@ import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
-import { OVERLAY_BORDER_LEFT_PX, OVERLAY_MIN_WIDTH_PX } from '@/utils/constants';
+import { OVERLAY_BORDER_LEFT_PX, OVERLAY_MIN_WIDTH_PX, RESIZE_HANDLE_PX } from '@/utils/constants';
 import { computeMarginRatios } from '@/utils/recordingPosition';
+import { getResizableEdges } from '@/utils/recordingResize';
 import { getRecordingStateColor, RECORDING_STATE_LABELS } from '@/utils/recordingStates';
 import RecordingTooltip from './RecordingTooltip';
 
@@ -66,6 +70,29 @@ const CellRoot = styled('button')(({ theme }) => ({
     },
   },
 }));
+
+const ResizeHandle = styled('span')({
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  width: RESIZE_HANDLE_PX,
+  cursor: 'ew-resize',
+  '&[data-resize-edge="start"]': { left: 0 },
+  '&[data-resize-edge="end"]': { right: 0 },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
+    left: 2,
+    width: 3,
+    borderRadius: 2,
+    background: 'var(--state-color)',
+    opacity: 0,
+    transition: 'opacity 0.15s',
+  },
+  'button:hover > &::after': { opacity: 1 },
+});
 
 const Name = styled('span')({
   flex: 1,
@@ -113,12 +140,13 @@ const StateIcon = ({ state, color }) => {
   return <Icon sx={baseSx} />;
 };
 
-const RecordingCell = memo(({ recording, rect, onSelect, onDelete }) => {
+const RecordingCell = memo(({ recording, rect, onSelect, onDelete, onResizeStart, isResizing = false }) => {
   const theme = useTheme();
   const supportsHover = useMediaQuery('(hover: hover) and (pointer: fine)');
   const stateColor = getRecordingStateColor(theme, recording.state);
   const stateLabel = RECORDING_STATE_LABELS[recording.state] ?? recording.state;
   const margins = computeMarginRatios(recording);
+  const edges = supportsHover ? getResizableEdges(recording) : { start: false, end: false };
 
   const handleClick = useCallback(() => {
     onSelect(recording);
@@ -132,13 +160,22 @@ const RecordingCell = memo(({ recording, rect, onSelect, onDelete }) => {
     [onDelete, recording],
   );
 
+  const handleResizeStart = useCallback(
+    (event) => {
+      event.stopPropagation();
+      onResizeStart(event, recording, event.currentTarget.dataset.resizeEdge);
+    },
+    [onResizeStart, recording],
+  );
+
   const tooltipContent = useMemo(() => <RecordingTooltip recording={recording} />, [recording]);
 
   const showName = rect.width >= NAME_MIN_WIDTH;
 
   return (
     <Tooltip
-      title={tooltipContent}
+      // An empty title also closes a tooltip already open when the drag starts.
+      title={isResizing ? '' : tooltipContent}
       placement="top"
       arrow
       enterDelay={250}
@@ -154,12 +191,15 @@ const RecordingCell = memo(({ recording, rect, onSelect, onDelete }) => {
           top: rect.top,
           width: Math.max(OVERLAY_MIN_WIDTH_PX, rect.width),
           height: rect.height,
+          // Keep the delete button clear of the end handle.
+          paddingRight: edges.end ? RESIZE_HANDLE_PX : undefined,
           borderLeft: `${OVERLAY_BORDER_LEFT_PX}px solid ${stateColor}`,
           '--state-color': stateColor,
           '--margin-before': `${margins.before * 100}%`,
           '--margin-after': `${margins.after * 100}%`,
         }}
       >
+        {edges.start && <ResizeHandle data-resize-edge="start" data-no-drag-scroll onMouseDown={handleResizeStart} />}
         <StateIcon state={recording.state} color={stateColor} />
         {showName && <Name>{recording.name}</Name>}
         {supportsHover && (
@@ -178,6 +218,7 @@ const RecordingCell = memo(({ recording, rect, onSelect, onDelete }) => {
             <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
           </IconButton>
         )}
+        {edges.end && <ResizeHandle data-resize-edge="end" data-no-drag-scroll onMouseDown={handleResizeStart} />}
       </CellRoot>
     </Tooltip>
   );

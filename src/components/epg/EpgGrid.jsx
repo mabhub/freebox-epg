@@ -20,6 +20,7 @@ import useCurrentTime from '@/hooks/useCurrentTime';
 import useLayoutConstants from '@/hooks/useLayoutConstants';
 import useElementSize from '@/hooks/useElementSize';
 import { useDeleteRecording } from '@/hooks/usePvr';
+import useResizeWithUndo from '@/hooks/useResizeWithUndo';
 import { TIME_HEADER_HEIGHT, PAST_HOURS, FUTURE_HOURS } from '@/utils/constants';
 
 import TimeHeader from './TimeHeader';
@@ -27,6 +28,7 @@ import ChannelRow from './ChannelRow';
 import NowIndicator from './NowIndicator';
 import RecordingsOverlay from './RecordingsOverlay';
 import RecordModal from './RecordModal';
+import NoticeSnackbar from './NoticeSnackbar';
 
 const HOURS_TO_RENDER = PAST_HOURS + FUTURE_HOURS;
 
@@ -45,6 +47,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   const [containerNode, setContainerNode] = useState(null);
   const [editingRecording, setEditingRecording] = useState(null);
   const deleteRecording = useDeleteRecording();
+  const { notice, resize: handleResizeRecording, closeNotice: handleCloseNotice } = useResizeWithUndo();
   const { timeOrigin, scrollTop, scrollLeft } = useSelector(
     (state) => ({
       timeOrigin: state.epg.timeOrigin,
@@ -225,6 +228,9 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
             viewportEnd={viewportEnd}
             onSelect={handleSelectRecording}
             onDelete={handleDeleteRecording}
+            programs={programs}
+            now={now}
+            onResize={handleResizeRecording}
           />
           <NowIndicator
             timeOrigin={timeOrigin}
@@ -236,6 +242,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
       </Box>
 
       <RecordModal open={editingRecording !== null} onClose={handleCloseRecordingModal} recording={editingRecording} />
+      <NoticeSnackbar notice={notice} onClose={handleCloseNotice} />
 
       {isLoadingPrograms && (
         <CircularProgress
