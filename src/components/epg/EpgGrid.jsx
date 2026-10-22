@@ -22,6 +22,7 @@ import useLayoutConstants from '@/hooks/useLayoutConstants';
 import useElementSize from '@/hooks/useElementSize';
 import { useDeleteRecording } from '@/hooks/usePvr';
 import useResizeWithUndo from '@/hooks/useResizeWithUndo';
+import useRecordGroup from '@/hooks/useRecordGroup';
 import { TIME_HEADER_HEIGHT, PAST_HOURS, FUTURE_HOURS } from '@/utils/constants';
 import { viewportTimeRange } from '@/utils/viewport';
 
@@ -52,7 +53,11 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   const dispatch = useDispatch();
   const [containerNode, setContainerNode] = useState(null);
   const [editingRecording, setEditingRecording] = useState(null);
-  const [recordTarget, setRecordTarget] = useState(null);
+  const {
+    target: recordTarget,
+    recordGroup: handleRecordGroup,
+    closeTarget: handleCloseRecordTarget,
+  } = useRecordGroup(setEditingRecording);
   const deleteRecording = useDeleteRecording();
   const { notice, resize: handleResizeRecording, closeNotice: handleCloseNotice } = useResizeWithUndo();
   const { timeOrigin, scrollTop, scrollLeft } = useSelector(
@@ -146,11 +151,6 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
       dispatch(selectProgram({ programId, channelUuid }));
     },
     [dispatch],
-  );
-
-  const handleRecordGroup = useCallback(
-    (program, channel) => setRecordTarget({ program, channelUuid: channel.uuid, channelName: channel.name }),
-    [],
   );
 
   const handleSelectRecording = useCallback((recording) => {
@@ -284,7 +284,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
       </Box>
 
       <RecordModal open={editingRecording !== null} onClose={handleCloseRecordingModal} recording={editingRecording} />
-      {recordTarget && <RecordModal open onClose={() => setRecordTarget(null)} {...recordTarget} />}
+      {recordTarget && <RecordModal open onClose={handleCloseRecordTarget} {...recordTarget} />}
       <NoticeSnackbar notice={notice} onClose={handleCloseNotice} />
 
       {isLoadingPrograms && (
