@@ -23,7 +23,7 @@ import { PRIORITY } from '@/api/requestQueue';
 import { epgByChannelPath } from '@/api/endpoints';
 import { transformEpgByChannel, mergeByChannelEntries } from '@/api/transformers';
 import { get2HourBuckets } from '@/utils/time';
-import { OVERSCAN_HOURS } from '@/utils/constants';
+import { FUTURE_HOURS, OVERSCAN_HOURS, PAST_HOURS } from '@/utils/constants';
 import { pairPriority, viewportTimeRange } from '@/utils/viewport';
 
 // Shared sentinel for the "no pairs to fetch" case so that the hook return
@@ -89,10 +89,14 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute, rows = 
 
   const { startTs, endTs } = viewportTimeRange({ timeOrigin, scrollLeft, viewportWidth, pixelsPerMinute });
 
-  const buckets = useMemo(
-    () => (viewportWidth <= 0 ? [] : get2HourBuckets(startTs - OVERSCAN_HOURS * 3600, endTs + OVERSCAN_HOURS * 3600)),
-    [startTs, endTs, viewportWidth],
-  );
+  // Clamped to the grid: past its end, the programs fetched would be drawn
+  // beyond it, widen the scroll area and pull the next fetch further away.
+  const buckets = useMemo(() => {
+    if (viewportWidth <= 0) return [];
+    const fetchStart = Math.max(timeOrigin, startTs - OVERSCAN_HOURS * 3600);
+    const fetchEnd = Math.min(timeOrigin + (PAST_HOURS + FUTURE_HOURS) * 3600, endTs + OVERSCAN_HOURS * 3600);
+    return fetchEnd > fetchStart ? get2HourBuckets(fetchStart, fetchEnd - 1) : [];
+  }, [timeOrigin, startTs, endTs, viewportWidth]);
 
   // Stabilise visibleChannels by uuid so that scroll-driven re-renders that
   // do not actually change the slice keep the same `pairs` identity, and

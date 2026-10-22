@@ -5,7 +5,7 @@ import { configureStore } from '@reduxjs/toolkit';
 
 import apiFetch from '@/api/client';
 import epgReducer, { setScroll, centerOnTimeOrigin } from '@/store/epgSlice';
-import { PAST_HOURS, OVERSCAN_HOURS } from '@/utils/constants';
+import { PAST_HOURS, FUTURE_HOURS, OVERSCAN_HOURS } from '@/utils/constants';
 import { roundTo2Hours, nowTimestamp } from '@/utils/time';
 import { PRIORITY } from '@/api/requestQueue';
 import useEpgViewport, { getCachedChannelPrograms } from './useEpgViewport';
@@ -62,6 +62,22 @@ beforeEach(() => {
 });
 
 describe('useEpgViewport', () => {
+  it('never fetches past the ends of the grid, even scrolled beyond them', async () => {
+    const { store } = renderViewport({ visibleChannels: [channel(1)], viewportWidth: 1200 });
+    const { timeOrigin } = store.getState().epg;
+    const gridEnd = timeOrigin + (PAST_HOURS + FUTURE_HOURS) * 3600;
+    // Programs drawn past the grid's end widen the scroll area: scroll there.
+    act(() => {
+      store.dispatch(setScroll({ scrollLeft: (PAST_HOURS + FUTURE_HOURS + 3) * 60 * 4 }));
+    });
+    await waitFor(() => expect(apiFetch.mock.calls.length).toBeGreaterThan(0));
+    const buckets = apiFetch.mock.calls.map(([path]) =>
+      Number.parseInt(path.match(/by_channel\/uuid-1\/(\d+)/)[1], 10),
+    );
+    expect(Math.min(...buckets) + 7200).toBeGreaterThan(timeOrigin);
+    expect(Math.max(...buckets)).toBeLessThan(gridEnd);
+  });
+
   it('returns an empty result and emits no fetch while the viewport is unmeasured', () => {
     const { result } = renderViewport({
       visibleChannels: [channel(1), channel(2)],

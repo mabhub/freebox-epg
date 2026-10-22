@@ -42,6 +42,10 @@ const EMPTY_PROGRAMS = Object.freeze([]);
 const GridContent = styled('div')({
   position: 'relative',
   marginTop: TIME_HEADER_HEIGHT,
+  // Programs of the last bucket run past the grid's end: keep them from
+  // widening the scroll area. `clip`, unlike `hidden`, keeps the sticky
+  // sidebar working.
+  overflowX: 'clip',
 });
 
 const EpgGrid = ({ channels, isLoadingChannels }) => {
