@@ -33,6 +33,21 @@ const EMPTY_RESULT = { programs: EMPTY_PROGRAMS, isLoading: false, error: null }
 const BY_CHANNEL_KEY = ['epg', 'byChannel'];
 
 /**
+ * Query options for one `by_channel` bucket, shared by every consumer so
+ * they all hit the same cache entries.
+ * @param {string} uuid - Channel UUID
+ * @param {number} ts - Bucket start, aligned on 2 hours
+ * @returns {Object} useQueries entry
+ */
+export const byChannelQuery = (uuid, ts) => ({
+  queryKey: [...BY_CHANNEL_KEY, uuid, ts],
+  queryFn: ({ signal }) => apiFetch(epgByChannelPath(uuid, ts), { signal }),
+  select: transformEpgByChannel,
+  staleTime: 5 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+});
+
+/**
  * Read every cached `by_channel` bucket of one channel, outside of any
  * observer. The cache holds the raw API dict (`select` only runs inside
  * observers), so each bucket goes through the same transform and merge as
@@ -98,13 +113,7 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
   const cacheRef = useRef({ key: '', value: EMPTY_PROGRAMS });
 
   return useQueries({
-    queries: pairs.map(({ uuid, ts }) => ({
-      queryKey: [...BY_CHANNEL_KEY, uuid, ts],
-      queryFn: ({ signal }) => apiFetch(epgByChannelPath(uuid, ts), { signal }),
-      select: transformEpgByChannel,
-      staleTime: 5 * 60 * 1000,
-      gcTime: 30 * 60 * 1000,
-    })),
+    queries: pairs.map(({ uuid, ts }) => byChannelQuery(uuid, ts)),
     combine: (results) => {
       if (results.length === 0) {
         return EMPTY_RESULT;

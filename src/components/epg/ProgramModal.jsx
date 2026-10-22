@@ -27,15 +27,16 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { Close as CloseIcon, Edit as EditIcon, FiberManualRecord as RecordIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Edit as EditIcon } from '@mui/icons-material';
 
 import useProgramDetail from '@/hooks/useProgramDetail';
 import useRecordingsByChannel from '@/hooks/useRecordingsByChannel';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import { findRecordingCoveringProgram } from '@/utils/recordingPosition';
 import RecordModal from './RecordModal';
+import RecordSplitButton from './RecordSplitButton';
 import { formatTime, formatDate, formatDuration } from '@/utils/time';
-import formatSeasonEpisode from '@/utils/programs';
+import formatSeasonEpisode, { extendProgramOverEpisodes } from '@/utils/programs';
 
 /**
  * Render cast members grouped by role
@@ -75,7 +76,14 @@ const CastSection = ({ cast }) => {
   );
 };
 
-const RecordingActionButton = ({ coveringRecording, programIsOver, onRecord, onEditRecording }) => {
+const RecordingActionButton = ({
+  program,
+  channelUuid,
+  coveringRecording,
+  programIsOver,
+  onRecord,
+  onEditRecording,
+}) => {
   if (coveringRecording) {
     return (
       <Button
@@ -92,14 +100,18 @@ const RecordingActionButton = ({ coveringRecording, programIsOver, onRecord, onE
   if (programIsOver) {
     return null;
   }
-  return (
-    <Button variant="contained" color="error" size="small" startIcon={<RecordIcon />} onClick={onRecord}>
-      Enregistrer
-    </Button>
-  );
+  return <RecordSplitButton channelUuid={channelUuid} program={program} onRecord={onRecord} />;
 };
 
-const ProgramModalContent = ({ program, isLoading, coveringRecording, programIsOver, onRecord, onEditRecording }) => {
+const ProgramModalContent = ({
+  program,
+  isLoading,
+  coveringRecording,
+  programIsOver,
+  channelUuid,
+  onRecord,
+  onEditRecording,
+}) => {
   if (isLoading) {
     return (
       <Box sx={{ p: 2 }}>
@@ -166,6 +178,8 @@ const ProgramModalContent = ({ program, isLoading, coveringRecording, programIsO
 
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
         <RecordingActionButton
+          program={program}
+          channelUuid={channelUuid}
           coveringRecording={coveringRecording}
           programIsOver={programIsOver}
           onRecord={onRecord}
@@ -181,7 +195,8 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isOpen = Boolean(programId);
-  const [recordOpen, setRecordOpen] = useState(false);
+  // Program the record modal opens on, stretched over any extra episodes.
+  const [recordProgram, setRecordProgram] = useState(null);
   const [editingRecording, setEditingRecording] = useState(null);
   const channelUuid = selectedChannel?.uuid ?? '';
   const channelName = selectedChannel?.name ?? '';
@@ -218,18 +233,18 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
      datetime inputs use them, and navigating would re-prefill its form
      with the neighbouring program. */
   useEffect(() => {
-    if (!isOpen || recordOpen || editingRecording !== null) {
+    if (!isOpen || recordProgram !== null || editingRecording !== null) {
       return;
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, recordOpen, editingRecording, handleKeyDown]);
+  }, [isOpen, recordProgram, editingRecording, handleKeyDown]);
 
-  const recordModal = recordOpen && (
+  const recordModal = recordProgram !== null && (
     <RecordModal
       open
-      onClose={() => setRecordOpen(false)}
-      program={program}
+      onClose={() => setRecordProgram(null)}
+      program={recordProgram}
       channelUuid={channelUuid}
       channelName={channelName}
     />
@@ -245,7 +260,8 @@ const ProgramModal = ({ programId, channelPrograms, selectedChannel, onNavigate,
       isLoading={isLoading}
       coveringRecording={coveringRecording}
       programIsOver={programIsOver}
-      onRecord={() => setRecordOpen(true)}
+      channelUuid={channelUuid}
+      onRecord={(episodes) => setRecordProgram(extendProgramOverEpisodes(program, episodes))}
       onEditRecording={setEditingRecording}
     />
   );
