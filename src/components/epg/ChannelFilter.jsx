@@ -26,9 +26,14 @@ import {
   InputAdornment,
   styled,
 } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import {
+  Search as SearchIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
+} from '@mui/icons-material';
 
 import { toggleChannel, setHiddenChannels } from '@/store/channelsSlice';
+import { CHANNEL_GROUPS, isGroupHidden, toggleGroup } from '@/utils/channelGroups';
 import useElementSize from '@/hooks/useElementSize';
 import getLogoUrl from '@/utils/images';
 import useFreeboxImage from '@/hooks/useFreeboxImage';
@@ -122,9 +127,22 @@ const ChannelFilter = ({ open, onClose, channels }) => {
     dispatch(setHiddenChannels(channels.map((ch) => ch.uuid)));
   }, [dispatch, channels]);
 
-  const handleShowTnt = useCallback(() => {
-    dispatch(setHiddenChannels(channels.filter((ch) => !ch.pubService).map((ch) => ch.uuid)));
-  }, [dispatch, channels]);
+  const groups = useMemo(
+    () =>
+      CHANNEL_GROUPS.map((group) => ({
+        group,
+        count: channels.filter((channel) => group.match(channel)).length,
+        hidden: isGroupHidden(channels, hiddenChannels, group),
+      })).filter(({ count }) => count > 0),
+    [channels, hiddenChannels],
+  );
+
+  const handleToggleGroup = useCallback(
+    (group) => {
+      dispatch(setHiddenChannels(toggleGroup(channels, hiddenChannels, group)));
+    },
+    [dispatch, channels, hiddenChannels],
+  );
 
   const handleSearchChange = useCallback(
     (event) => {
@@ -170,7 +188,17 @@ const ChannelFilter = ({ open, onClose, channels }) => {
         </Box>
 
         <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
-          <Chip label="TNT" size="small" variant="outlined" onClick={handleShowTnt} />
+          {groups.map(({ group, count, hidden }) => (
+            <Chip
+              key={group.id}
+              label={`${group.label} (${count})`}
+              size="small"
+              variant={hidden ? 'filled' : 'outlined'}
+              icon={hidden ? <VisibilityOffIcon /> : <VisibilityIcon />}
+              aria-pressed={hidden}
+              onClick={() => handleToggleGroup(group)}
+            />
+          ))}
         </Box>
 
         <TextField
