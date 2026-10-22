@@ -44,6 +44,12 @@ export const PRIME_TIME_MINUTE = 30;
 /** Where a time jump puts its target, as a fraction of the viewport width */
 export const JUMP_TARGET_FRACTION = 1 / 3;
 
+/** Height in pixels of the band spanning back-to-back episodes of a show */
+export const SERIES_BAND_HEIGHT = 20;
+
+/** Horizontal gap in pixels between two neighbouring cells */
+export const CELL_GAP_PX = 4;
+
 /** Fraction of a row's height occupied by the recordings overlay strip */
 export const OVERLAY_HEIGHT_RATIO = 0.18;
 

@@ -79,3 +79,62 @@ export const extendProgramOverEpisodes = (program, episodes) => {
     sub_title: formatEpisodesSubname(program.sub_title ?? '', episodes.length),
   };
 };
+
+/**
+ * @typedef {Object} EpisodeGroup
+ * @property {string} id - Id of the first episode
+ * @property {string} title - Show title shared by the episodes
+ * @property {number} date - Start of the first episode (unix seconds)
+ * @property {number} end - End of the last episode (unix seconds)
+ * @property {Array<Object>} episodes - Episodes of the group (at least 2), in airing order
+ * @property {Array<Object>} programs - Every program within [date, end], interludes included, in airing order
+ */
+
+/**
+ * Split a channel's programs into runs of back-to-back episodes of the same
+ * show, with the rule of {@link findFollowingEpisodes}. Programs outside any
+ * run are left out.
+ * @param {Array<{ id: string, title: string, date: number, duration: number }>|undefined} programs - Channel programs, sorted by date
+ * @returns {Array<EpisodeGroup>} Groups of at least two episodes, in airing order
+ */
+export const groupConsecutiveEpisodes = (programs) => {
+  if (!programs) {
+    return [];
+  }
+  const groups = [];
+  let i = 0;
+  while (i < programs.length) {
+    const first = programs[i];
+    const following = findFollowingEpisodes(programs.slice(i + 1), first);
+    const last = following.at(-1);
+    if (last) {
+      const end = last.date + last.duration;
+      groups.push({
+        id: first.id,
+        title: first.title,
+        date: first.date,
+        end,
+        episodes: [first, ...following],
+        programs: programs.filter((p) => p.date >= first.date && p.date + p.duration <= end),
+      });
+      i = programs.indexOf(last);
+    }
+    i += 1;
+  }
+  return groups;
+};
+
+/**
+ * Program to record for a group: from the first episode not over yet to the
+ * end of the group, named like the multi-episode recordings.
+ * @param {EpisodeGroup} group - Group of episodes
+ * @param {number} now - Current time (unix seconds)
+ * @returns {Object|null} Program spanning the remaining episodes, or null once they are all over
+ */
+export const recordableGroupProgram = (group, now) => {
+  const remaining = group.episodes.filter((episode) => episode.date + episode.duration > now);
+  if (remaining.length === 0) {
+    return null;
+  }
+  return extendProgramOverEpisodes(remaining[0], remaining.slice(1));
+};

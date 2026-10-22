@@ -2,6 +2,8 @@ import formatSeasonEpisode, {
   extendProgramOverEpisodes,
   findFollowingEpisodes,
   formatEpisodesSubname,
+  groupConsecutiveEpisodes,
+  recordableGroupProgram,
 } from './programs';
 
 describe('formatSeasonEpisode', () => {
@@ -100,5 +102,71 @@ describe('extendProgramOverEpisodes', () => {
 
   it('returns the program untouched without extra episodes', () => {
     expect(extendProgramOverEpisodes(first, [])).toBe(first);
+  });
+});
+
+describe('groupConsecutiveEpisodes', () => {
+  it('groups back-to-back episodes of the same title', () => {
+    const programs = [show('a', 'Phinéas', 0, 10), show('b', 'Phinéas', 10, 10), show('c', 'Green', 20, 10)];
+    const [group, ...rest] = groupConsecutiveEpisodes(programs);
+    expect(rest).toStrictEqual([]);
+    expect(group).toMatchObject({ id: 'a', title: 'Phinéas', date: at(0), end: at(20) });
+    expect(group.episodes.map((p) => p.id)).toStrictEqual(['a', 'b']);
+  });
+
+  it('keeps a short interlude inside the group as a member, not an episode', () => {
+    const programs = [show('a', 'Phinéas', 0, 10), show('m', 'Météo', 10, 3), show('b', 'Phinéas', 13, 10)];
+    const [group] = groupConsecutiveEpisodes(programs);
+    expect(group.episodes.map((p) => p.id)).toStrictEqual(['a', 'b']);
+    expect(group.programs.map((p) => p.id)).toStrictEqual(['a', 'm', 'b']);
+  });
+
+  it('does not group the same show aired apart', () => {
+    expect(groupConsecutiveEpisodes([show('a', 'JT', 0, 30), show('b', 'JT', 36, 30)])).toStrictEqual([]);
+  });
+
+  it('returns no group for an isolated episode or no programs', () => {
+    expect(groupConsecutiveEpisodes([show('a', 'Phinéas', 0, 10), show('c', 'Green', 10, 10)])).toStrictEqual([]);
+    expect(groupConsecutiveEpisodes()).toStrictEqual([]);
+  });
+
+  it('finds several groups on one channel', () => {
+    const programs = [
+      show('a', 'Phinéas', 0, 10),
+      show('b', 'Phinéas', 10, 10),
+      show('c', 'Green', 20, 10),
+      show('d', 'Green', 30, 10),
+      show('e', 'Green', 40, 10),
+    ];
+    expect(groupConsecutiveEpisodes(programs).map((g) => g.episodes.length)).toStrictEqual([2, 3]);
+  });
+});
+
+describe('recordableGroupProgram', () => {
+  const group = groupConsecutiveEpisodes([
+    { ...show('a', 'Phinéas', 0, 10), sub_title: 'La belle' },
+    { ...show('b', 'Phinéas', 10, 10), sub_title: 'La terrifiante' },
+    { ...show('c', 'Phinéas', 20, 10), sub_title: 'Médiévalhowen' },
+  ])[0];
+
+  it('spans the whole group before it starts', () => {
+    expect(recordableGroupProgram(group, at(-5))).toMatchObject({
+      date: at(0),
+      duration: 30 * 60,
+      sub_title: 'La belle (+2 épisodes)',
+    });
+  });
+
+  it('starts from the episode on air once the group has begun', () => {
+    expect(recordableGroupProgram(group, at(12))).toMatchObject({
+      id: 'b',
+      date: at(10),
+      duration: 20 * 60,
+      sub_title: 'La terrifiante (+1 épisodes)',
+    });
+  });
+
+  it('returns null once every episode is over', () => {
+    expect(recordableGroupProgram(group, at(30))).toBeNull();
   });
 });
