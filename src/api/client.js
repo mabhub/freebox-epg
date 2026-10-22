@@ -117,7 +117,9 @@ const withConcurrencyLimit = async (task, signal) => {
  * @param {string} path - API path (e.g., "/tv/channels/")
  * @param {RequestInit} [options] - Fetch options. `signal` is forwarded to
  *   the underlying fetch and observed by the concurrency queue.
- * @returns {Promise<*>} Unwrapped API result
+ * @returns {Promise<*>} Unwrapped API result, or null when the Freebox sends
+ *   none (its answer for an empty list). React Query treats `undefined` as a
+ *   failed fetch and would keep showing the previous data.
  * @throws {AuthError} If the API returns 403 (session expired)
  * @throws {ApiHttpError} If the API returns a non-2xx, non-403 status
  * @throws {Error} If the API returns success: false or network error
@@ -147,7 +149,7 @@ const apiFetch = (path, options = {}) =>
       throw new Error(data.msg ?? `API error: ${data.error_code ?? 'unknown'}`);
     }
 
-    return data.result;
+    return data.result ?? null;
   }, options.signal);
 
 export default apiFetch;

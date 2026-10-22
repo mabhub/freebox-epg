@@ -21,6 +21,11 @@ describe('apiFetch', () => {
     await expect(apiFetch('/x')).resolves.toStrictEqual({ ok: 1 });
   });
 
+  it('returns null for a success without result, as the Freebox answers an empty list', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(buildResponse({ success: true }));
+    await expect(apiFetch('/pvr/programmed/')).resolves.toBeNull();
+  });
+
   it('throws AuthError on 403', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 403, statusText: 'Forbidden' }));
     await expect(apiFetch('/x')).rejects.toBeInstanceOf(AuthError);

@@ -6,7 +6,8 @@
 /**
  * Transform EPG by_channel response into a sorted program array
  * API returns: { "ts_hash": program, ... }, or no result at all when empty
- * @param {Object|undefined} data - Raw API result
+ * (null once unwrapped by apiFetch)
+ * @param {Object|null} data - Raw API result
  * @returns {Array} Sorted program array
  */
 export const transformEpgByChannel = (data) => Object.values(data ?? {}).toSorted((a, b) => a.date - b.date);
