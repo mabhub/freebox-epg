@@ -5,7 +5,7 @@
 
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import apiFetch from '@/api/client';
+import apiFetch, { PRIORITY } from '@/api/client';
 import { programDetailPath } from '@/api/endpoints';
 
 const PROGRAM_STALE_TIME = 10 * 60 * 1000;
@@ -53,7 +53,7 @@ export const usePrefetchProgram = () => {
       }
       queryClient.prefetchQuery({
         queryKey: programQueryKey(programId),
-        queryFn: () => apiFetch(programDetailPath(programId)),
+        queryFn: () => apiFetch(programDetailPath(programId), { priority: PRIORITY.PREFETCH }),
         staleTime: PROGRAM_STALE_TIME,
       });
     },
