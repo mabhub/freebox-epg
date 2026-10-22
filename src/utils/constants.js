@@ -81,3 +81,21 @@ export const RESPONSIVE_CONSTANTS = {
 /** Freebox images kept in memory as blob URLs (least recently used evicted).
  *  Covers a full screen of thumbnails and logos with room to scroll back. */
 export const IMAGE_CACHE_MAX_ENTRIES = 400;
+
+/** Idle prefetch pace, in requests per second. Half of the sustained
+ *  `by_channel` rate the Freebox held without any 429 for 3 minutes
+ *  (2 req/s measured on 2026-10-22; 4 req/s hit 429 after ~100 s). The
+ *  Freebox limits the number of requests, not the volume served. */
+export const PREFETCH_RATE_PER_SECOND = 1;
+
+/** Prefetch pause after a 503/429 anywhere, or after its own failure */
+export const PREFETCH_PAUSE_MS = 3 * 60 * 1000;
+
+/** Channels at the top of the list whose evening is prefetched */
+export const PREFETCH_FIRST_CHANNELS = 50;
+
+/** Local hour the prefetched evening starts at */
+export const PREFETCH_EVENING_START_HOUR = 20;
+
+/** Web Locks name: only the tab holding it prefetches */
+export const PREFETCH_LOCK_NAME = 'freebox-epg:prefetch';

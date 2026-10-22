@@ -1,4 +1,4 @@
-import { roundToHour, roundTo2Hours, formatDuration, nowTimestamp } from './time';
+import { roundToHour, roundTo2Hours, formatDuration, nowTimestamp, eveningRange } from './time';
 
 describe('roundToHour', () => {
   it('rounds down to the nearest hour', () => {
@@ -58,5 +58,15 @@ describe('nowTimestamp', () => {
     const expected = Math.floor(Date.now() / 1000);
     expect(ts).toBeGreaterThanOrEqual(expected - 1);
     expect(ts).toBeLessThanOrEqual(expected + 1);
+  });
+});
+
+describe('eveningRange', () => {
+  it('spans 20:00 to midnight local time of the given day', () => {
+    const day = new Date(2026, 9, 22, 9, 15).getTime() / 1000;
+    expect(eveningRange(day, 20)).toStrictEqual({
+      startTs: new Date(2026, 9, 22, 20, 0).getTime() / 1000,
+      endTs: new Date(2026, 9, 23, 0, 0).getTime() / 1000,
+    });
   });
 });

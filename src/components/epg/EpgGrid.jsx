@@ -15,6 +15,7 @@ import { Box, CircularProgress, Typography, styled } from '@mui/material';
 import { setScroll, centerOnTimeOrigin, selectProgram } from '@/store/epgSlice';
 import useVirtualChannels from '@/hooks/useVirtualChannels';
 import useEpgViewport from '@/hooks/useEpgViewport';
+import useIdlePrefetch from '@/hooks/useIdlePrefetch';
 import useDragScroll from '@/hooks/useDragScroll';
 import useCurrentTime from '@/hooks/useCurrentTime';
 import useLayoutConstants from '@/hooks/useLayoutConstants';
@@ -22,6 +23,7 @@ import useElementSize from '@/hooks/useElementSize';
 import { useDeleteRecording } from '@/hooks/usePvr';
 import useResizeWithUndo from '@/hooks/useResizeWithUndo';
 import { TIME_HEADER_HEIGHT, PAST_HOURS, FUTURE_HOURS } from '@/utils/constants';
+import { viewportTimeRange } from '@/utils/viewport';
 
 import TimeHeader from './TimeHeader';
 import ChannelRow from './ChannelRow';
@@ -107,6 +109,22 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     pixelsPerMinute,
     rows,
   );
+
+  const onScreenChannels = useMemo(
+    () => channels.slice(onScreenStart, onScreenEnd),
+    [channels, onScreenStart, onScreenEnd],
+  );
+  const viewportRange = useMemo(
+    () => viewportTimeRange({ timeOrigin, scrollLeft, viewportWidth: containerWidth, pixelsPerMinute }),
+    [timeOrigin, scrollLeft, containerWidth, pixelsPerMinute],
+  );
+  useIdlePrefetch({
+    channels,
+    onScreenChannels,
+    viewportRange,
+    timeOrigin,
+    enabled: isCentered && containerWidth > 0 && visibleChannels.length > 0 && !isLoadingPrograms,
+  });
 
   useDragScroll(containerNode);
 
