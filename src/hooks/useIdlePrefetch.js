@@ -1,7 +1,8 @@
 /**
  * Hook that spends the spare Freebox budget, while the grid is idle, on the
  * `by_channel` buckets the user is likely to reach next: the channels on
- * screen over the whole grid, then tonight for the first channels.
+ * screen over the whole grid, then the screen the `20h30` jump shows for
+ * the first channels.
  *
  * The Freebox limits the number of requests over a sliding window (a 429
  * blocks every route for about a minute), so the prefetch sends one request
@@ -18,15 +19,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PRIORITY, hasQueuedAhead, getLastSaturationAt } from '@/api/requestQueue';
 import { byChannelQuery } from '@/hooks/useEpgViewport';
 import buildPrefetchPlan from '@/utils/prefetchPlan';
-import { eveningRange } from '@/utils/time';
+import { todayAt } from '@/utils/time';
+import { jumpTargetRange } from '@/utils/viewport';
 import {
   FUTURE_HOURS,
   PAST_HOURS,
-  PREFETCH_EVENING_START_HOUR,
   PREFETCH_FIRST_CHANNELS,
   PREFETCH_LOCK_NAME,
   PREFETCH_PAUSE_MS,
   PREFETCH_RATE_PER_SECOND,
+  PRIME_TIME_HOUR,
+  PRIME_TIME_MINUTE,
 } from '@/utils/constants';
 
 const hasWebLocks = () => typeof navigator !== 'undefined' && Boolean(navigator.locks);
@@ -120,7 +123,7 @@ const useIdlePrefetch = ({ channels, onScreenChannels, viewportRange, timeOrigin
         firstUuids: all.slice(0, PREFETCH_FIRST_CHANNELS).map((c) => c.uuid),
         gridRange: { startTs: origin, endTs: origin + (PAST_HOURS + FUTURE_HOURS) * 3600 },
         viewportRange: viewport,
-        eveningRange: eveningRange(origin + PAST_HOURS * 3600, PREFETCH_EVENING_START_HOUR),
+        primeTimeRange: jumpTargetRange(todayAt(PRIME_TIME_HOUR, PRIME_TIME_MINUTE), viewport.endTs - viewport.startTs),
         isKnown,
       });
       if (next) {

@@ -5,6 +5,7 @@
  */
 
 import { PRIORITY } from '@/api/requestQueue';
+import { JUMP_TARGET_FRACTION } from '@/utils/constants';
 
 const BUCKET_SECONDS = 7200;
 
@@ -24,6 +25,18 @@ export const viewportTimeRange = ({ timeOrigin, scrollLeft, viewportWidth, pixel
     endTs: timeOrigin + (scrollLeft + viewportWidth) / pixelsPerSecond,
   };
 };
+
+/**
+ * Time span on screen right after a jump to a target time (`Maintenant`,
+ * `20h30`), which `centerOnTimeOrigin` places a third of the way in.
+ * @param {number} targetTs - Jump target, Unix seconds
+ * @param {number} spanSeconds - Time span the viewport shows, in seconds
+ * @returns {{ startTs: number, endTs: number }} Range on screen after the jump, Unix seconds
+ */
+export const jumpTargetRange = (targetTs, spanSeconds) => ({
+  startTs: targetTs - spanSeconds * JUMP_TARGET_FRACTION,
+  endTs: targetTs + spanSeconds * (1 - JUMP_TARGET_FRACTION),
+});
 
 /**
  * Queue priority of one `by_channel` request. A pair whose row and bucket

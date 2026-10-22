@@ -1,5 +1,5 @@
 import { PRIORITY } from '@/api/requestQueue';
-import { pairPriority, viewportTimeRange } from './viewport';
+import { jumpTargetRange, pairPriority, viewportTimeRange } from './viewport';
 
 describe('pairPriority', () => {
   const range = { onScreenStart: 10, onScreenEnd: 20, startTs: 72_000, endTs: 90_000 };
@@ -29,5 +29,14 @@ describe('viewportTimeRange', () => {
     expect(
       viewportTimeRange({ timeOrigin: 1000, scrollLeft: 240, viewportWidth: 1200, pixelsPerMinute: 4 }),
     ).toStrictEqual({ startTs: 1000 + 3600, endTs: 1000 + 3600 + 18_000 });
+  });
+});
+
+describe('jumpTargetRange', () => {
+  it('spans the screen shown after a jump, the target a third of the way in', () => {
+    expect(jumpTargetRange(100_000, 9 * 3600)).toStrictEqual({
+      startTs: 100_000 - 3 * 3600,
+      endTs: 100_000 + 6 * 3600,
+    });
   });
 });

@@ -1,7 +1,7 @@
 /**
  * Order in which the idle prefetch asks for `by_channel` buckets: first the
  * channels on screen over the whole grid, nearest to the viewport first,
- * then tonight for the first channels of the list.
+ * then the screen the `20h30` jump shows, for the first channels of the list.
  * @module utils/prefetchPlan
  */
 
@@ -31,20 +31,20 @@ const bucketsOf = ({ startTs, endTs }) => (endTs > startTs ? get2HourBuckets(sta
  * @param {Array<string>} params.firstUuids - UUIDs of the first channels of the list
  * @param {{ startTs: number, endTs: number }} params.gridRange - Time span of the grid
  * @param {{ startTs: number, endTs: number }} params.viewportRange - Time span on screen
- * @param {{ startTs: number, endTs: number }} params.eveningRange - Evening to cover for the first channels
+ * @param {{ startTs: number, endTs: number }} params.primeTimeRange - Span the `20h30` jump shows, to cover for the first channels
  * @param {(uuid: string, ts: number) => boolean} params.isKnown - True for a pair already cached or loading
  * @returns {Array<{ uuid: string, ts: number }>} Pairs to fetch, most useful first
  */
-const buildPrefetchPlan = ({ onScreenUuids, firstUuids, gridRange, viewportRange, eveningRange, isKnown }) => {
+const buildPrefetchPlan = ({ onScreenUuids, firstUuids, gridRange, viewportRange, primeTimeRange, isKnown }) => {
   const onScreenBuckets = bucketsOf(gridRange)
     .map((ts, index) => ({ ts, index, distance: distanceToRange(ts, viewportRange) }))
     .toSorted((a, b) => a.distance - b.distance || a.index - b.index)
     .map(({ ts }) => ts);
-  const eveningBuckets = bucketsOf(eveningRange);
+  const primeTimeBuckets = bucketsOf(primeTimeRange);
 
   const candidates = [
     ...onScreenBuckets.flatMap((ts) => onScreenUuids.map((uuid) => ({ uuid, ts }))),
-    ...firstUuids.flatMap((uuid) => eveningBuckets.map((ts) => ({ uuid, ts }))),
+    ...firstUuids.flatMap((uuid) => primeTimeBuckets.map((ts) => ({ uuid, ts }))),
   ];
 
   const seen = new Set();

@@ -125,18 +125,3 @@ export const timestampToDatetimeLocal = (timestamp) => {
  * @returns {number} Unix timestamp in seconds
  */
 export const datetimeLocalToTimestamp = (str) => Math.floor(new Date(str).getTime() / 1000);
-
-/**
- * Evening slot of the local day containing a timestamp, from a given hour
- * to the following local midnight.
- * @param {number} dayTs - Any Unix timestamp of the day, in seconds
- * @param {number} startHour - Local hour the evening starts at (0-23)
- * @returns {{ startTs: number, endTs: number }} Evening range, Unix seconds
- */
-export const eveningRange = (dayTs, startHour) => {
-  const start = new Date(dayTs * 1000);
-  start.setHours(startHour, 0, 0, 0);
-  const end = new Date(dayTs * 1000);
-  end.setHours(24, 0, 0, 0);
-  return { startTs: start.getTime() / 1000, endTs: end.getTime() / 1000 };
-};

@@ -41,6 +41,9 @@ export const FUTURE_HOURS = 24;
 export const PRIME_TIME_HOUR = 20;
 export const PRIME_TIME_MINUTE = 30;
 
+/** Where a time jump puts its target, as a fraction of the viewport width */
+export const JUMP_TARGET_FRACTION = 1 / 3;
+
 /** Fraction of a row's height occupied by the recordings overlay strip */
 export const OVERLAY_HEIGHT_RATIO = 0.18;
 
@@ -93,9 +96,6 @@ export const PREFETCH_PAUSE_MS = 3 * 60 * 1000;
 
 /** Channels at the top of the list whose evening is prefetched */
 export const PREFETCH_FIRST_CHANNELS = 50;
-
-/** Local hour the prefetched evening starts at */
-export const PREFETCH_EVENING_START_HOUR = 20;
 
 /** Web Locks name: only the tab holding it prefetches */
 export const PREFETCH_LOCK_NAME = 'freebox-epg:prefetch';

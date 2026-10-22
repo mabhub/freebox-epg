@@ -5,7 +5,7 @@
 
 import { createSlice } from '@reduxjs/toolkit';
 import { nowTimestamp } from '@/utils/time';
-import { PAST_HOURS, pastOffsetPx } from '@/utils/constants';
+import { JUMP_TARGET_FRACTION, PAST_HOURS, pastOffsetPx } from '@/utils/constants';
 
 const initialState = {
   /** Unix timestamp of the left edge of the viewport (includes past buffer) */
@@ -56,7 +56,7 @@ const epgSlice = createSlice({
     },
 
     /**
-     * Centre the current time origin at ~1/3 of the viewport width.
+     * Put the current time origin a third of the way into the viewport.
      * Needs the runtime viewport dimensions in the payload because they
      * live in the DOM, not in Redux state.
      * @param {Object} state - Current state
@@ -64,7 +64,7 @@ const epgSlice = createSlice({
      */
     centerOnTimeOrigin(state, action) {
       const { viewportWidth, pixelsPerMinute } = action.payload;
-      state.scrollLeft = Math.max(0, pastOffsetPx(pixelsPerMinute) - viewportWidth / 3);
+      state.scrollLeft = Math.max(0, pastOffsetPx(pixelsPerMinute) - viewportWidth * JUMP_TARGET_FRACTION);
     },
 
     /**

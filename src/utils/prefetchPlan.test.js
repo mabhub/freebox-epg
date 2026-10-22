@@ -4,7 +4,7 @@ const B = 7200;
 const T0 = 1000 * B;
 const gridRange = { startTs: T0, endTs: T0 + 4 * B };
 const viewportRange = { startTs: T0 + B + 600, endTs: T0 + 2 * B - 600 };
-const eveningRange = { startTs: T0 + 10 * B, endTs: T0 + 12 * B };
+const primeTimeRange = { startTs: T0 + 10 * B, endTs: T0 + 12 * B };
 const never = () => false;
 
 const plan = (overrides = {}) =>
@@ -13,7 +13,7 @@ const plan = (overrides = {}) =>
     firstUuids: [],
     gridRange,
     viewportRange,
-    eveningRange,
+    primeTimeRange,
     isKnown: never,
     ...overrides,
   });
@@ -37,7 +37,7 @@ describe('buildPrefetchPlan', () => {
     ]);
   });
 
-  it('appends the evening of the first channels after the on-screen part', () => {
+  it('appends the prime time screen of the first channels after the on-screen part', () => {
     expect(plan({ firstUuids: ['x', 'y'] }).slice(4)).toStrictEqual([
       { uuid: 'x', ts: T0 + 10 * B },
       { uuid: 'x', ts: T0 + 11 * B },
@@ -47,7 +47,7 @@ describe('buildPrefetchPlan', () => {
   });
 
   it('does not repeat a pair present in both parts', () => {
-    expect(plan({ firstUuids: ['a'], eveningRange: { startTs: T0 + 3 * B, endTs: T0 + 5 * B } })).toStrictEqual([
+    expect(plan({ firstUuids: ['a'], primeTimeRange: { startTs: T0 + 3 * B, endTs: T0 + 5 * B } })).toStrictEqual([
       { uuid: 'a', ts: T0 + B },
       { uuid: 'a', ts: T0 },
       { uuid: 'a', ts: T0 + 2 * B },
