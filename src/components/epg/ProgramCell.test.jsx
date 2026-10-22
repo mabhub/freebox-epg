@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react';
 import useFreeboxImage from '@/hooks/useFreeboxImage';
+import { SERIES_BAND_HEIGHT } from '@/utils/constants';
 import ProgramCell from './ProgramCell';
 
 vi.mock('@/hooks/useFreeboxImage', () => ({ default: vi.fn() }));
@@ -10,9 +11,10 @@ const PROGRAM = { id: 'p', title: 'Titre', date: 0, duration: 3600, picture: '/a
 /**
  * Render a cell wide enough to show a thumbnail.
  * @param {Object} [program] - Program to render
- * @returns {HTMLElement} Render container
+ * @param {Object} [props] - Extra props
+ * @returns {import('@testing-library/react').RenderResult} Render result
  */
-const renderCell = (program = PROGRAM) =>
+const renderCellResult = (program = PROGRAM, props = {}) =>
   render(
     <ProgramCell
       program={program}
@@ -22,8 +24,17 @@ const renderCell = (program = PROGRAM) =>
       channelUuid="uuid-1"
       isOnAir={false}
       onSelect={() => {}}
+      {...props}
     />,
-  ).container;
+  );
+
+/**
+ * Render a cell wide enough to show a thumbnail.
+ * @param {Object} [program] - Program to render
+ * @param {Object} [props] - Extra props
+ * @returns {HTMLElement} Render container
+ */
+const renderCell = (program = PROGRAM, props = {}) => renderCellResult(program, props).container;
 
 describe('ProgramCell thumbnail', () => {
   it('holds the thumbnail space with a pulsing placeholder while loading', () => {
@@ -51,5 +62,45 @@ describe('ProgramCell thumbnail', () => {
     useFreeboxImage.mockReturnValue({ src: null, failed: false });
     const container = renderCell({ ...PROGRAM, picture: undefined });
     expect(container.querySelector('.MuiSkeleton-root')).toBeNull();
+  });
+});
+
+describe('ProgramCell in an episode group', () => {
+  const EPISODE = { ...PROGRAM, sub_title: 'La belle', season_number: 2, episode_number: 3 };
+
+  beforeEach(() => {
+    useFreeboxImage.mockReturnValue({ src: null, failed: false });
+  });
+
+  it('hides the show title and shows subtitle then season/episode', () => {
+    const { getByText, queryByText } = renderCellResult(EPISODE, { groupTitle: 'Titre' });
+    expect(queryByText('Titre')).toBeNull();
+    expect(getByText('La belle')).toBeInTheDocument();
+    expect(getByText('S2E3')).toBeInTheDocument();
+  });
+
+  it('falls back to season/episode when there is no subtitle', () => {
+    const { getByText, queryByText } = renderCellResult({ ...EPISODE, sub_title: undefined }, { groupTitle: 'Titre' });
+    expect(queryByText('Titre')).toBeNull();
+    expect(getByText('S2E3')).toBeInTheDocument();
+  });
+
+  it('keeps the title of an interlude under a band', () => {
+    const { getByText } = renderCellResult({ ...PROGRAM, title: 'Météo' }, { groupTitle: 'Titre' });
+    expect(getByText('Météo')).toBeInTheDocument();
+  });
+
+  it('drops the thumbnail and sits below the band', () => {
+    const container = renderCell(EPISODE, { groupTitle: 'Titre' });
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('.MuiSkeleton-root')).toBeNull();
+    expect(container.firstChild.style.top).toBe(`${SERIES_BAND_HEIGHT + 4}px`);
+  });
+
+  it('renders as before without a group', () => {
+    const { container, getByText } = renderCellResult(EPISODE);
+    expect(getByText('Titre')).toBeInTheDocument();
+    expect(container.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
+    expect(container.firstChild.style.top).toBe('');
   });
 });
