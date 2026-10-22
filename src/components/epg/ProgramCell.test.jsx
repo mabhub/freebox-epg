@@ -90,10 +90,9 @@ describe('ProgramCell in an episode group', () => {
     expect(getByText('Météo')).toBeInTheDocument();
   });
 
-  it('drops the thumbnail and sits below the band', () => {
+  it('keeps the thumbnail and sits below the band', () => {
     const container = renderCell(EPISODE, { groupTitle: 'Titre' });
-    expect(container.querySelector('img')).toBeNull();
-    expect(container.querySelector('.MuiSkeleton-root')).toBeNull();
+    expect(container.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
     expect(container.firstChild.style.top).toBe(`${SERIES_BAND_HEIGHT + 4}px`);
   });
 

@@ -10,7 +10,7 @@
  * @param {string} props.channelUuid - UUID of the parent channel
  * @param {boolean} props.isOnAir - Whether the program is currently airing (computed by ChannelRow)
  * @param {string|null} [props.groupTitle] - Title of the series band the cell sits under; the cell then
- *   moves below the band, drops its thumbnail and hides its title when it is the band's
+ *   moves below the band and hides its title when it is the band's
  * @param {Function} props.onSelect - Callback when program is clicked
  * @returns {React.ReactElement} Program cell
  */
@@ -236,9 +236,7 @@ const ProgramCell = memo(
             ...(categoryAccent && { borderLeft: `3px solid ${categoryAccent}` }),
           }}
         >
-          {groupTitle === null && widthPx >= THUMBNAIL_MIN_WIDTH && program.picture && (
-            <ProgramThumbnail url={program.picture} />
-          )}
+          {widthPx >= THUMBNAIL_MIN_WIDTH && program.picture && <ProgramThumbnail url={program.picture} />}
           <TextContainer>
             <Typography variant="caption" fontWeight="bold" noWrap sx={{ display: 'block', lineHeight: 1.3 }}>
               {main}
