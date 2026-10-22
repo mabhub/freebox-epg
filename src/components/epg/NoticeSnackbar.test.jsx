@@ -13,6 +13,22 @@ describe('NoticeSnackbar', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Enregistrement modifié : 21:05 – 22:55');
   });
 
+  it('keeps the message on screen while it fades out', () => {
+    const { rerender } = render(<NoticeSnackbar notice={{ message: 'Enregistrement modifié' }} onClose={() => {}} />);
+
+    rerender(<NoticeSnackbar notice={null} onClose={() => {}} />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Enregistrement modifié');
+  });
+
+  it('replaces the message with the next notice', () => {
+    const { rerender } = render(<NoticeSnackbar notice={{ message: 'Premier' }} onClose={() => {}} />);
+
+    rerender(<NoticeSnackbar notice={{ message: 'Second' }} onClose={() => {}} />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Second');
+  });
+
   it('runs the undo then closes when Annuler is clicked', () => {
     const undo = vi.fn();
     const onClose = vi.fn();

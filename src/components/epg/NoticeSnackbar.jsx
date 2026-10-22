@@ -9,44 +9,52 @@
  * @returns {React.ReactElement} Snackbar
  */
 
+import { useState } from 'react';
 import { Alert, Button, Snackbar } from '@mui/material';
 
 const AUTO_HIDE_MS = 6000;
 
 const NoticeSnackbar = ({ notice, onClose }) => {
+  // The last notice stays rendered while the snackbar fades out; its key
+  // only changes with a new notice, which restarts the hide timer.
+  const [shown, setShown] = useState({ notice, key: 0 });
+  if (notice !== null && notice !== shown.notice) {
+    setShown({ notice, key: shown.key + 1 });
+  }
+  const current = shown.notice;
+
   const handleClose = (_event, reason) => {
     // A click on the grid (a drag, a program) should not dismiss it.
     if (reason !== 'clickaway') onClose();
   };
 
   const handleUndo = () => {
-    notice.undo();
+    current.undo();
     onClose();
   };
 
   return (
     <Snackbar
-      // Restart the timer for each new notice.
-      key={notice?.message}
+      key={shown.key}
       open={notice !== null}
       autoHideDuration={AUTO_HIDE_MS}
       onClose={handleClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
     >
-      {notice ? (
+      {current ? (
         <Alert
-          severity={notice.severity ?? 'success'}
+          severity={current.severity ?? 'success'}
           variant="filled"
           onClose={onClose}
           action={
-            notice.undo ? (
+            current.undo ? (
               <Button color="inherit" size="small" onClick={handleUndo}>
                 Annuler
               </Button>
             ) : undefined
           }
         >
-          {notice.message}
+          {current.message}
         </Alert>
       ) : undefined}
     </Snackbar>
