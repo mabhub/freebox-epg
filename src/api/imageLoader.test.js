@@ -1,7 +1,7 @@
 /* eslint-disable vitest/prefer-called-once -- contradicts vitest/prefer-called-times, both enabled */
 import { transientRetryDelay } from './client';
 import { getLastSaturationAt, runInQueue } from './requestQueue';
-import { clearImageCache, loadImage } from './imageLoader';
+import { clearImageCache, loadImage, peekImage } from './imageLoader';
 
 vi.mock('./requestQueue', async (importOriginal) => {
   const original = await importOriginal();
@@ -112,5 +112,18 @@ describe('loadImage', () => {
     await loadImage('/api/latest/tv/img/c.jpg');
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:1');
     expect(URL.revokeObjectURL).not.toHaveBeenCalledWith('blob:2');
+  });
+});
+
+describe('peekImage', () => {
+  it('returns null for an image not loaded yet', () => {
+    expect(peekImage('/api/latest/tv/img/a.jpg')).toBeNull();
+  });
+
+  it('returns the blob url of a loaded image without fetching', async () => {
+    const spy = stubFetch({ cached: () => Promise.resolve(image()) });
+    await loadImage('/api/latest/tv/img/a.jpg');
+    expect(peekImage('/api/latest/tv/img/a.jpg')).toBe('blob:1');
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

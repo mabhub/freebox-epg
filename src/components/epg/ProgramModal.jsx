@@ -104,6 +104,15 @@ const RecordingActionButton = ({
   return <RecordSplitButton channelUuid={channelUuid} program={program} onRecord={onRecord} />;
 };
 
+const PICTURE_SX = {
+  float: 'right',
+  width: 168,
+  height: 130,
+  borderRadius: 1,
+  ml: 2,
+  mb: 1,
+};
+
 const ProgramModalContent = ({
   program,
   isLoading,
@@ -113,7 +122,8 @@ const ProgramModalContent = ({
   onRecord,
   onEditRecording,
 }) => {
-  const { src: imageSrc } = useFreeboxImage(program?.picture_big ?? null);
+  const pictureUrl = program?.picture_big ?? null;
+  const { src: imageSrc, failed: imageFailed } = useFreeboxImage(pictureUrl);
 
   if (isLoading) {
     return (
@@ -138,20 +148,10 @@ const ProgramModalContent = ({
 
   return (
     <>
-      {imageSrc && (
-        <Box
-          component="img"
-          src={imageSrc}
-          alt={program.title}
-          sx={{
-            float: 'right',
-            width: 168,
-            height: 130,
-            borderRadius: 1,
-            ml: 2,
-            mb: 1,
-          }}
-        />
+      {imageSrc && <Box component="img" src={imageSrc} alt={program.title} sx={PICTURE_SX} />}
+      {pictureUrl && !imageSrc && (
+        // Same box as the picture, so the text does not reflow when it arrives.
+        <Skeleton variant="rectangular" animation={imageFailed ? false : 'pulse'} sx={PICTURE_SX} />
       )}
 
       <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>

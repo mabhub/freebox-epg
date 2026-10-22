@@ -14,7 +14,7 @@
  */
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Typography, Tooltip, styled, useMediaQuery } from '@mui/material';
+import { Box, Skeleton, Typography, Tooltip, styled, useMediaQuery } from '@mui/material';
 import { formatTime } from '@/utils/time';
 import { getCategoryColor, getCategoryAccent } from '@/utils/categories';
 import formatSeasonEpisode from '@/utils/programs';
@@ -49,14 +49,37 @@ const CellRoot = styled('div')(({ theme }) => ({
   },
 }));
 
-const Thumbnail = styled('img')({
+const THUMBNAIL_BOX = {
   width: 50,
   height: 38,
-  objectFit: 'cover',
   borderRadius: 2,
   flexShrink: 0,
+};
+
+const Thumbnail = styled('img')({
+  ...THUMBNAIL_BOX,
+  objectFit: 'cover',
   pointerEvents: 'none',
 });
+
+const ThumbnailPlaceholder = styled(Skeleton)(THUMBNAIL_BOX);
+
+/**
+ * Program thumbnail loaded through the request queue. A placeholder of the
+ * same size holds its space until it arrives, so the title does not shift;
+ * it stops pulsing if the image never comes.
+ * @param {Object} props - Component props
+ * @param {string} props.url - Image URL
+ * @returns {React.ReactElement} Thumbnail or placeholder
+ */
+const ProgramThumbnail = ({ url }) => {
+  const { src, failed } = useFreeboxImage(url);
+  return src ? (
+    <Thumbnail src={src} alt="" />
+  ) : (
+    <ThumbnailPlaceholder variant="rectangular" animation={failed ? false : 'pulse'} />
+  );
+};
 
 const TextContainer = styled('div')({
   minWidth: 0,
@@ -83,7 +106,6 @@ const ProgramCell = memo(({ program, timeOrigin, pixelsPerMinute, sidebarWidth, 
   const durationMinutes = program.duration / 60;
   const leftPx = sidebarWidth + offsetMinutes * pixelsPerMinute;
   const widthPx = Math.max(MIN_CELL_WIDTH, durationMinutes * pixelsPerMinute - CELL_GAP);
-  const { src: thumbnailSrc } = useFreeboxImage(widthPx >= THUMBNAIL_MIN_WIDTH ? (program.picture ?? null) : null);
   const categoryBg = getCategoryColor(program.category);
   const categoryAccent = getCategoryAccent(program.category);
   const prefetchProgram = usePrefetchProgram();
@@ -189,7 +211,7 @@ const ProgramCell = memo(({ program, timeOrigin, pixelsPerMinute, sidebarWidth, 
           ...(categoryAccent && { borderLeft: `3px solid ${categoryAccent}` }),
         }}
       >
-        {thumbnailSrc && <Thumbnail src={thumbnailSrc} alt="" />}
+        {widthPx >= THUMBNAIL_MIN_WIDTH && program.picture && <ProgramThumbnail url={program.picture} />}
         <TextContainer>
           <Typography variant="caption" fontWeight="bold" noWrap sx={{ display: 'block', lineHeight: 1.3 }}>
             {program.title}

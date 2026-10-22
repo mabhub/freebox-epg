@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import { formatTime } from '@/utils/time';
+import useFreeboxImage from '@/hooks/useFreeboxImage';
 import ProgramModal from './ProgramModal';
 
 const PROGRAMS = [
@@ -9,9 +10,10 @@ const PROGRAMS = [
   { id: 'c', date: 2200, duration: 600 },
 ];
 
+let programPicture;
 vi.mock('@/hooks/useProgramDetail', () => ({
   default: (programId) => ({
-    program: { id: programId, title: `Programme ${programId}`, date: 1600, duration: 600 },
+    program: { id: programId, title: `Programme ${programId}`, date: 1600, duration: 600, picture_big: programPicture },
     isLoading: false,
     error: null,
   }),
@@ -20,6 +22,8 @@ vi.mock('@/hooks/useProgramDetail', () => ({
 vi.mock('@/hooks/useRecordingsByChannel', () => ({
   default: () => new Map(),
 }));
+
+vi.mock('@/hooks/useFreeboxImage', () => ({ default: vi.fn() }));
 
 vi.mock('@/hooks/useCurrentTime', () => ({
   default: () => 0,
@@ -43,6 +47,8 @@ vi.mock('./RecordModal', () => ({
 beforeEach(() => {
   followingEpisodes = [];
   episodesLoading = false;
+  programPicture = undefined;
+  useFreeboxImage.mockReturnValue({ src: null, failed: false });
 });
 
 const renderModal = (onNavigate) =>
@@ -125,5 +131,36 @@ describe('recording the following episodes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     expect(screen.getByText("jusqu'à 2200", { exact: false })).toBeInTheDocument();
+  });
+});
+
+describe('picture in ProgramModal', () => {
+  it('holds the picture space with a pulsing placeholder while loading', () => {
+    programPicture = '/api/latest/tv/img/b.jpg';
+    renderModal(() => {});
+    expect(screen.queryByRole('img', { name: 'Programme b' })).toBeNull();
+    expect(document.querySelector('.MuiSkeleton-root')).toHaveClass('MuiSkeleton-pulse');
+  });
+
+  it('keeps a still placeholder when the picture fails', () => {
+    programPicture = '/api/latest/tv/img/b.jpg';
+    useFreeboxImage.mockReturnValue({ src: null, failed: true });
+    renderModal(() => {});
+    const placeholder = document.querySelector('.MuiSkeleton-root');
+    expect(placeholder).toBeInTheDocument();
+    expect(placeholder).not.toHaveClass('MuiSkeleton-pulse');
+  });
+
+  it('shows the picture once loaded', () => {
+    programPicture = '/api/latest/tv/img/b.jpg';
+    useFreeboxImage.mockReturnValue({ src: 'blob:1', failed: false });
+    renderModal(() => {});
+    expect(screen.getByRole('img', { name: 'Programme b' })).toHaveAttribute('src', 'blob:1');
+    expect(document.querySelector('.MuiSkeleton-root')).toBeNull();
+  });
+
+  it('reserves no space for a program without picture', () => {
+    renderModal(() => {});
+    expect(document.querySelector('.MuiSkeleton-root')).toBeNull();
   });
 });

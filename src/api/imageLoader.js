@@ -126,6 +126,15 @@ export const loadImage = async (url, { signal } = {}) => {
 };
 
 /**
+ * Return the blob URL of an image already loaded in memory, without
+ * loading anything. Lets a remounted component show the image on its first
+ * render instead of flashing its placeholder.
+ * @param {string} url - Image URL
+ * @returns {string|null} Blob URL, or null if the image is not in memory
+ */
+export const peekImage = (url) => cache.get(url) ?? null;
+
+/**
  * Forget every loaded image and revoke its blob URL. For tests and logout.
  */
 export const clearImageCache = () => {
