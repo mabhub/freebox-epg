@@ -98,6 +98,7 @@ describe('runInQueue', () => {
     const waiting = [
       enqueue('a', { priority: PRIORITY.PREFETCH }),
       enqueue('b', { priority: PRIORITY.IMAGE }),
+      enqueue('g', { priority: PRIORITY.EPG_OVERSCAN }),
       enqueue('c', { priority: PRIORITY.EPG_VISIBLE, rank: 0.5 }),
       enqueue('d', { priority: PRIORITY.EPG_VISIBLE, rank: 0.1 }),
       enqueue('e', { priority: PRIORITY.EPG_VISIBLE, rank: 0.1 }),
@@ -110,7 +111,7 @@ describe('runInQueue', () => {
     for (const { release } of blockers) release();
     await Promise.all(blockerPromises);
 
-    expect(order).toStrictEqual(['f', 'd', 'e', 'c', 'b', 'a']);
+    expect(order).toStrictEqual(['f', 'd', 'e', 'c', 'b', 'g', 'a']);
   });
 });
 

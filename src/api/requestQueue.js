@@ -14,8 +14,10 @@
 export const PRIORITY = Object.freeze({
   INTERACTION: 0,
   EPG_VISIBLE: 1,
-  EPG_OVERSCAN: 2,
-  IMAGE: 3,
+  // Images of the rendered cells before the margins: they show on screen,
+  // the margins only serve the next scroll.
+  IMAGE: 2,
+  EPG_OVERSCAN: 3,
   PREFETCH: 4,
 });
 
