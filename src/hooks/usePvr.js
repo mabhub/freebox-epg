@@ -126,18 +126,24 @@ export const useUpdateRecording = () => {
  * overlay cell does. The cached list shows the new slot at once so the
  * cell does not jump back while the Freebox answers; it is put back if
  * the Freebox refuses. The mutation accepts `{ recording, start, end }`.
+ *
+ * The other fields are read from the cache when the request leaves, not
+ * from `recording`: an undo replays a recording captured before the drag,
+ * and must not revert what the modal changed in between.
  * @returns {import('@tanstack/react-query').UseMutationResult} Mutation result
  */
 export const useResizeRecording = () => {
   const queryClient = useQueryClient();
   const queryKey = ['pvr', 'programmed'];
   return useMutation({
-    mutationFn: ({ recording, start, end }) =>
-      apiFetch(pvrProgrammedItemPath(recording.id), {
+    mutationFn: ({ recording, start, end }) => {
+      const latest = queryClient.getQueryData(queryKey)?.find((raw) => raw.id === recording.id) ?? recording.raw;
+      return apiFetch(pvrProgrammedItemPath(recording.id), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...recording.raw, start, end }),
-      }),
+        body: JSON.stringify({ ...latest, start, end }),
+      });
+    },
     onMutate: async ({ recording, start, end }) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData(queryKey);

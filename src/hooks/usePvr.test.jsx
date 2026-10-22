@@ -54,6 +54,17 @@ describe('useResizeRecording', () => {
     });
   });
 
+  it('keeps the fields edited since the drag began, as an undo would otherwise revert them', async () => {
+    apiFetch.mockResolvedValue({});
+    const { result, queryClient } = renderResize();
+    const edited = { ...raw, name: 'Renommée', margin_after: 600 };
+    queryClient.setQueryData(['pvr', 'programmed'], [edited, { ...raw, id: 8 }]);
+
+    await act(() => result.current.mutateAsync({ recording, start: 1000, end: 4000 }));
+
+    expect(apiFetch.mock.calls[0][1].body).toBe(JSON.stringify(edited));
+  });
+
   it('shows the new slot in the cache before the Freebox answers', async () => {
     apiFetch.mockReturnValue(new Promise(() => {}));
     const { result, queryClient } = renderResize();
