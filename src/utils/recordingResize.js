@@ -5,8 +5,8 @@
  * @module utils/recordingResize
  */
 
-import { computeFieldLocks } from '@/hooks/useRecordingForm';
 import { RESIZE_MIN_DURATION_SECONDS, RESIZE_STEP_SECONDS } from './constants';
+import computeFieldLocks from './recordingLocks';
 
 /**
  * Edges a drag may move, matching the start/end locks of the edit modal.
