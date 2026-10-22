@@ -77,3 +77,7 @@ export const RESPONSIVE_CONSTANTS = {
     pixelsPerMinute: 2,
   },
 };
+
+/** Freebox images kept in memory as blob URLs (least recently used evicted).
+ *  Covers a full screen of thumbnails and logos with room to scroll back. */
+export const IMAGE_CACHE_MAX_ENTRIES = 400;

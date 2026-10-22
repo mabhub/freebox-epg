@@ -11,6 +11,7 @@
 import { memo, useMemo } from 'react';
 import { Box, Typography, Tooltip, styled } from '@mui/material';
 import getLogoUrl from '@/utils/images';
+import useFreeboxImage from '@/hooks/useFreeboxImage';
 
 const SidebarRoot = styled('div')(({ theme }) => ({
   position: 'sticky',
@@ -37,6 +38,8 @@ const TextBlock = styled('div')({
 });
 
 const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
+  const { src: logoSrc } = useFreeboxImage(getLogoUrl(channel.uuid));
+  const logoSize = { width: isMobile ? 32 : 40, height: isMobile ? 28 : 35 };
   const tooltipContent = useMemo(
     () => (
       <Box>
@@ -55,15 +58,11 @@ const ChannelSidebar = memo(({ channel, sidebarWidth, isMobile }) => {
   return (
     <Tooltip title={tooltipContent} placement="right" arrow>
       <SidebarRoot style={{ width: sidebarWidth, minWidth: sidebarWidth }}>
-        <ChannelLogo
-          src={getLogoUrl(channel.uuid)}
-          alt={channel.name}
-          loading="lazy"
-          style={{
-            width: isMobile ? 32 : 40,
-            height: isMobile ? 28 : 35,
-          }}
-        />
+        {logoSrc ? (
+          <ChannelLogo src={logoSrc} alt={channel.name} style={logoSize} />
+        ) : (
+          <Box sx={{ flexShrink: 0 }} style={logoSize} />
+        )}
         {!isMobile && (
           <TextBlock>
             <Typography variant="caption" fontWeight="bold" noWrap sx={{ display: 'block', lineHeight: 1.2 }}>

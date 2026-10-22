@@ -31,6 +31,7 @@ import { Search as SearchIcon } from '@mui/icons-material';
 import { toggleChannel, setHiddenChannels } from '@/store/channelsSlice';
 import useElementSize from '@/hooks/useElementSize';
 import getLogoUrl from '@/utils/images';
+import useFreeboxImage from '@/hooks/useFreeboxImage';
 
 const DRAWER_WIDTH = 320;
 const ITEM_HEIGHT = 40;
@@ -49,6 +50,26 @@ const ChannelLogo = styled('img')({
   objectFit: 'contain',
   marginRight: 8,
 });
+
+const LogoSlot = styled('span')({
+  display: 'inline-block',
+  flexShrink: 0,
+  width: 28,
+  height: 24,
+  marginRight: 8,
+});
+
+/**
+ * Channel logo loaded through the request queue; an empty slot of the same
+ * size stands in until it arrives, or if it never does.
+ * @param {Object} props - Component props
+ * @param {string} props.uuid - Channel UUID
+ * @returns {React.ReactElement} Logo or placeholder
+ */
+const FilterLogo = ({ uuid }) => {
+  const { src } = useFreeboxImage(getLogoUrl(uuid));
+  return src ? <ChannelLogo src={src} alt="" /> : <LogoSlot />;
+};
 
 const VirtualList = styled('div')({
   position: 'relative',
@@ -187,7 +208,7 @@ const ChannelFilter = ({ open, onClose, channels }) => {
                 <CompactListItemIcon>
                   <Checkbox edge="start" checked={!isHidden} tabIndex={-1} disableRipple size="small" />
                 </CompactListItemIcon>
-                <ChannelLogo src={getLogoUrl(channel.uuid)} alt="" loading="lazy" />
+                <FilterLogo uuid={channel.uuid} />
                 <ListItemText
                   primary={`${channel.number} - ${channel.name}`}
                   slotProps={{ primary: { variant: 'body2', noWrap: true } }}

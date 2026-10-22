@@ -20,6 +20,7 @@ import { getCategoryColor, getCategoryAccent } from '@/utils/categories';
 import formatSeasonEpisode from '@/utils/programs';
 import { ROW_HEIGHT } from '@/utils/constants';
 import { usePrefetchProgram } from '@/hooks/useProgramDetail';
+import useFreeboxImage from '@/hooks/useFreeboxImage';
 
 const MIN_CELL_WIDTH = 8;
 const CELL_GAP = 4;
@@ -82,7 +83,7 @@ const ProgramCell = memo(({ program, timeOrigin, pixelsPerMinute, sidebarWidth, 
   const durationMinutes = program.duration / 60;
   const leftPx = sidebarWidth + offsetMinutes * pixelsPerMinute;
   const widthPx = Math.max(MIN_CELL_WIDTH, durationMinutes * pixelsPerMinute - CELL_GAP);
-  const thumbnailUrl = program.picture ?? null;
+  const { src: thumbnailSrc } = useFreeboxImage(widthPx >= THUMBNAIL_MIN_WIDTH ? (program.picture ?? null) : null);
   const categoryBg = getCategoryColor(program.category);
   const categoryAccent = getCategoryAccent(program.category);
   const prefetchProgram = usePrefetchProgram();
@@ -188,7 +189,7 @@ const ProgramCell = memo(({ program, timeOrigin, pixelsPerMinute, sidebarWidth, 
           ...(categoryAccent && { borderLeft: `3px solid ${categoryAccent}` }),
         }}
       >
-        {thumbnailUrl && widthPx >= THUMBNAIL_MIN_WIDTH && <Thumbnail src={thumbnailUrl} alt="" loading="lazy" />}
+        {thumbnailSrc && <Thumbnail src={thumbnailSrc} alt="" />}
         <TextContainer>
           <Typography variant="caption" fontWeight="bold" noWrap sx={{ display: 'block', lineHeight: 1.3 }}>
             {program.title}

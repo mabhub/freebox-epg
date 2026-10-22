@@ -28,6 +28,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { Close as CloseIcon, Edit as EditIcon } from '@mui/icons-material';
+import useFreeboxImage from '@/hooks/useFreeboxImage';
 
 import useProgramDetail from '@/hooks/useProgramDetail';
 import useRecordingsByChannel from '@/hooks/useRecordingsByChannel';
@@ -112,6 +113,8 @@ const ProgramModalContent = ({
   onRecord,
   onEditRecording,
 }) => {
+  const { src: imageSrc } = useFreeboxImage(program?.picture_big ?? null);
+
   if (isLoading) {
     return (
       <Box sx={{ p: 2 }}>
@@ -127,7 +130,6 @@ const ProgramModalContent = ({
     return null;
   }
 
-  const imageUrl = program.picture_big ?? null;
   const startTime = formatTime(program.date);
   const endTime = formatTime(program.date + program.duration);
   const date = formatDate(program.date);
@@ -136,10 +138,10 @@ const ProgramModalContent = ({
 
   return (
     <>
-      {imageUrl && (
+      {imageSrc && (
         <Box
           component="img"
-          src={imageUrl}
+          src={imageSrc}
           alt={program.title}
           sx={{
             float: 'right',
