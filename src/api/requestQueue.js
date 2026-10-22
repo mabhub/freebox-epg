@@ -29,9 +29,25 @@ export const PRIORITY = Object.freeze({
  *  while staying well under the cap. */
 const MAX_CONCURRENT_REQUESTS = 4;
 
+/** HTTP statuses the Freebox answers when saturated or rate limiting */
+export const SATURATION_STATUSES = new Set([503, 429]);
+
+/** Pause after a first 503/429. A saturated Freebox refuses in ~50 ms, so
+ *  without a pause the queue would send dozens of doomed requests per
+ *  second and keep it saturated. */
+const SATURATION_PAUSE_MS = 1000;
+
+/** Longest pause, reached when saturations follow each other */
+const SATURATION_PAUSE_MAX_MS = 30_000;
+
 let inFlight = 0;
 let nextSeq = 0;
 let lastSaturationAt = 0;
+// Saturations in a row, without a healthy answer in between. While it is
+// non-zero the queue probes the Freebox with one request at a time.
+let saturationStreak = 0;
+let pausedUntil = 0;
+let resumeTimer = null;
 const waiting = [];
 
 /**
@@ -70,16 +86,31 @@ const takeNext = () => {
 };
 
 /**
+ * Start the most urgent waiting entries while the Freebox accepts more
+ * requests: up to 4 in flight, a single probe after a saturation, none
+ * during a pause. A pause schedules the next attempt at its end.
+ */
+const pump = () => {
+  const now = Date.now();
+  if (now < pausedUntil) {
+    clearTimeout(resumeTimer);
+    resumeTimer = waiting.length > 0 ? setTimeout(pump, pausedUntil - now) : null;
+    return;
+  }
+  const limit = saturationStreak > 0 ? 1 : MAX_CONCURRENT_REQUESTS;
+  while (inFlight < limit && waiting.length > 0) {
+    inFlight += 1;
+    takeNext().run();
+  }
+};
+
+/**
  * Wait for a free slot. Resolves at once when one is available.
  * @param {{ priority: number, rank: number, signal?: AbortSignal }} options - Entry ordering and cancellation
  * @returns {Promise<void>} Resolves when the caller holds a slot
  */
-const acquireSlot = ({ priority, rank, signal }) => {
-  if (inFlight < MAX_CONCURRENT_REQUESTS) {
-    inFlight += 1;
-    return Promise.resolve();
-  }
-  return new Promise((resolve, reject) => {
+const acquireSlot = ({ priority, rank, signal }) =>
+  new Promise((resolve, reject) => {
     const entry = { priority, rank, seq: nextSeq, run: null };
     nextSeq += 1;
     const onAbort = () => {
@@ -93,20 +124,15 @@ const acquireSlot = ({ priority, rank, signal }) => {
       resolve();
     };
     waiting.push(entry);
+    pump();
   });
-};
 
 /**
- * Hand the slot over to the most urgent waiting entry, or free it.
+ * Free a slot and hand it to the most urgent waiting entry.
  */
 const releaseSlot = () => {
-  const next = takeNext();
-  if (next) {
-    // The slot passes straight to the next entry: inFlight is unchanged.
-    next.run();
-  } else {
-    inFlight -= 1;
-  }
+  inFlight -= 1;
+  pump();
 };
 
 /**
@@ -145,11 +171,35 @@ export const runInQueue = async (task, { priority = PRIORITY.INTERACTION, rank =
 export const hasQueuedAhead = (priority) => waiting.some((entry) => entry.priority < priority);
 
 /**
- * Record that the Freebox answered 503 or 429.
+ * Record that the Freebox answered 503 or 429: the queue starts nothing
+ * for a pause, 1 s doubled at each saturation in a row up to 30 s, then
+ * probes with one request at a time until a healthy answer. Answers to
+ * requests sent before the pause belong to the same burst and do not
+ * lengthen it.
  * @param {number} [now] - Time of the answer, in milliseconds (current time by default)
  */
 export const markSaturated = (now = Date.now()) => {
   lastSaturationAt = now;
+  if (now < pausedUntil) return;
+  saturationStreak += 1;
+  pausedUntil = now + Math.min(SATURATION_PAUSE_MS * 2 ** (saturationStreak - 1), SATURATION_PAUSE_MAX_MS);
+};
+
+/**
+ * Record the status of an answer from the Freebox. A saturation pauses the
+ * queue (see markSaturated); any other answer proves the Freebox serves
+ * again and reopens every slot.
+ * @param {number} status - HTTP status of the answer
+ */
+export const recordAnswer = (status) => {
+  if (SATURATION_STATUSES.has(status)) {
+    markSaturated();
+    return;
+  }
+  if (saturationStreak > 0) {
+    saturationStreak = 0;
+    pump();
+  }
 };
 
 /**
@@ -157,3 +207,14 @@ export const markSaturated = (now = Date.now()) => {
  * @returns {number} Milliseconds since epoch, or 0 if none yet
  */
 export const getLastSaturationAt = () => lastSaturationAt;
+
+/**
+ * Forget every saturation and its pause. For tests.
+ */
+export const resetSaturation = () => {
+  clearTimeout(resumeTimer);
+  resumeTimer = null;
+  lastSaturationAt = 0;
+  saturationStreak = 0;
+  pausedUntil = 0;
+};

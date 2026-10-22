@@ -1,4 +1,12 @@
-import { PRIORITY, runInQueue, hasQueuedAhead, markSaturated, getLastSaturationAt } from './requestQueue';
+import {
+  PRIORITY,
+  runInQueue,
+  hasQueuedAhead,
+  markSaturated,
+  getLastSaturationAt,
+  recordAnswer,
+  resetSaturation,
+} from './requestQueue';
 
 const flush = () =>
   new Promise((resolve) => {
@@ -34,6 +42,10 @@ const blockingTask = (name, started) => {
     release: () => release(),
   };
 };
+
+afterEach(() => {
+  resetSaturation();
+});
 
 describe('runInQueue', () => {
   it('never runs more than 4 tasks at once', async () => {
@@ -136,5 +148,99 @@ describe('saturation', () => {
   it('remembers the last saturation time', () => {
     markSaturated(1234);
     expect(getLastSaturationAt()).toBe(1234);
+  });
+});
+
+describe('saturation pause', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /**
+   * Queue a task that records its start and answers with `status`.
+   * @param {string} name - Label pushed to `started`
+   * @param {Array<string>} started - Start order log
+   * @param {number} status - HTTP status the Freebox answers
+   * @returns {Promise<string>} Task result
+   */
+  const answering = (name, started, status) =>
+    runInQueue(() => {
+      started.push(name);
+      recordAnswer(status);
+      return Promise.resolve(name);
+    });
+
+  it('holds every start after a 503, then probes with a single request', async () => {
+    const started = [];
+    const blockers = Array.from({ length: 2 }, (_, i) => blockingTask(`b${i}`, started));
+    const blockerPromises = blockers.map(({ task }) => runInQueue(task));
+    await vi.advanceTimersByTimeAsync(0);
+
+    recordAnswer(503);
+    const probe = blockingTask('probe', started);
+    const probePromise = runInQueue(probe.task);
+    const others = [answering('x', started, 200), answering('y', started, 200)];
+    await vi.advanceTimersByTimeAsync(999);
+    expect(started).toStrictEqual(['b0', 'b1']);
+
+    // The blockers ending during the pause start nothing.
+    for (const { release } of blockers) release();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(started).toStrictEqual(['b0', 'b1']);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(started).toStrictEqual(['b0', 'b1', 'probe']);
+
+    // A healthy answer reopens every slot.
+    recordAnswer(200);
+    probe.release();
+    await Promise.all([...blockerPromises, probePromise, ...others]);
+    expect(started).toStrictEqual(['b0', 'b1', 'probe', 'x', 'y']);
+  });
+
+  it('doubles the pause when the probe is saturated too', async () => {
+    const started = [];
+    recordAnswer(429);
+    const first = answering('first', started, 503);
+    const second = answering('second', started, 200);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(started).toStrictEqual(['first']);
+
+    await vi.advanceTimersByTimeAsync(1999);
+    expect(started).toStrictEqual(['first']);
+    await vi.advanceTimersByTimeAsync(1);
+    await Promise.all([first, second]);
+    expect(started).toStrictEqual(['first', 'second']);
+  });
+
+  it('counts the answers of one burst as a single saturation', async () => {
+    const started = [];
+    recordAnswer(503);
+    recordAnswer(503);
+    recordAnswer(503);
+    const task = answering('task', started, 200);
+    await vi.advanceTimersByTimeAsync(1000);
+    await task;
+    expect(started).toStrictEqual(['task']);
+  });
+
+  it('caps the pause at 30 s', async () => {
+    const started = [];
+    for (let i = 0; i < 10; i += 1) {
+      recordAnswer(503);
+      // eslint-disable-next-line no-await-in-loop -- each saturation must land after the previous pause
+      await vi.advanceTimersByTimeAsync(60_000);
+    }
+    recordAnswer(503);
+    const task = answering('task', started, 200);
+    await vi.advanceTimersByTimeAsync(29_999);
+    expect(started).toStrictEqual([]);
+    await vi.advanceTimersByTimeAsync(1);
+    await task;
+    expect(started).toStrictEqual(['task']);
   });
 });

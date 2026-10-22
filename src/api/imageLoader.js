@@ -11,7 +11,7 @@
 
 import { IMAGE_CACHE_MAX_ENTRIES } from '@/utils/constants';
 import { ApiHttpError, MAX_TRANSIENT_RETRIES, isTransientError, transientRetryDelay } from './client';
-import { PRIORITY, buildAbortError, markSaturated, runInQueue } from './requestQueue';
+import { PRIORITY, buildAbortError, recordAnswer, runInQueue } from './requestQueue';
 
 /** Loaded images, least recently used first: url → blob URL */
 const cache = new Map();
@@ -74,7 +74,8 @@ const readHttpCache = async (url, signal) => {
  * Fetch the image from the Freebox through the request queue, retrying
  * transient failures with the same backoff as API calls.
  * @param {string} url - Image URL
- * @param {AbortSignal} [signal] - Abort signal
+ * @param {AbortSignal} [signal] - Abort signal, observed while waiting for a
+ *   slot or a retry; a request already sent runs to its end
  * @returns {Promise<Blob>} The image
  * @throws {ApiHttpError} On a permanent HTTP failure or once retries are spent
  */
@@ -84,11 +85,11 @@ const fetchFromNetwork = async (url, signal) => {
       // eslint-disable-next-line no-await-in-loop -- retries are sequential by design
       return await runInQueue(
         async () => {
-          const response = await fetch(url, { signal });
+          // No signal: once sent, the image is served anyway and kept in memory.
+          const response = await fetch(url);
+          recordAnswer(response.status);
           if (!response.ok) {
-            const error = new ApiHttpError(response.status, response.statusText);
-            if (isTransientError(error)) markSaturated();
-            throw error;
+            throw new ApiHttpError(response.status, response.statusText);
           }
           return response.blob();
         },

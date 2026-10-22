@@ -1,5 +1,5 @@
 import apiFetch, { AuthError, ApiHttpError, PRIORITY, isTransientError, transientRetryDelay } from './client';
-import { getLastSaturationAt } from './requestQueue';
+import { getLastSaturationAt, resetSaturation } from './requestQueue';
 
 const buildResponse = (body, init = {}) =>
   Response.json(body, {
@@ -9,6 +9,10 @@ const buildResponse = (body, init = {}) =>
 
 beforeEach(() => {
   vi.restoreAllMocks();
+});
+
+afterEach(() => {
+  resetSaturation();
 });
 
 describe('apiFetch', () => {
@@ -42,6 +46,14 @@ describe('apiFetch', () => {
     await apiFetch('/x', { priority: PRIORITY.IMAGE, rank: 2 });
     expect(spy.mock.calls[0][1]).not.toHaveProperty('priority');
     expect(spy.mock.calls[0][1]).not.toHaveProperty('rank');
+  });
+
+  it('lets a request already sent run to its end', async () => {
+    // Aborting it would free the queue slot while the Freebox still serves it.
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(buildResponse({ success: true, result: 1 }));
+    const controller = new AbortController();
+    await apiFetch('/x', { signal: controller.signal });
+    expect(spy.mock.calls[0][1]).not.toHaveProperty('signal');
   });
 
   it.each([503, 429])('marks the Freebox saturated on %i', async (status) => {

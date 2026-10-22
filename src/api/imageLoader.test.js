@@ -1,6 +1,6 @@
 /* eslint-disable vitest/prefer-called-once -- contradicts vitest/prefer-called-times, both enabled */
 import { transientRetryDelay } from './client';
-import { getLastSaturationAt, runInQueue } from './requestQueue';
+import { getLastSaturationAt, resetSaturation, runInQueue } from './requestQueue';
 import { clearImageCache, loadImage, peekImage } from './imageLoader';
 
 vi.mock('./requestQueue', async (importOriginal) => {
@@ -49,6 +49,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  resetSaturation();
   vi.useRealTimers();
 });
 
@@ -69,7 +70,7 @@ describe('loadImage', () => {
   });
 
   it('retries a 503 then succeeds', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
     const before = Date.now();
     const spy = stubFetch({ network: [() => Promise.resolve(image(503)), () => Promise.resolve(image())] });
     const pending = loadImage('/api/latest/tv/img/a.jpg');
@@ -86,7 +87,7 @@ describe('loadImage', () => {
   });
 
   it('stops retrying when aborted during the backoff', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
     const spy = stubFetch({ network: [() => Promise.resolve(image(503)), () => Promise.resolve(image())] });
     const controller = new AbortController();
     const pending = loadImage('/api/latest/tv/img/a.jpg', { signal: controller.signal });
@@ -96,6 +97,26 @@ describe('loadImage', () => {
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
     await vi.advanceTimersByTimeAsync(60_000);
     expect(spy).toHaveBeenCalledTimes(callsBeforeAbort);
+  });
+
+  it('keeps an image already requested when the load is aborted', async () => {
+    let answer;
+    const spy = stubFetch({
+      network: [
+        () =>
+          new Promise((resolve) => {
+            answer = resolve;
+          }),
+      ],
+    });
+    const controller = new AbortController();
+    const pending = loadImage('/api/latest/tv/img/a.jpg', { signal: controller.signal });
+    await vi.waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+    controller.abort();
+    answer(image());
+    await pending;
+    expect(spy.mock.calls[1][1]?.signal).toBeUndefined();
+    expect(peekImage('/api/latest/tv/img/a.jpg')).toBe('blob:1');
   });
 
   it('serves a second load from memory', async () => {
