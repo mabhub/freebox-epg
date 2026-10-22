@@ -90,11 +90,13 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     }
   }, [containerNode, scrollLeft]);
 
-  const { visibleChannels, startIndex, totalHeight } = useVirtualChannels({
+  const { visibleChannels, startIndex, onScreenStart, onScreenEnd, totalHeight } = useVirtualChannels({
     channels,
     scrollTop,
     containerHeight: containerHeight - TIME_HEADER_HEIGHT,
   });
+
+  const rows = useMemo(() => ({ startIndex, onScreenStart, onScreenEnd }), [startIndex, onScreenStart, onScreenEnd]);
 
   // Hold off the first fetch batch until the centring dispatch has landed,
   // otherwise the hook would issue queries against the default scrollLeft
@@ -103,6 +105,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     visibleChannels,
     isCentered ? containerWidth : 0,
     pixelsPerMinute,
+    rows,
   );
 
   useDragScroll(containerNode);

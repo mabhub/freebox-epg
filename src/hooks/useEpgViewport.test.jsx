@@ -7,6 +7,7 @@ import apiFetch from '@/api/client';
 import epgReducer, { setScroll, centerOnTimeOrigin } from '@/store/epgSlice';
 import { PAST_HOURS, OVERSCAN_HOURS } from '@/utils/constants';
 import { roundTo2Hours, nowTimestamp } from '@/utils/time';
+import { PRIORITY } from '@/api/requestQueue';
 import useEpgViewport, { getCachedChannelPrograms } from './useEpgViewport';
 
 vi.mock('@/api/client', () => ({
@@ -22,7 +23,17 @@ const programDict = (uuid, ts) => ({
   [`${ts}_x`]: { id: `prog_${uuid}_${ts}`, date: ts, duration: 7200, title: 't' },
 });
 
-const renderViewport = ({ visibleChannels, viewportWidth, pixelsPerMinute = 4 }) => {
+/**
+ * Build a predicate matching calls for one channel whose bucket overlaps a time range.
+ * @param {{ uuid: string, startTs: number, endTs: number }} area - Channel and time range
+ * @returns {(call: { uuid: string, ts: number }) => boolean} Predicate
+ */
+const isOnScreenPair =
+  ({ uuid, startTs, endTs }) =>
+  (call) =>
+    call.uuid === uuid && call.ts < endTs && call.ts + 7200 > startTs;
+
+const renderViewport = ({ visibleChannels, viewportWidth, pixelsPerMinute = 4, rows = null }) => {
   const store = configureStore({ reducer: { epg: epgReducer } });
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: Infinity } },
@@ -35,9 +46,9 @@ const renderViewport = ({ visibleChannels, viewportWidth, pixelsPerMinute = 4 })
   return {
     store,
     queryClient,
-    ...renderHook(({ vc, vw, ppm }) => useEpgViewport(vc, vw, ppm), {
+    ...renderHook(({ vc, vw, ppm, r }) => useEpgViewport(vc, vw, ppm, r), {
       wrapper,
-      initialProps: { vc: visibleChannels, vw: viewportWidth, ppm: pixelsPerMinute },
+      initialProps: { vc: visibleChannels, vw: viewportWidth, ppm: pixelsPerMinute, r: rows },
     }),
   };
 };
@@ -77,6 +88,28 @@ describe('useEpgViewport', () => {
     expect(apiFetch).toHaveBeenCalledTimes(channels.length * distinctBuckets.size);
     expect(result.current.programs.get('uuid-1')).toBeInstanceOf(Array);
     expect(result.current.programs.get('uuid-2').length).toBeGreaterThan(0);
+  });
+
+  it('queues on-screen pairs as visible and the others as overscan', async () => {
+    const { result, store } = renderViewport({
+      visibleChannels: [channel(1), channel(2), channel(3)],
+      viewportWidth: 1200,
+      rows: { startIndex: 0, onScreenStart: 1, onScreenEnd: 2 },
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const { timeOrigin, scrollLeft } = store.getState().epg;
+    const startTs = timeOrigin + scrollLeft / (4 / 60);
+    const endTs = startTs + 1200 / (4 / 60);
+    const calls = apiFetch.mock.calls.map(([path, options]) => {
+      const [, uuid, ts] = path.match(/by_channel\/(uuid-\d+)\/(\d+)/);
+      return { uuid, ts: Number(ts), ...options };
+    });
+    const isOnScreen = isOnScreenPair({ uuid: 'uuid-2', startTs, endTs });
+    const onScreen = calls.filter((call) => isOnScreen(call));
+    expect(onScreen.length).toBeGreaterThan(0);
+    expect(onScreen.every((c) => c.priority === PRIORITY.EPG_VISIBLE)).toBe(true);
+    expect(calls.filter((c) => c.uuid !== 'uuid-2').every((c) => c.priority === PRIORITY.EPG_OVERSCAN)).toBe(true);
+    expect(calls.every((c) => typeof c.rank === 'number')).toBe(true);
   });
 
   it('does not refetch when visibleChannels is replaced by a value-equal array', async () => {

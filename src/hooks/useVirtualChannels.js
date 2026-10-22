@@ -13,15 +13,17 @@ import { ROW_HEIGHT, OVERSCAN_ROWS } from '@/utils/constants';
  * @param {Array} options.channels - Full sorted channel list
  * @param {number} options.scrollTop - Current vertical scroll position in pixels
  * @param {number} options.containerHeight - Viewport height in pixels
- * @returns {{ visibleChannels: Array, startIndex: number, totalHeight: number }} Visible channels slice and positioning info
+ * @returns {{ visibleChannels: Array, startIndex: number, onScreenStart: number, onScreenEnd: number, totalHeight: number }}
+ *   Rendered slice (overscan included), its first index, the on-screen rows
+ *   without overscan (`onScreenEnd` exclusive) and the total height
  */
 const useVirtualChannels = ({ channels, scrollTop, containerHeight }) => {
-  const { visibleChannels, startIndex, totalHeight } = useMemo(() => {
+  const { visibleChannels, startIndex, onScreenStart, onScreenEnd, totalHeight } = useMemo(() => {
     const total = channels.length;
     const height = total * ROW_HEIGHT;
 
     if (total === 0 || containerHeight === 0) {
-      return { visibleChannels: [], startIndex: 0, totalHeight: height };
+      return { visibleChannels: [], startIndex: 0, onScreenStart: 0, onScreenEnd: 0, totalHeight: height };
     }
 
     const rawStart = Math.floor(scrollTop / ROW_HEIGHT);
@@ -33,11 +35,13 @@ const useVirtualChannels = ({ channels, scrollTop, containerHeight }) => {
     return {
       visibleChannels: channels.slice(start, end),
       startIndex: start,
+      onScreenStart: Math.min(total, Math.max(0, rawStart)),
+      onScreenEnd: Math.min(total, rawEnd),
       totalHeight: height,
     };
   }, [channels, scrollTop, containerHeight]);
 
-  return { visibleChannels, startIndex, totalHeight };
+  return { visibleChannels, startIndex, onScreenStart, onScreenEnd, totalHeight };
 };
 
 export default useVirtualChannels;

@@ -19,10 +19,12 @@ import { useSelector } from 'react-redux';
 import { useQueries } from '@tanstack/react-query';
 
 import apiFetch from '@/api/client';
+import { PRIORITY } from '@/api/requestQueue';
 import { epgByChannelPath } from '@/api/endpoints';
 import { transformEpgByChannel, mergeByChannelEntries } from '@/api/transformers';
 import { get2HourBuckets } from '@/utils/time';
 import { OVERSCAN_HOURS } from '@/utils/constants';
+import { pairPriority, viewportTimeRange } from '@/utils/viewport';
 
 // Shared sentinel for the "no pairs to fetch" case so that the hook return
 // value keeps a stable identity across renders. Treat as immutable: never
@@ -35,13 +37,16 @@ const BY_CHANNEL_KEY = ['epg', 'byChannel'];
 /**
  * Query options for one `by_channel` bucket, shared by every consumer so
  * they all hit the same cache entries.
+ * The queue options only order the request; they are not part of the key.
  * @param {string} uuid - Channel UUID
  * @param {number} ts - Bucket start, aligned on 2 hours
+ * @param {{ priority?: number, rank?: number }} [queueOptions] - Request queue
+ *   options (interaction by default, see PRIORITY)
  * @returns {Object} useQueries entry
  */
-export const byChannelQuery = (uuid, ts) => ({
+export const byChannelQuery = (uuid, ts, { priority, rank } = {}) => ({
   queryKey: [...BY_CHANNEL_KEY, uuid, ts],
-  queryFn: ({ signal }) => apiFetch(epgByChannelPath(uuid, ts), { signal }),
+  queryFn: ({ signal }) => apiFetch(epgByChannelPath(uuid, ts), { signal, priority, rank }),
   select: transformEpgByChannel,
   staleTime: 5 * 60 * 1000,
   gcTime: 30 * 60 * 1000,
@@ -73,25 +78,21 @@ export const getCachedChannelPrograms = (queryClient, channelUuid) => {
  * @param {Array<{ uuid: string }>} visibleChannels - Channels currently rendered (overscan included)
  * @param {number} viewportWidth - Viewport width in pixels (0 while the container is being measured)
  * @param {number} pixelsPerMinute - Current responsive scale factor
+ * @param {{ startIndex: number, onScreenStart: number, onScreenEnd: number }|null} [rows] - Absolute
+ *   row indices from useVirtualChannels, used to serve on-screen cells first. Without them
+ *   every pair is queued as visible.
  * @returns {{ programs: Map<string, Array>, isLoading: boolean, error: Error|null }} Merged programs and loading state
  */
-const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
+const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute, rows = null) => {
   const timeOrigin = useSelector((state) => state.epg.timeOrigin);
   const scrollLeft = useSelector((state) => state.epg.scrollLeft);
 
-  const buckets = useMemo(() => {
-    if (viewportWidth <= 0) {
-      return [];
-    }
-    const pixelsPerSecond = pixelsPerMinute / 60;
-    const viewportStartOffset = scrollLeft / pixelsPerSecond;
-    const viewportEndOffset = (scrollLeft + viewportWidth) / pixelsPerSecond;
+  const { startTs, endTs } = viewportTimeRange({ timeOrigin, scrollLeft, viewportWidth, pixelsPerMinute });
 
-    const startTs = timeOrigin + viewportStartOffset - OVERSCAN_HOURS * 3600;
-    const endTs = timeOrigin + viewportEndOffset + OVERSCAN_HOURS * 3600;
-
-    return get2HourBuckets(startTs, endTs);
-  }, [timeOrigin, scrollLeft, viewportWidth, pixelsPerMinute]);
+  const buckets = useMemo(
+    () => (viewportWidth <= 0 ? [] : get2HourBuckets(startTs - OVERSCAN_HOURS * 3600, endTs + OVERSCAN_HOURS * 3600)),
+    [startTs, endTs, viewportWidth],
+  );
 
   // Stabilise visibleChannels by uuid so that scroll-driven re-renders that
   // do not actually change the slice keep the same `pairs` identity, and
@@ -100,10 +101,21 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
   // self-contained and lets exhaustive-deps stay enabled.
   const visibleUuidsKey = useMemo(() => visibleChannels.map((c) => c.uuid).join('|'), [visibleChannels]);
 
+  const startIndex = rows?.startIndex;
+  const onScreenStart = rows?.onScreenStart;
+  const onScreenEnd = rows?.onScreenEnd;
   const pairs = useMemo(() => {
     const uuids = visibleUuidsKey ? visibleUuidsKey.split('|') : [];
-    return uuids.flatMap((uuid) => buckets.map((ts) => ({ uuid, ts })));
-  }, [visibleUuidsKey, buckets]);
+    return uuids.flatMap((uuid, i) =>
+      buckets.map((ts) => ({
+        uuid,
+        ts,
+        ...(startIndex === undefined
+          ? { priority: PRIORITY.EPG_VISIBLE, rank: 0 }
+          : pairPriority({ rowIndex: startIndex + i, ts }, { onScreenStart, onScreenEnd, startTs, endTs })),
+      })),
+    );
+  }, [visibleUuidsKey, buckets, startIndex, onScreenStart, onScreenEnd, startTs, endTs]);
 
   // `combine` re-runs whenever any individual query toggles a flag
   // (isLoading, isFetching…), so we cache the merged Map keyed on the
@@ -113,7 +125,7 @@ const useEpgViewport = (visibleChannels, viewportWidth, pixelsPerMinute) => {
   const cacheRef = useRef({ key: '', value: EMPTY_PROGRAMS });
 
   return useQueries({
-    queries: pairs.map(({ uuid, ts }) => byChannelQuery(uuid, ts)),
+    queries: pairs.map(({ uuid, ts, priority, rank }) => byChannelQuery(uuid, ts, { priority, rank })),
     combine: (results) => {
       if (results.length === 0) {
         return EMPTY_RESULT;
