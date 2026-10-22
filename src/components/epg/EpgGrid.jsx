@@ -52,6 +52,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
   const dispatch = useDispatch();
   const [containerNode, setContainerNode] = useState(null);
   const [editingRecording, setEditingRecording] = useState(null);
+  const [recordTarget, setRecordTarget] = useState(null);
   const deleteRecording = useDeleteRecording();
   const { notice, resize: handleResizeRecording, closeNotice: handleCloseNotice } = useResizeWithUndo();
   const { timeOrigin, scrollTop, scrollLeft } = useSelector(
@@ -147,6 +148,11 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
     [dispatch],
   );
 
+  const handleRecordGroup = useCallback(
+    (program, channel) => setRecordTarget({ program, channelUuid: channel.uuid, channelName: channel.name }),
+    [],
+  );
+
   const handleSelectRecording = useCallback((recording) => {
     setEditingRecording(recording);
   }, []);
@@ -183,9 +189,20 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
           sidebarWidth={sidebarWidth}
           isMobile={isMobile}
           onSelectProgram={handleSelectProgram}
+          onRecordGroup={handleRecordGroup}
         />
       )),
-    [visibleChannels, programs, startIndex, timeOrigin, pixelsPerMinute, sidebarWidth, isMobile, handleSelectProgram],
+    [
+      visibleChannels,
+      programs,
+      startIndex,
+      timeOrigin,
+      pixelsPerMinute,
+      sidebarWidth,
+      isMobile,
+      handleSelectProgram,
+      handleRecordGroup,
+    ],
   );
 
   if (isLoadingChannels) {
@@ -267,6 +284,7 @@ const EpgGrid = ({ channels, isLoadingChannels }) => {
       </Box>
 
       <RecordModal open={editingRecording !== null} onClose={handleCloseRecordingModal} recording={editingRecording} />
+      {recordTarget && <RecordModal open onClose={() => setRecordTarget(null)} {...recordTarget} />}
       <NoticeSnackbar notice={notice} onClose={handleCloseNotice} />
 
       {isLoadingPrograms && (

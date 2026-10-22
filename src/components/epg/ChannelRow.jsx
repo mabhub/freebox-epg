@@ -11,15 +11,19 @@
  * @param {number} props.sidebarWidth - Sidebar width in pixels
  * @param {boolean} props.isMobile - Whether in mobile viewport
  * @param {Function} props.onSelectProgram - Callback when a program is clicked
+ * @param {Function} props.onRecordGroup - Called with the program spanning a run of episodes and the channel,
+ *   when the series band above the run is clicked
  * @returns {React.ReactElement} Channel row
  */
 
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { styled } from '@mui/material';
 import { ROW_HEIGHT } from '@/utils/constants';
 import useCurrentTime from '@/hooks/useCurrentTime';
+import { groupConsecutiveEpisodes } from '@/utils/programs';
 import ChannelSidebar from './ChannelSidebar';
 import ProgramCell from './ProgramCell';
+import SeriesBand from './SeriesBand';
 
 const RowRoot = styled('div')({
   position: 'absolute',
@@ -30,7 +34,17 @@ const RowRoot = styled('div')({
 });
 
 const ChannelRow = memo(
-  ({ channel, programs, rowIndex, timeOrigin, pixelsPerMinute, sidebarWidth, isMobile, onSelectProgram }) => {
+  ({
+    channel,
+    programs,
+    rowIndex,
+    timeOrigin,
+    pixelsPerMinute,
+    sidebarWidth,
+    isMobile,
+    onSelectProgram,
+    onRecordGroup,
+  }) => {
     // Resolve the on-air program once per row instead of letting every cell
     // subscribe to the minute tick context — a row of 30 cells used to
     // re-render in full each minute even though at most one of them flips.
@@ -40,9 +54,27 @@ const ChannelRow = memo(
       return onAir?.id ?? null;
     }, [programs, now]);
 
+    const groups = useMemo(() => groupConsecutiveEpisodes(programs), [programs]);
+    const groupTitleById = useMemo(
+      () => new Map(groups.flatMap((group) => group.programs.map((program) => [program.id, group.title]))),
+      [groups],
+    );
+    const handleRecordGroup = useCallback((program) => onRecordGroup(program, channel), [onRecordGroup, channel]);
+
     return (
       <RowRoot style={{ top: rowIndex * ROW_HEIGHT }}>
         <ChannelSidebar channel={channel} sidebarWidth={sidebarWidth} isMobile={isMobile} />
+        {groups.map((group) => (
+          <SeriesBand
+            key={group.id}
+            group={group}
+            timeOrigin={timeOrigin}
+            pixelsPerMinute={pixelsPerMinute}
+            sidebarWidth={sidebarWidth}
+            now={now}
+            onRecord={handleRecordGroup}
+          />
+        ))}
         {programs.map((program) => (
           <ProgramCell
             key={program.id}
@@ -53,6 +85,7 @@ const ChannelRow = memo(
             channelUuid={channel.uuid}
             isOnAir={program.id === onAirProgramId}
             onSelect={onSelectProgram}
+            groupTitle={groupTitleById.get(program.id) ?? null}
           />
         ))}
       </RowRoot>
